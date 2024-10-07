@@ -17,6 +17,7 @@ namespace MolenApplicatie.Server.Models
         public string Ten_Brugge_Nr { get; set; }
         public string Plaats { get; set; }
         public string Adres { get; set; }
+        public byte[] Image { get; set; }
         [Ignore]
         public List<MolenType> ModelType { get; set; } = new List<MolenType>();
         public double North { get; set; }

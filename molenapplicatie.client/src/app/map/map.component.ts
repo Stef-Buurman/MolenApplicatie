@@ -55,12 +55,10 @@ export class MapComponent {
   }
 
   private onMarkerClick(tenBruggeNr: any): void {
-    console.log('Opening dialog with tenBruggeNr:', tenBruggeNr);
     const dialogRef = this.dialog.open(MolenDialogComponent, {
       width: '250px',
       data: { tenBruggeNr }
     });
-    console.log('Dialog opened:', dialogRef);
   }
 
 }

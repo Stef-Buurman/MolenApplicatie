@@ -15,6 +15,7 @@ export interface MolenData {
   north: number;
   east: number;
   lastUpdated: Date;
+  image?: Uint8Array;
 
   getBouwjaar(): string;
 }

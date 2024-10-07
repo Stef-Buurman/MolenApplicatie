@@ -6,6 +6,11 @@
   background-color: #f9f9f9;
 }
 
-  .molen-data h2 {
-    margin-top: 0;
-  }
+.molen-data h2 {
+  margin-top: 0;
+}
+
+.molenImage {
+    width:100%;
+    max-height:400px;
+}

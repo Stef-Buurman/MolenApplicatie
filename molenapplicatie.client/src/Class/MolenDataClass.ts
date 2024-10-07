@@ -5,7 +5,7 @@ export class MolenDataClass implements MolenData {
   id: number;
   name: string;
   bouwjaar?: number;
-  herbouwdJaar?: string;
+  herbouwd_jaar?: string;
   bouwjaarStart?: number;
   bouwjaarEinde?: number;
   functie: string;
@@ -16,6 +16,7 @@ export class MolenDataClass implements MolenData {
   north: number;
   east: number;
   lastUpdated: Date;
+  image?: Uint8Array;
 
   constructor(
     id: number,
@@ -29,14 +30,15 @@ export class MolenDataClass implements MolenData {
     modelType: MolenType[] = [],
     lastUpdated: Date,
     bouwjaar?: number,
-    herbouwdJaar?: string,
+    herbouwd_jaar?: string,
     bouwjaarStart?: number,
-    bouwjaarEinde?: number
+    bouwjaarEinde?: number,
+    image?: Uint8Array
   ) {
     this.id = id;
     this.name = name;
     this.bouwjaar = bouwjaar;
-    this.herbouwdJaar = herbouwdJaar;
+    this.herbouwd_jaar = herbouwd_jaar;
     this.bouwjaarStart = bouwjaarStart;
     this.bouwjaarEinde = bouwjaarEinde;
     this.functie = functie;
@@ -47,9 +49,9 @@ export class MolenDataClass implements MolenData {
     this.north = north;
     this.east = east;
     this.lastUpdated = lastUpdated;
+    this.image = image;
   }
 
-  // Method matches the interface signature
   getBouwjaar(): string {
     if (this.bouwjaar !== undefined) {
       return this.bouwjaar.toString();
@@ -63,17 +65,11 @@ export class MolenDataClass implements MolenData {
       return "Onbekend";
     }
   }
-  get bouwjaarString(): string {
-    if (this.bouwjaar !== undefined) {
-      return this.bouwjaar.toString();
-    } else if (this.bouwjaarStart !== undefined && this.bouwjaarEinde !== undefined) {
-      return `${this.bouwjaarStart} - ${this.bouwjaarEinde}`;
-    } else if (this.bouwjaarStart !== undefined) {
-      return this.bouwjaarStart.toString();
-    } else if (this.bouwjaarEinde !== undefined) {
-      return this.bouwjaarEinde.toString();
-    } else {
-      return "Onbekend";
+
+  get imageBase64(): string {
+    if (this.image) {
+      return `data:image/jpeg;base64,${btoa(String.fromCharCode(...this.image))}`;
     }
+    return '';
   }
 }

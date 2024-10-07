@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -11,6 +12,7 @@ import { MolenDataClass } from '../../Class/MolenDataClass';
 export class MolenDialogComponent {
   public molen?: MolenDataClass;
   constructor(
+    private sanitizer: DomSanitizer,
     private http: HttpClient,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string }
@@ -19,7 +21,6 @@ export class MolenDialogComponent {
   ngOnInit(): void {
     this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe(
       (result) => {
-        console.log(result);
         this.molen = result;
       },
       (error) => {
@@ -30,5 +31,11 @@ export class MolenDialogComponent {
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  getImage(data: Uint8Array): any
+  {
+    let objectURL = 'data:image/png;base64,' + data;
+    return this.sanitizer.bypassSecurityTrustUrl(objectURL);
   }
 }

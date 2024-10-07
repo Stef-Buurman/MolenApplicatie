@@ -28,6 +28,12 @@ namespace MolenApplicatie.Server.Controllers
         {
             return Ok(await _readMolenDataService.GetMolenByTBN(tbNumber));
         }
+
+        //[HttpGet("get_molen_data")]
+        //public async Task<IActionResult> GetMolenData()
+        //{
+        //    return Ok(await _readMolenDataService.GetAllMolenData());
+        //}
     }
 }
 //namespace MolenApplicatie.Server.Controllers

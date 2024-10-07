@@ -71,6 +71,7 @@ namespace MolenApplicatie.Server.Services
 
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='attrib']");
                 var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
+                var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
@@ -186,6 +187,17 @@ namespace MolenApplicatie.Server.Services
                         if (data.ContainsKey(name)) data[name] = NewAddedTypes;
                         else data.Add(name, NewAddedTypes);
                     }
+
+                    if (Image != null)
+                    {
+                        var src = Image.First().GetAttributeValue("src", string.Empty);
+                        if (!string.IsNullOrEmpty(src))
+                        {
+                            var imageResponse = await _client.GetAsync(src);
+                            newMolenData.Image = await imageResponse.Content.ReadAsByteArrayAsync();
+                        }
+                    }
+
                     newMolenData.LastUpdated = DateTime.Now;
                     if (oldMolenData == null)
                     {
