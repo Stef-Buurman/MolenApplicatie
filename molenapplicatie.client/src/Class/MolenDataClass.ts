@@ -63,4 +63,17 @@ export class MolenDataClass implements MolenData {
       return "Onbekend";
     }
   }
+  get bouwjaarString(): string {
+    if (this.bouwjaar !== undefined) {
+      return this.bouwjaar.toString();
+    } else if (this.bouwjaarStart !== undefined && this.bouwjaarEinde !== undefined) {
+      return `${this.bouwjaarStart} - ${this.bouwjaarEinde}`;
+    } else if (this.bouwjaarStart !== undefined) {
+      return this.bouwjaarStart.toString();
+    } else if (this.bouwjaarEinde !== undefined) {
+      return this.bouwjaarEinde.toString();
+    } else {
+      return "Onbekend";
+    }
+  }
 }

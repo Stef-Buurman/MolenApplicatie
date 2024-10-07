@@ -19,11 +19,11 @@ export class MapComponent {
   getMolens(): void {
     this.http.get<MolenDataClass[]>('/api/all_molen_locations').subscribe(
       (result) => {
-        this.molens = result; // Store the retrieved data
-        this.initMap(); // Initialize the map after receiving data
+        this.molens = result;
+        this.initMap();
       },
       (error) => {
-        console.error(error); // Handle any error response
+        console.error(error);
       }
     );
   }
