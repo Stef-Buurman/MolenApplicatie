@@ -2,6 +2,7 @@ using MolenApplicatie.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Environment.WebRootPath = "/var/www/app/wwwroot";
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
