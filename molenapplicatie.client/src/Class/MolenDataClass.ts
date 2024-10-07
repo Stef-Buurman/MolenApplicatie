@@ -9,7 +9,7 @@ export class MolenDataClass implements MolenData {
   bouwjaarStart?: number;
   bouwjaarEinde?: number;
   functie: string;
-  tenBruggeNr: string;
+  ten_Brugge_Nr: string;
   plaats: string;
   adres: string;
   modelType: MolenType[] = [];
@@ -21,7 +21,7 @@ export class MolenDataClass implements MolenData {
     id: number,
     name: string,
     functie: string,
-    tenBruggeNr: string,
+    ten_Brugge_Nr: string,
     plaats: string,
     adres: string,
     north: number,
@@ -40,7 +40,7 @@ export class MolenDataClass implements MolenData {
     this.bouwjaarStart = bouwjaarStart;
     this.bouwjaarEinde = bouwjaarEinde;
     this.functie = functie;
-    this.tenBruggeNr = tenBruggeNr;
+    this.ten_Brugge_Nr = ten_Brugge_Nr;
     this.plaats = plaats;
     this.adres = adres;
     this.modelType = modelType;

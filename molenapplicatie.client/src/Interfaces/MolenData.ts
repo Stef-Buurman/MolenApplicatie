@@ -8,7 +8,7 @@ export interface MolenData {
   bouwjaarStart?: number;
   bouwjaarEinde?: number;
   functie: string;
-  tenBruggeNr: string;
+  ten_Brugge_Nr: string;
   plaats: string;
   adres: string;
   modelType: MolenType[];

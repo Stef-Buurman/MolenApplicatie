@@ -2,6 +2,8 @@ import { Component, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 import { MolenDataClass } from '../../Class/MolenDataClass';
+import { MatDialog } from '@angular/material/dialog';
+import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
 
 @Component({
   selector: 'app-map',
@@ -11,7 +13,8 @@ import { MolenDataClass } from '../../Class/MolenDataClass';
 export class MapComponent {
   molens: MolenDataClass[] = [];
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,
+    private dialog: MatDialog) { }
 
   getMolens(): void {
     this.http.get<MolenDataClass[]>('/api/all_molen_locations').subscribe(
@@ -46,12 +49,18 @@ export class MapComponent {
       const marker = L.marker([molen.north, molen.east], { icon: customIcon })
         .addTo(map);
       marker.on('click', () => {
-        this.onMarkerClick(molen); // Call a method when the marker is clicked
+        this.onMarkerClick(molen.ten_Brugge_Nr);
       });
     });
   }
 
-  private onMarkerClick(molen: any): void {
-    console.log(molen);
+  private onMarkerClick(tenBruggeNr: any): void {
+    console.log('Opening dialog with tenBruggeNr:', tenBruggeNr);
+    const dialogRef = this.dialog.open(MolenDialogComponent, {
+      width: '250px',
+      data: { tenBruggeNr }
+    });
+    console.log('Dialog opened:', dialogRef);
   }
+
 }
