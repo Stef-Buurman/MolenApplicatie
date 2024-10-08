@@ -29,6 +29,44 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _readMolenDataService.GetMolenByTBN(tbNumber));
         }
 
+        [HttpPost]
+        [Route("upload_image/{tbNumber}")]
+        public async Task<IActionResult> UploadImage(string tbNumber, IFormFile image)
+        {
+            // Check if the image is null or empty
+            if (image == null || image.Length == 0)
+                return BadRequest("No image provided");
+            Console.WriteLine(Directory.GetCurrentDirectory());
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "testFolder");
+
+            // Ensure the directory exists
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            // Create a unique file name using tbNumber
+            var uniqueFileName = $"{tbNumber}_{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
+            var filePath = Path.Combine(directoryPath, uniqueFileName);
+
+            try
+            {
+                // Save the image to the specified path
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+            // Return the file path as part of the response
+            return Ok(new { filePath = uniqueFileName });
+        }
+
+
         //[HttpGet("get_molen_data")]
         //public async Task<IActionResult> GetMolenData()
         //{
