@@ -1,20 +1,54 @@
-<div class="molen-data" *ngIf="molen">
-  <h2>{{ molen.name }}</h2>
-  <img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />
-  <p><strong>Type:</strong> {{ molen.functie }}</p>
-  <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
-  <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
-  <p><strong>Adres:</strong> {{ molen.adres }}</p>
-  <p><strong>Coordinates:</strong> (North: {{ molen.north }}, East: {{ molen.east }})</p>
-  <p><strong>Bouwjaar:</strong> {{ molen.getBouwjaar }}</p>
-  <p *ngIf="molen.herbouwd_jaar">
-    <strong>Herbouwd:</strong> {{molen.herbouwd_jaar}}
-  </p>
+<div class="container" *ngIf="molen">
+  <div class="data-left">
+    <img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />
+  </div>
+  <div class="molen-data">
+    <h2>{{ molen.name }}</h2>
+    <p><strong>Type:</strong> {{ molen.functie }}</p>
+    <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
+    <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
+    <p><strong>Adres:</strong> {{ molen.adres }}</p>
+    <p><strong>Coordinates:</strong> (North: {{ molen.north }}, East: {{ molen.east }})</p>
+    <p><strong>Bouwjaar:</strong> {{ molen.getBouwjaar }}</p>
+    <p *ngIf="molen.herbouwd_jaar">
+      <strong>Herbouwd:</strong> {{molen.herbouwd_jaar}}
+    </p>
 
-  <h3>Model Types:</h3>
-  <ul>
-    <li *ngFor="let model of molen.modelType">
-      {{ model.name }}
-    </li>
-  </ul>
+    <h3>Model Types:</h3>
+    <ul>
+      <li *ngFor="let model of molen.modelType">
+        {{ model.name }}
+      </li>
+    </ul>
+  </div>
+  <div class="data-right">
+    <h2>Single File Upload</h2>
+
+    <input type="file" accept="image/*" class="file-input" (change)="onFileSelected($event)" #fileUpload />
+
+    <div *ngIf="file">
+      <section class="file-info">
+        File details:
+        <ul>
+          <li>Name: {{file.name}}</li>
+          <li>Type: {{file.type}}</li>
+          <li>Size: {{file.size}} bytes</li>
+        </ul>
+      </section>
+
+      <div *ngIf="file.type.startsWith('image/')">
+        <h3>Image Preview:</h3>
+        <img [src]="imagePreview" alt="Selected Image" width="300" />
+      </div>
+
+      <button (click)="onSubmit()">Upload the file</button>
+
+      <section [ngSwitch]="status">
+        <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>
+        <p *ngSwitchCase="'success'">✅ Done!</p>
+        <p *ngSwitchCase="'fail'">❌ Error!</p>
+        <p *ngSwitchDefault>😶 Waiting to upload...</p>
+      </section>
+    </div>
+  </div>
 </div>
