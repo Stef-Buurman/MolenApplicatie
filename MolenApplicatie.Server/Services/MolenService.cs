@@ -8,7 +8,7 @@ using HtmlAgilityPack;
 
 namespace MolenApplicatie.Server.Services
 {
-    public class ReadMolenDataService
+    public class MolenService
     {
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
@@ -16,7 +16,7 @@ namespace MolenApplicatie.Server.Services
 
         private readonly SQLiteAsyncConnection _db;
 
-        public ReadMolenDataService()
+        public MolenService()
         {
             _client = new HttpClient();
             _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);

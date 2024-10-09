@@ -1,4 +1,4 @@
-.molen-data {
+/*.molen-data {
   border: 1px solid #ccc;
   padding: 16px;
   margin: 16px 0;
@@ -11,6 +11,31 @@
 }
 
 .molenImage {
-    width:100%;
-    max-height:350px;
+    height:350px;
+    margin:auto;
+}*/
+
+.container {
+  width: 80vh;
+  display: flex;
+  justify-content: space-between;
+}
+
+.data-left, .data-right {
+  width: 40%;
+  padding: 10px;
+}
+
+.molen-data {
+  width: 60%;
+  padding: 10px;
+}
+
+.molenImage {
+  max-width: 100%;
+  height: auto;
+}
+
+.image-selector {
+  margin-top: 20px;
 }
