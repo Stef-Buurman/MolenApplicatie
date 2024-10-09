@@ -6,19 +6,18 @@ namespace MolenApplicatie.Server.Controllers
 {
     [ApiController]
     [Route("api")]
-    public class GetMolenDataController : ControllerBase
+    public class MolenController : ControllerBase
     {
-        private readonly ReadMolenDataService _readMolenDataService;
+        private readonly MolenService _readMolenDataService;
 
-        public GetMolenDataController(ReadMolenDataService readMolenDataService)
+        public MolenController(MolenService readMolenDataService)
         {
             _readMolenDataService = readMolenDataService;
         }
 
-        [HttpGet("all_molen_locations")] // Matches the route /api/all_molen_locations
+        [HttpGet("all_molen_locations")]
         public async Task<IActionResult> GetAllMolenLocations()
         {
-            Console.WriteLine("API endpoint hit"); // This should log if the endpoint is hit
             var locations = await _readMolenDataService.GetAllMolenLatLon();
             return Ok(locations);
         }
@@ -28,6 +27,39 @@ namespace MolenApplicatie.Server.Controllers
         {
             return Ok(await _readMolenDataService.GetMolenByTBN(tbNumber));
         }
+
+        [HttpPost]
+        [Route("upload_image/{tbNumber}")]
+        public async Task<IActionResult> UploadImage(string tbNumber, IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+                return BadRequest("No image provided");
+
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "testFolder");
+
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            var uniqueFileName = $"{tbNumber}_{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
+            var filePath = Path.Combine(directoryPath, uniqueFileName);
+
+            try
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+            return Ok(new { filePath = uniqueFileName });
+        }
+
 
         //[HttpGet("get_molen_data")]
         //public async Task<IActionResult> GetMolenData()
