@@ -50,11 +50,11 @@ export class MolenDialogComponent {
   }
 
   onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+    const uploadedFile: File = event.target.files[0];
 
-    if (file) {
+    if (uploadedFile) {
       this.status = "initial";
-      this.file = file;
+      this.file = uploadedFile;
       const reader = new FileReader();
       reader.onload = (e) => {
         this.imagePreview = e.target?.result as string;
@@ -65,7 +65,7 @@ export class MolenDialogComponent {
 
   onSubmit(): void {
     if (this.file && this.molen) {
-      this.status = "uploading"; // Set status to uploading
+      this.status = "uploading";
 
       const headers = new HttpHeaders({
         'API_Key': this.APIKey,
@@ -74,16 +74,14 @@ export class MolenDialogComponent {
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
 
-      // Send the file to your server endpoint
       this.http.post('/api/upload_image/' + this.molen.ten_Brugge_Nr, formData, { headers })
         .subscribe({
           next: (response) => {
-            console.log('Upload success', response);
-            this.status = "success"; // Update status to success
+            this.removeImg()
+            this.status = "success";
           },
           error: (error) => {
-            console.error('Upload failed', error);
-            this.status = "fail"; // Update status to fail
+            this.status = "fail";
           }
         });
     }
