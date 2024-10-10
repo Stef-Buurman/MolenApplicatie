@@ -1,5 +1,6 @@
 <section class="header">
   <span *ngIf="molen">{{ molen.name }}</span>
+  <button (click)="closeDialog()">X</button>
 </section>
 <!--<mat-dialog-content>-->
 <div class="container" *ngIf="molen">
@@ -37,10 +38,10 @@
     </ul>
   </div>
   <div class="data-right">
-    <h5>Upload de foto hier.</h5>
+    <h4>Upload de foto hier.</h4>
 
     <input *ngIf="!file" type="file" accept="image/*" class="file-input" (change)="onFileSelected($event)" #fileUpload />
-    <input matInput type="text" name="password" [(ngModel)]="APIKey" />
+
     <div *ngIf="file">
       <section class="file-info">
         <button (click)="removeImg()" class="close-btn">&times;</button>
@@ -54,13 +55,14 @@
       </section>
 
       <div class="image-preview" *ngIf="file.type.startsWith('image/')">
-        <h3>Image Preview:</h3>
+        <span>Image Preview:</span>
         <img [src]="imagePreview" alt="Selected Image" width="300" />
       </div>
-
+      <span>API Key: <input matInput type="text" name="password" [(ngModel)]="APIKey" /></span>
       <button (click)="onSubmit()">Upload the file</button>
-
-      <section [ngSwitch]="status">
+    </div>
+    <div>
+      <section *ngIf="status == 'success' || file" [ngSwitch]="status">
         <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>
         <p *ngSwitchCase="'success'">✅ Done!</p>
         <p *ngSwitchCase="'fail'">❌ Error!</p>

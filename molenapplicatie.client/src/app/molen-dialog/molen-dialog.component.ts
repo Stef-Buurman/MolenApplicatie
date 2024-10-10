@@ -77,7 +77,7 @@ export class MolenDialogComponent {
       this.http.post('/api/upload_image/' + this.molen.ten_Brugge_Nr, formData, { headers })
         .subscribe({
           next: (response) => {
-            this.removeImg()
+            this.removeImg();
             this.status = "success";
           },
           error: (error) => {
@@ -85,6 +85,10 @@ export class MolenDialogComponent {
           }
         });
     }
+  }
+
+  closeDialog(): void {
+    this.dialogRef.close();
   }
 
 
