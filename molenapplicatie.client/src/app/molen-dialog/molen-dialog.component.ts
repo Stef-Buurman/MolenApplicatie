@@ -68,7 +68,6 @@ export class MolenDialogComponent {
       this.status = "uploading"; // Set status to uploading
 
       const headers = new HttpHeaders({
-        'Content-Type': 'multipart/form-data',
         'API_Key': this.APIKey,
       });
 
