@@ -28,6 +28,7 @@ namespace MolenApplicatie.Server.Services
             await _db.CreateTableAsync<MolenTBN>();
             await _db.CreateTableAsync<MolenData>();
             await _db.CreateTableAsync<MolenType>();
+            await _db.CreateTableAsync<MolenImage>();
             await _db.CreateTableAsync<MolenTypeAssociation>();
             return 1;
         }
@@ -302,6 +303,8 @@ namespace MolenApplicatie.Server.Services
         {
             molen.ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { molen.Id });
+            var allImages = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE MolenDataId = ?", new object[] { molen.Id });
+            molen.AddedImages = allImages.Select(x => x.Image).ToList();
             return molen;
         }
 
@@ -346,6 +349,27 @@ namespace MolenApplicatie.Server.Services
                 "(SELECT Id FROM MolenType WHERE Name = ?))", new object[] { type.ToLower() });
             MolenData.ForEach(async x => await GetFullDataOfMolen(x));
             return MolenData;
+        }
+
+        public async Task<IFormFile> SaveMolenImage(int id, string TBN, IFormFile file)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+
+                // Create an instance of MolenImage
+                var molenImage = new MolenImage
+                {
+                    MolenTBN = TBN,
+                    MolenDataId = id,
+                    Image = imageBytes
+                };
+
+                // Save to the database
+                await _db.InsertAsync(molenImage);
+            }
+            return file;
         }
     }
 }

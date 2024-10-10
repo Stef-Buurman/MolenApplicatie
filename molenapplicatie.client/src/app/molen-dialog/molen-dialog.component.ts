@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
@@ -11,6 +11,11 @@ import { DomSanitizer } from '@angular/platform-browser';
 })
 export class MolenDialogComponent {
   public molen?: MolenDataClass;
+  public status: "initial" | "uploading" | "success" | "fail" = "initial";
+  public file: File | null = null;
+  public imagePreview: string | null = null;
+  public APIKey: string = "";
+
   constructor(
     private sanitizer: DomSanitizer,
     private http: HttpClient,
@@ -35,15 +40,15 @@ export class MolenDialogComponent {
     this.dialogRef.close();
   }
 
-  getImage(data: Uint8Array): any
-  {
+  getImage(data: Uint8Array): any {
     let objectURL = 'data:image/png;base64,' + data;
     return this.sanitizer.bypassSecurityTrustUrl(objectURL);
   }
 
-  status: "initial" | "uploading" | "success" | "fail" = "initial";
-  file: File | null = null;
-  imagePreview: string | null = null;
+  removeImg(): void {
+    this.file = null;
+  }
+
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
 
@@ -62,11 +67,16 @@ export class MolenDialogComponent {
     if (this.file && this.molen) {
       this.status = "uploading"; // Set status to uploading
 
+      const headers = new HttpHeaders({
+        'Content-Type': 'multipart/form-data',
+        'API_Key': this.APIKey,
+      });
+
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
 
       // Send the file to your server endpoint
-      this.http.post('/api/upload_image/'+this.molen.ten_Brugge_Nr, formData)
+      this.http.post('/api/upload_image/' + this.molen.ten_Brugge_Nr, formData, { headers })
         .subscribe({
           next: (response) => {
             console.log('Upload success', response);

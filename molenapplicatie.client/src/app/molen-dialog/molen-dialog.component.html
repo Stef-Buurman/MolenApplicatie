@@ -1,9 +1,24 @@
+<section class="header">
+  <span *ngIf="molen">{{ molen.name }}</span>
+</section>
+<!--<mat-dialog-content>-->
 <div class="container" *ngIf="molen">
   <div class="data-left">
+    <!--<section class="slider_container">
+      <section class="slider">
+        <div class="slide one" *ngIf="molen.image">
+          <img [src]="getImage(molen.image)" alt="" />
+          <span class="caption"> slide one </span>
+        </div>-->
+    <!--<div class="slide two" *ngFor="let image of molen.addedImages">
+      <img [src]="getImage(image)" alt="" />
+      <span class="caption"> slide two </span>
+    </div>-->
+    <!--</section>
+    </section>-->
     <img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />
   </div>
   <div class="molen-data">
-    <h2>{{ molen.name }}</h2>
     <p><strong>Type:</strong> {{ molen.functie }}</p>
     <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
     <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
@@ -14,7 +29,7 @@
       <strong>Herbouwd:</strong> {{molen.herbouwd_jaar}}
     </p>
 
-    <h3>Model Types:</h3>
+    <h6>Model Types:</h6>
     <ul>
       <li *ngFor="let model of molen.modelType">
         {{ model.name }}
@@ -22,12 +37,14 @@
     </ul>
   </div>
   <div class="data-right">
-    <h2>Single File Upload</h2>
+    <h5>Upload de foto hier.</h5>
 
-    <input type="file" accept="image/*" class="file-input" (change)="onFileSelected($event)" #fileUpload />
-
+    <input *ngIf="!file" type="file" accept="image/*" class="file-input" (change)="onFileSelected($event)" #fileUpload />
+    <input matInput type="text" name="password" [(ngModel)]="APIKey" />
     <div *ngIf="file">
       <section class="file-info">
+        <button (click)="removeImg()" class="close-btn">&times;</button>
+        <br />
         File details:
         <ul>
           <li>Name: {{file.name}}</li>
@@ -36,7 +53,7 @@
         </ul>
       </section>
 
-      <div *ngIf="file.type.startsWith('image/')">
+      <div class="image-preview" *ngIf="file.type.startsWith('image/')">
         <h3>Image Preview:</h3>
         <img [src]="imagePreview" alt="Selected Image" width="300" />
       </div>
@@ -52,3 +69,4 @@
     </div>
   </div>
 </div>
+<!--</mat-dialog-content>-->

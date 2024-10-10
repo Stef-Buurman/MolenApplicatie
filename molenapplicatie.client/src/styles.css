@@ -1,12 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
-
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .cdk-overlay-pane.mat-mdc-dialog-panel {
-  max-width: 90vw !important;
-  max-height: 75vw !important; 
-  /*width: 600px;*/ 
+  max-width: 100vw !important;
+  max-height: 75vw !important;
 }
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.mat-mdc-dialog-surface {
+/*  border-radius:
+  2px
+  2px
+  var(--mdc-dialog-container-shape, var(--mat-app-corner-extra-large, 4px))
+  var(--mdc-dialog-container-shape, var(--mat-app-corner-extra-large, 4px)) !important;*/
+  /*var(--mdc-dialog-container-shape, var(--mat-app-corner-extra-large, 4px))*/
+}

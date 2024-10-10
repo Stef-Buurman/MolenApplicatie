@@ -16,6 +16,7 @@ export class MolenDataClass implements MolenData {
   north: number;
   east: number;
   lastUpdated: Date;
+  addedImages?: Uint8Array[];
   image?: Uint8Array;
 
   constructor(
@@ -33,6 +34,7 @@ export class MolenDataClass implements MolenData {
     herbouwd_jaar?: string,
     bouwjaarStart?: number,
     bouwjaarEinde?: number,
+    addedImages?: Uint8Array[],
     image?: Uint8Array
   ) {
     this.id = id;
@@ -49,6 +51,7 @@ export class MolenDataClass implements MolenData {
     this.north = north;
     this.east = east;
     this.lastUpdated = lastUpdated;
+    this.addedImages = addedImages;
     this.image = image;
   }
 

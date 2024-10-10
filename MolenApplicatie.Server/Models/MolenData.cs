@@ -20,6 +20,9 @@ namespace MolenApplicatie.Server.Models
         public byte[] Image { get; set; }
         [Ignore]
         public List<MolenType> ModelType { get; set; } = new List<MolenType>();
+
+        [Ignore]
+        public List<byte[]> AddedImages { get; set; } = new List<byte[]>();
         public double North { get; set; }
         public double East { get; set; }
         public DateTime LastUpdated { get; set; }
