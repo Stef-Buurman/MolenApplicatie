@@ -26,6 +26,7 @@ export class MolenDialogComponent {
   ngOnInit(): void {
     this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe(
       (result) => {
+        console.log(result);
         this.molen = result;
         if (this.molen == undefined) this.onClose();
       },
@@ -98,7 +99,7 @@ export class MolenDialogComponent {
         AllImages.push(this.molen.image);
       }
       if (this.molen.addedImages && this.molen.addedImages.length > 0) {
-        AllImages.concat(this.molen.addedImages);
+        AllImages = AllImages.concat(this.molen.addedImages);
       }
     }
     return AllImages.map(x => this.getImage(x));

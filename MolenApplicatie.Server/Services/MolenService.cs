@@ -335,7 +335,7 @@ namespace MolenApplicatie.Server.Services
 
             if (Directory.Exists($"{MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}"))
             {
-                string[] imageFiles = Directory.GetFiles(MolenAddedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
+                string[] imageFiles = Directory.GetFiles($"{MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}", "*.*", SearchOption.TopDirectoryOnly)
                                                .Where(file => file.ToLower().EndsWith(".jpg") ||
                                                               file.ToLower().EndsWith(".jpeg") ||
                                                               file.ToLower().EndsWith(".png"))
@@ -398,6 +398,10 @@ namespace MolenApplicatie.Server.Services
             using (var memoryStream = new MemoryStream())
             {
                 var fileExtension = Path.GetExtension(file.FileName);
+                if (fileExtension == null ||
+                    (fileExtension.ToLower() != ".jpg"
+                    && fileExtension.ToLower() != ".jpeg" 
+                    && fileExtension.ToLower() != ".png")) return null;
                 await file.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
 

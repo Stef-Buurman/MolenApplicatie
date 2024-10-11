@@ -3,8 +3,8 @@
     <img [src]="selectedImage" alt="Selected Image" />
   </div>
   <div class="thumbnail-container">
-    <div class="thumbnail"
-         *ngFor="let image of images"
+    <div *ngFor="let image of images"
+         class="{{isSelectedImage(image) ? 'thumbnail selected' : 'thumbnail'}}"
          (click)="changeImage(image)">
       <img [src]="image" alt="Thumbnail" />
     </div>
