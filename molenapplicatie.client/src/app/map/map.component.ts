@@ -1,11 +1,9 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import * as L from 'leaflet';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { MatDialog } from '@angular/material/dialog';
 import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
-
-import * as L from 'leaflet';
-import 'leaflet.markercluster';
 
 @Component({
   selector: 'app-map',
@@ -20,7 +18,7 @@ export class MapComponent {
 
   getMolens(): void {
     this.http.get<MolenDataClass[]>('/api/all_molen_locations').subscribe(
-      (result) => {
+      async (result) => {
         this.molens = result;
         this.initMap();
       },
@@ -34,54 +32,28 @@ export class MapComponent {
     this.getMolens();
   }
 
-  //private initMap(): void {
-  //  const map = L.map('map').setView([52, 4.4], 10);
-
-  //  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  //    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  //  }).addTo(map);
-  //  const customIcon = L.icon({
-  //    iconUrl: 'Assets/Icons/grondzeiler.png',
-  //    iconSize: [32, 32],
-  //    iconAnchor: [16, 32],
-  //    popupAnchor: [0, -32]
-  //  });
-
-  //  this.molens.forEach(molen => {
-  //    const marker = L.marker([molen.north, molen.east], { icon: customIcon })
-  //      .addTo(map);
-  //    marker.on('click', () => {
-  //      this.onMarkerClick(molen.ten_Brugge_Nr);
-  //    });
-  //  });
-  //}
-
   private initMap(): void {
-    const map = L.map('map').setView([52, 4.4], 10);
+    const map = L.map('map');
+    map.setView([52, 4.4], 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-
     const customIcon = L.icon({
       iconUrl: 'Assets/Icons/grondzeiler.png',
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32]
     });
-
-    const markerCluster = L.markerClusterGroup();
-
     this.molens.forEach(molen => {
-      const marker = L.marker([molen.north, molen.east], { icon: customIcon });
-      marker.on('click', () => {
-        this.onMarkerClick(molen.ten_Brugge_Nr);
-      });
-
-      markerCluster.addLayer(marker);
+      if (map) {
+        const marker = L.marker([molen.north, molen.east], { icon: customIcon })
+          .addTo(map);
+        marker.on('click', () => {
+          this.onMarkerClick(molen.ten_Brugge_Nr);
+        });
+      }
     });
-
-    map.addLayer(markerCluster);
   }
 
   private onMarkerClick(tenBruggeNr: any): void {

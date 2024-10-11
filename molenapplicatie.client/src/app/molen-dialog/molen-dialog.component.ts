@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
-import { DomSanitizer } from '@angular/platform-browser';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -40,7 +40,7 @@ export class MolenDialogComponent {
     this.dialogRef.close();
   }
 
-  getImage(data: Uint8Array): any {
+  getImage(data: Uint8Array): SafeUrl {
     let objectURL = 'data:image/png;base64,' + data;
     return this.sanitizer.bypassSecurityTrustUrl(objectURL);
   }
@@ -91,21 +91,16 @@ export class MolenDialogComponent {
     this.dialogRef.close();
   }
 
-
-  //onSubmit(): void {
-  //  if (this.file && this.file.length > 0) {
-  //    const formData = new FormData();
-
-  //    this.file.forEach((file) => {
-  //      formData.append('files[]', file, file.name);
-  //    });
-
-  //    this.http.post('https://www.primefaces.org/cdn/api/upload.php', formData)
-  //      .subscribe(response => {
-  //        console.log('Upload success', response);
-  //      }, error => {
-  //        console.error('Upload failed', error);
-  //      });
-  //  }
-  //}
+  getAllMolenImages(): SafeUrl[] {
+    var AllImages: Uint8Array[] = [];
+    if (this.molen) {
+      if (this.molen.image) {
+        AllImages.push(this.molen.image);
+      }
+      if (this.molen.addedImages && this.molen.addedImages.length > 0) {
+        AllImages.concat(this.molen.addedImages);
+      }
+    }
+    return AllImages.map(x => this.getImage(x));
+  }
 }

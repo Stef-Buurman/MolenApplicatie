@@ -6,7 +6,7 @@
 }
 
 .molenImage {
-  border-radius: var(--mdc-dialog-container-shape, var(--mat-app-corner-extra-large, 4px));
+  border-radius: 20px;
 }
 
 .container {
@@ -32,7 +32,7 @@
 
 .molenImage {
   max-width: 100%;
-  height: 75%;
+  max-height: 75%;
 }
 
 .image-selector {

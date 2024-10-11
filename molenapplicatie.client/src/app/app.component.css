@@ -1,5 +1,8 @@
-.container {
+.container, header {
   margin: auto;
   width: 80%;
+}
+.container {
   height: 80vh;
 }
+

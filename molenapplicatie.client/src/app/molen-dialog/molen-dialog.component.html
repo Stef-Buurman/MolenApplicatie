@@ -6,18 +6,19 @@
 <div class="container" *ngIf="molen">
   <div class="data-left">
     <!--<section class="slider_container">
-      <section class="slider">
-        <div class="slide one" *ngIf="molen.image">
-          <img [src]="getImage(molen.image)" alt="" />
-          <span class="caption"> slide one </span>
-        </div>-->
+    <section class="slider">
+      <div class="slide one" *ngIf="molen.image">
+        <img [src]="getImage(molen.image)" alt="" />
+        <span class="caption"> slide one </span>
+      </div>-->
     <!--<div class="slide two" *ngFor="let image of molen.addedImages">
-      <img [src]="getImage(image)" alt="" />
-      <span class="caption"> slide two </span>
-    </div>-->
+    <img [src]="getImage(image)" alt="" />
+    <span class="caption"> slide two </span>
+  </div>-->
     <!--</section>
-    </section>-->
-    <img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />
+  </section>-->
+    <!--<img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />-->
+    <app-image-selector [images]="getAllMolenImages()"></app-image-selector>
   </div>
   <div class="molen-data">
     <p><strong>Type:</strong> {{ molen.functie }}</p>

@@ -8,12 +8,14 @@ import { AppComponent } from './app.component';
 import { MapComponent } from './map/map.component';
 import { MolenDialogComponent } from './molen-dialog/molen-dialog.component';
 import { FormsModule } from '@angular/forms';
+import { ImageSelectorComponent } from './image-selector/image-selector.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MapComponent,
-    MolenDialogComponent
+    MolenDialogComponent,
+    ImageSelectorComponent
   ],
   imports: [
     BrowserAnimationsModule,
