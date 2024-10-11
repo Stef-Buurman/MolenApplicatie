@@ -1,0 +1,12 @@
+<div class="image-selector">
+  <div class="main-image">
+    <img [src]="selectedImage" alt="Selected Image" />
+  </div>
+  <div class="thumbnail-container">
+    <div class="thumbnail"
+         *ngFor="let image of images"
+         (click)="changeImage(image)">
+      <img [src]="image" alt="Thumbnail" />
+    </div>
+  </div>
+</div>
