@@ -207,6 +207,10 @@ namespace MolenApplicatie.Server.Services
                         {
                             var imageResponse = await _client.GetAsync(src);
                             newMolenData.Image = await imageResponse.Content.ReadAsByteArrayAsync();
+                            if (!Directory.Exists(MolenImagesFolder))
+                            {
+                                Directory.CreateDirectory(MolenImagesFolder);
+                            }
                             if (!File.Exists($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}"))
                             {
                                 File.WriteAllBytes($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Image);
