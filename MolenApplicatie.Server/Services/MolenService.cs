@@ -10,9 +10,12 @@ namespace MolenApplicatie.Server.Services
 {
     public class MolenService
     {
+        private readonly string MolenImagesFolder = "MolenImages";
+        private readonly string MolenAddedImagesFolder = "MolenAddedImages";
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
+        private List<string> allowedTypes = new List<string>();
 
         private readonly SQLiteAsyncConnection _db;
 
@@ -28,7 +31,6 @@ namespace MolenApplicatie.Server.Services
             await _db.CreateTableAsync<MolenTBN>();
             await _db.CreateTableAsync<MolenData>();
             await _db.CreateTableAsync<MolenType>();
-            await _db.CreateTableAsync<MolenImage>();
             await _db.CreateTableAsync<MolenTypeAssociation>();
             return 1;
         }
@@ -40,9 +42,11 @@ namespace MolenApplicatie.Server.Services
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> Data = new List<MolenData>();
             List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>().ToListAsync();
+            allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
             foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
             {
                 var x = await GetMolenDataByTBNumber(Ten_Brugge_Nr.Ten_Brugge_Nr);
+                if (x.Item1 == null) continue;
                 Data.Add(x.Item1);
                 keyValuePairs.Add(x.Item2);
                 Console.WriteLine(Ten_Brugge_Nr.Id);
@@ -83,7 +87,6 @@ namespace MolenApplicatie.Server.Services
                         var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
                         if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
                         {
-                            //Console.WriteLine($"{dt}: {dd}");
                             switch (dt.ToLower())
                             {
                                 case "geo positie":
@@ -169,17 +172,20 @@ namespace MolenApplicatie.Server.Services
                                 foreach (string type in dd.Split(','))
                                 {
                                     var molenType = new MolenType() { Name = type.Trim() };
-                                    if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0)
+                                    if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && allowedTypes.Contains(molenType.Name.ToLower()))
                                     {
                                         await _db.InsertAsync(molenType);
                                         molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                                         NewAddedTypes.Add(molenType);
                                         newMolenData.ModelType.Add(molenType);
                                     }
-                                    else if (newMolenData.ModelType.Find(x => x.Name == molenType.Name) == null)
+                                    else
                                     {
-                                        molenType = MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).First();
-                                        newMolenData.ModelType.Add(molenType);
+                                        var existingType = MolenTypes.Concat(NewAddedTypes).FirstOrDefault(x => x.Name == molenType.Name);
+                                        if (existingType != null && newMolenData.ModelType.Find(x => x.Name == existingType.Name) == null)
+                                        {
+                                            newMolenData.ModelType.Add(existingType);
+                                        }
                                     }
                                 }
                                 NewAddedTypes.AddRange(newMolenData.ModelType);
@@ -189,6 +195,11 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
+                    if (!allowedTypes.Any(x => newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower()) && newMolenData.ModelType.Count > 0))
+                    {
+                        return (null, null);
+                    }
+
                     if (Image != null)
                     {
                         var src = Image.First().GetAttributeValue("src", string.Empty);
@@ -196,6 +207,14 @@ namespace MolenApplicatie.Server.Services
                         {
                             var imageResponse = await _client.GetAsync(src);
                             newMolenData.Image = await imageResponse.Content.ReadAsByteArrayAsync();
+                            if (!File.Exists($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}"))
+                            {
+                                File.WriteAllBytes($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Image);
+                            }
+                            else if (File.ReadAllBytes($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg").Length != newMolenData.Image.Length)
+                            {
+                                File.WriteAllBytes($"{MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Image);
+                            }
                         }
                     }
 
@@ -208,6 +227,7 @@ namespace MolenApplicatie.Server.Services
                     {
                         await _db.UpdateAsync(newMolenData);
                     }
+
 
                     var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
                         "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
@@ -303,8 +323,26 @@ namespace MolenApplicatie.Server.Services
         {
             molen.ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { molen.Id });
-            var allImages = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE MolenDataId = ?", new object[] { molen.Id });
-            molen.AddedImages = allImages.Select(x => x.Image).ToList();
+
+            if (File.Exists($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg"))
+            {
+                molen.Image = await File.ReadAllBytesAsync($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg");
+            }
+
+            if (Directory.Exists($"{MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}"))
+            {
+                string[] imageFiles = Directory.GetFiles(MolenAddedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
+                                               .Where(file => file.ToLower().EndsWith(".jpg") ||
+                                                              file.ToLower().EndsWith(".jpeg") ||
+                                                              file.ToLower().EndsWith(".png"))
+                                               .ToArray();
+
+                foreach (string imageFile in imageFiles)
+                {
+                    byte[] imageBytes = File.ReadAllBytes(imageFile);
+                    molen.AddedImages.Add(imageBytes);
+                }
+            }
             return molen;
         }
 
@@ -355,21 +393,48 @@ namespace MolenApplicatie.Server.Services
         {
             using (var memoryStream = new MemoryStream())
             {
+                var fileExtension = Path.GetExtension(file.FileName);
                 await file.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
 
-                // Create an instance of MolenImage
-                var molenImage = new MolenImage
-                {
-                    MolenTBN = TBN,
-                    MolenDataId = id,
-                    Image = imageBytes
-                };
+                string folderName = $"MolenAddedImages/{TBN}";
 
-                // Save to the database
-                await _db.InsertAsync(molenImage);
+                if (!Directory.Exists(folderName))
+                {
+                    Directory.CreateDirectory(folderName);
+                }
+                var FileDirectory = $"{folderName}/{Guid.NewGuid()}.{fileExtension}";
+                while (File.Exists(FileDirectory))
+                {
+                    FileDirectory = $"{folderName}/{Guid.NewGuid()}.{fileExtension}";
+                }
+                File.WriteAllBytes(FileDirectory, imageBytes);
             }
             return file;
         }
+
+
+        //public async Task SaveImagesToFolder()
+        //{
+        //    List<MolenData> molens = await _db.Table<MolenData>().ToListAsync();
+        //    if (!Directory.Exists(MolenImagesFolder))
+        //    {
+        //        Directory.CreateDirectory(MolenImagesFolder);
+        //    }
+        //    foreach (var molen in molens)
+        //    {
+        //        if (molen.Ten_Brugge_Nr != null && molen.Image != null)
+        //        {
+        //            if (!File.Exists($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg"))
+        //            {
+        //                File.WriteAllBytes($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg", molen.Image);
+        //            }
+        //            else if (File.ReadAllBytes($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg").Length != molen.Image.Length)
+        //            {
+        //                File.WriteAllBytes($"{MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg", molen.Image);
+        //            }
+        //        }
+        //    }
+        //}
     }
 }
