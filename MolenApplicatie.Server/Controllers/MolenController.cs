@@ -36,9 +36,16 @@ namespace MolenApplicatie.Server.Controllers
                 return BadRequest("No image provided");
 
             MolenData molen = await _readMolenDataService.GetMolenByTBN(tbNumber);
+            if (molen == null) return NotFound("Molen not found");
             IFormFile savedImage = await _readMolenDataService.SaveMolenImage(molen.Id, tbNumber, image);
 
             return Ok(new { File = savedImage });
+        }
+
+        [HttpGet("get_all_molen_data")]
+        public async Task<IActionResult> GetAllMolenData()
+        {
+            return Ok(await _readMolenDataService.GetAllMolenData());
         }
     }
 }
