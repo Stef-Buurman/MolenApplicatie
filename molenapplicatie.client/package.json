@@ -25,6 +25,7 @@
     "@angular/router": "^18.2.0",
     "jest-editor-support": "*",
     "leaflet": "^1.9.4",
+    "ngx-toastr": "^19.0.0",
     "run-script-os": "*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
