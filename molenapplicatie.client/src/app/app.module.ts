@@ -9,13 +9,16 @@ import { MapComponent } from './map/map.component';
 import { MolenDialogComponent } from './molen-dialog/molen-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { ImageSelectorComponent } from './image-selector/image-selector.component';
+import { ImageDialogComponent } from './image-dialog/image-dialog.component';
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
     AppComponent,
     MapComponent,
     MolenDialogComponent,
-    ImageSelectorComponent
+    ImageSelectorComponent,
+    ImageDialogComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -23,7 +26,8 @@ import { ImageSelectorComponent } from './image-selector/image-selector.componen
     HttpClientModule,
     AppRoutingModule,
     MatDialogModule,
-    FormsModule
+    FormsModule,
+    ToastrModule.forRoot(),
   ],
   providers: [],
   bootstrap: [AppComponent]
