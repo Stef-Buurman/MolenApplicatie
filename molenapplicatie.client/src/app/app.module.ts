@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ImageSelectorComponent } from './image-selector/image-selector.component';
 import { ImageDialogComponent } from './image-dialog/image-dialog.component';
 import { ToastrModule } from 'ngx-toastr';
+import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { ToastrModule } from 'ngx-toastr';
     MapComponent,
     MolenDialogComponent,
     ImageSelectorComponent,
-    ImageDialogComponent
+    ImageDialogComponent,
+    ConfirmationDialogComponent
   ],
   imports: [
     BrowserAnimationsModule,

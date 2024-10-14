@@ -1,8 +1,13 @@
 <div class="selectedImage">
   <img [src]="data.selectedImage.image" alt="Alternate Text" />
   <div class="button-container">
-    <input type="text" name="password" value="" />
-    <button (click)="deleteImage()">Delete</button>
-    <a [href]="data.selectedImage.image" download="{{data.selectedImage.name}}.jpg">Download Image</a>
+    <div class="image-buttons">
+      <button class="btn deleteButton" (click)="openDeleteDialog()"><i class="fas fa-trash"></i> Delete</button>
+      <button class="btn download_btn" click="downloadImage()"><i class="fa fa-download"></i> Download</button>
+    </div>
+    <div>
+      <button>X</button>
+    </div>
+      <!--<a [href]="data.selectedImage.image" class="btn download_btn" download="{{data.selectedImage.name}}.jpg"><i class="fa fa-download"></i> Download</a>-->
   </div>
 </div>

@@ -7,6 +7,45 @@
     height:100%;
 }
 .button-container {
-  background-color:white;
-  height:fit-content;
+  border-radius: 0 30px 30px 0;
+  background-color: white;
+  height: fit-content;
+  background-color:transparent;
+  display:flex;
+}
+
+.image-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.deleteButton {
+  color: #eee;
+  padding: 7px 13px;
+  border: none;
+  border-radius: 1px;
+  background-color: red;
+  border-radius: 0 30px 0 0;
+}
+
+.deleteButton:hover {
+  background-color: darkred;
+}
+
+.btn {
+  border: none;
+  color: white;
+  width:100%;
+  padding: 24px 60px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.download_btn {
+  border-radius: 0 0 30px 0;
+  background-color: DodgerBlue;
+}
+
+.download_btn:hover {
+  background-color: RoyalBlue;
 }
