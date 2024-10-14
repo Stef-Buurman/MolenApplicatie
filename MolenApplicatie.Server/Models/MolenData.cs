@@ -1,5 +1,6 @@
 ﻿using SQLite;
 using Reinforced.Typings.Attributes;
+using MolenApplicatie.Models;
 
 namespace MolenApplicatie.Server.Models
 {
@@ -18,12 +19,12 @@ namespace MolenApplicatie.Server.Models
         public string Plaats { get; set; }
         public string Adres { get; set; }
         [Ignore]
-        public byte[] Image { get; set; }
+        public MolenImage Image { get; set; }
         [Ignore]
         public List<MolenType> ModelType { get; set; } = new List<MolenType>();
 
         [Ignore]
-        public List<byte[]> AddedImages { get; set; } = new List<byte[]>();
+        public List<MolenImage> AddedImages { get; set; } = new List<MolenImage>();
         public double North { get; set; }
         public double East { get; set; }
         public DateTime LastUpdated { get; set; }

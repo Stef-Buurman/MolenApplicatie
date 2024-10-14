@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http.Features;
 using MolenApplicatie.Server.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Environment.WebRootPath = "/var/www/app/wwwroot";
@@ -8,6 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<MolenService>();
+builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
