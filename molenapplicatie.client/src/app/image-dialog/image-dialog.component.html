@@ -1,0 +1,8 @@
+<div class="selectedImage">
+  <img [src]="data.selectedImage.image" alt="Alternate Text" />
+  <div class="button-container">
+    <input type="text" name="password" value="" />
+    <button (click)="deleteImage()">Delete</button>
+    <a [href]="data.selectedImage.image" download="{{data.selectedImage.name}}.jpg">Download Image</a>
+  </div>
+</div>

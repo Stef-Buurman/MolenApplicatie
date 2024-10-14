@@ -1,0 +1,12 @@
+.selectedImage {
+  height: 95vh;
+  overflow: hidden;
+  display: flex;
+}
+.selectedImage img{
+    height:100%;
+}
+.button-container {
+  background-color:white;
+  height:fit-content;
+}
