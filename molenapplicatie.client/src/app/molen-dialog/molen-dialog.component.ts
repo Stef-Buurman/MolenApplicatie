@@ -3,6 +3,10 @@ import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { GetSafeUrl } from '../../Utils/GetSafeUrl';
+import { MolenImage } from '../../Class/MolenImage';
+import { Toasts } from '../../Utils/Toasts';
+import { MolenData } from '../../Interfaces/MolenData';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -19,31 +23,28 @@ export class MolenDialogComponent {
   constructor(
     private sanitizer: DomSanitizer,
     private http: HttpClient,
+    private toasts: Toasts,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string }
   ) { }
 
   ngOnInit(): void {
-    this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe(
-      (result) => {
+    this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe({
+      next: (result) => {
         console.log(result);
         this.molen = result;
         if (this.molen == undefined) this.onClose();
       },
-      (error) => {
+      error: (error) => {
         console.error(error);
+        this.toasts.showError(error.message, error.status);
         this.onClose();
       }
-    );
+    });
   }
 
   onClose(): void {
     this.dialogRef.close();
-  }
-
-  getImage(data: Uint8Array): SafeUrl {
-    let objectURL = 'data:image/png;base64,' + data;
-    return this.sanitizer.bypassSecurityTrustUrl(objectURL);
   }
 
   removeImg(): void {
@@ -75,14 +76,19 @@ export class MolenDialogComponent {
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
 
-      this.http.post('/api/upload_image/' + this.molen.ten_Brugge_Nr, formData, { headers })
+      this.http.post<MolenData>(`/api/upload_image/${this.molen.ten_Brugge_Nr}`, formData, { headers })
         .subscribe({
-          next: (response) => {
-            this.removeImg();
-            this.status = "success";
+          next: (molen: MolenData) => {
+            this.molen = molen;
           },
           error: (error) => {
             this.status = "fail";
+            console.log(error);
+            this.toasts.showError(error.message, error.status);
+          },
+          complete: () => {
+            this.removeImg();
+            this.toasts.showSuccess("Image is saved successfully!");
           }
         });
     }
@@ -92,8 +98,8 @@ export class MolenDialogComponent {
     this.dialogRef.close();
   }
 
-  getAllMolenImages(): SafeUrl[] {
-    var AllImages: Uint8Array[] = [];
+  getAllMolenImages(): MolenImage[] {
+    var AllImages: MolenImage[] = [];
     if (this.molen) {
       if (this.molen.image) {
         AllImages.push(this.molen.image);
@@ -102,6 +108,6 @@ export class MolenDialogComponent {
         AllImages = AllImages.concat(this.molen.addedImages);
       }
     }
-    return AllImages.map(x => this.getImage(x));
+    return AllImages;
   }
 }

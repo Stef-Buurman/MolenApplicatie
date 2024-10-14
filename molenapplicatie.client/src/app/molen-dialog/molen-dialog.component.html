@@ -2,23 +2,10 @@
   <span *ngIf="molen">{{ molen.name }}</span>
   <button (click)="closeDialog()">X</button>
 </section>
-<!--<mat-dialog-content>-->
 <div class="container" *ngIf="molen">
   <div class="data-left">
-    <!--<section class="slider_container">
-    <section class="slider">
-      <div class="slide one" *ngIf="molen.image">
-        <img [src]="getImage(molen.image)" alt="" />
-        <span class="caption"> slide one </span>
-      </div>-->
-    <!--<div class="slide two" *ngFor="let image of molen.addedImages">
-    <img [src]="getImage(image)" alt="" />
-    <span class="caption"> slide two </span>
-  </div>-->
-    <!--</section>
-  </section>-->
-    <!--<img class="molenImage" *ngIf="molen.image" [src]="getImage(molen.image)" alt="{{ molen.name }}" />-->
-    <app-image-selector [images]="getAllMolenImages()"></app-image-selector>
+    <app-image-selector [images]="getAllMolenImages()"
+                        [tbNr]="molen.ten_Brugge_Nr"></app-image-selector>
   </div>
   <div class="molen-data">
     <p><strong>Type:</strong> {{ molen.functie }}</p>
@@ -31,7 +18,7 @@
       <strong>Herbouwd:</strong> {{molen.herbouwd_jaar}}
     </p>
 
-    <h6>Model Types:</h6>
+    <strong>Model Types:</strong>
     <ul>
       <li *ngFor="let model of molen.modelType">
         {{ model.name }}
@@ -62,8 +49,8 @@
       <span>API Key: <input matInput type="text" name="password" [(ngModel)]="APIKey" /></span>
       <button (click)="onSubmit()">Upload the file</button>
     </div>
-    <div>
-      <section *ngIf="status == 'success' || file" [ngSwitch]="status">
+    <div *ngIf="file">
+      <section [ngSwitch]="status">
         <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>
         <p *ngSwitchCase="'success'">✅ Done!</p>
         <p *ngSwitchCase="'fail'">❌ Error!</p>
@@ -72,4 +59,3 @@
     </div>
   </div>
 </div>
-<!--</mat-dialog-content>-->
