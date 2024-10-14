@@ -1,11 +1,19 @@
 <section class="header">
   <span *ngIf="molen">{{ molen.name }}</span>
-  <button (click)="closeDialog()">X</button>
+  <div (click)="onClose()" class="container-close-btn">
+
+    <div class="circle">
+      <div class="line one"></div>
+      <div class="line two"></div>
+    </div>
+
+  </div>
 </section>
 <div class="container" *ngIf="molen">
   <div class="data-left">
     <app-image-selector [images]="getAllMolenImages()"
-                        [tbNr]="molen.ten_Brugge_Nr"></app-image-selector>
+                        [tbNr]="molen.ten_Brugge_Nr">
+    </app-image-selector>
   </div>
   <div class="molen-data">
     <p><strong>Type:</strong> {{ molen.functie }}</p>
@@ -28,7 +36,11 @@
   <div class="data-right">
     <h4>Upload de foto hier.</h4>
 
-    <input *ngIf="!file" type="file" accept="image/*" class="file-input" (change)="onFileSelected($event)" #fileUpload />
+    <div *ngIf="!file" class="file-input-container">
+      <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload/>
+      <label for="fileInput" class="file-label">Choose File</label>
+    </div>
+
 
     <div *ngIf="file">
       <section class="file-info">

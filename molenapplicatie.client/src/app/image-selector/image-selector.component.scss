@@ -12,18 +12,16 @@
 .main-image img {
   width: 100%;
   height: auto;
-  max-height: 85vh;
+  max-height: 75vh;
   padding:2px;
   cursor:pointer;
 }
 
-  .main-image img:hover {
-    /*  border: 2px solid gray;*/
-    border: 1px solid transparent; /* Optional: for an inner border */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* X-offset, Y-offset, blur-radius, spread-radius, color */
-    /*padding: 10px;*/
-    padding: 1px;
-  }
+.main-image img:hover {
+  border: 1px solid transparent;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  padding: 1px;
+}
 
 .thumbnail-container {
   display: flex;

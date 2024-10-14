@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MolenImage } from '../../Class/MolenImage';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
+import { Toasts } from '../../Utils/Toasts';
 
 @Component({
   selector: 'app-confirmation-dialog',
@@ -14,9 +15,11 @@ export class ConfirmationDialogComponent {
   public APIKey: string = "";
   constructor(@Inject(MAT_DIALOG_DATA) public data: ConfirmationDialogData,
     private dialogRef: MatDialogRef<ImageDialogComponent>,
+    private toasts: Toasts,
     private http: HttpClient) { }
 
   onClose(isSure: boolean): void {
+    if (!isSure) this.toasts.showInfo("Er is niets veranderd!");
     this.dialogRef.close(isSure);
   }
 

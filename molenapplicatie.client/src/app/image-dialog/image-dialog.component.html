@@ -6,8 +6,14 @@
       <button class="btn download_btn" click="downloadImage()"><i class="fa fa-download"></i> Download</button>
     </div>
     <div>
-      <button>X</button>
+      <div (click)="onClose()" class="container-close-btn">
+
+        <div class="circle">
+          <div class="line one"></div>
+          <div class="line two"></div>
+        </div>
+
+      </div>
     </div>
-      <!--<a [href]="data.selectedImage.image" class="btn download_btn" download="{{data.selectedImage.name}}.jpg"><i class="fa fa-download"></i> Download</a>-->
   </div>
 </div>

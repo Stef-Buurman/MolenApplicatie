@@ -26,10 +26,9 @@ export class ImageDialogComponent {
       data:{
         title: 'Delete image',
         message: 'Are you sure you want to delete this image?',
-        api_key_usage: true,
+        api_key_usage: false,
         onConfirm: () => this.deleteImage()
-      } as ConfirmationDialogData,
-      panelClass: 'selected-image'
+      } as ConfirmationDialogData
     });
   }
 
