@@ -1,4 +1,5 @@
 import { MolenData } from "../Interfaces/MolenData";
+import { MolenImage } from "./MolenImage";
 import { MolenType } from "./MolenType";
 
 export class MolenDataClass implements MolenData {
@@ -16,8 +17,8 @@ export class MolenDataClass implements MolenData {
   north: number;
   east: number;
   lastUpdated: Date;
-  addedImages?: Uint8Array[];
-  image?: Uint8Array;
+  addedImages?: MolenImage[];
+  image?: MolenImage;
 
   constructor(
     id: number,
@@ -34,8 +35,8 @@ export class MolenDataClass implements MolenData {
     herbouwd_jaar?: string,
     bouwjaarStart?: number,
     bouwjaarEinde?: number,
-    addedImages?: Uint8Array[],
-    image?: Uint8Array
+    addedImages?: MolenImage[],
+    image?: MolenImage
   ) {
     this.id = id;
     this.name = name;
@@ -67,12 +68,5 @@ export class MolenDataClass implements MolenData {
     } else {
       return "Onbekend";
     }
-  }
-
-  get imageBase64(): string {
-    if (this.image) {
-      return `data:image/jpeg;base64,${btoa(String.fromCharCode(...this.image))}`;
-    }
-    return '';
   }
 }

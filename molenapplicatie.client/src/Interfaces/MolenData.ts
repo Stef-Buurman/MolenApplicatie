@@ -1,3 +1,4 @@
+import { MolenImage } from "../Class/MolenImage";
 import { MolenType } from "../Class/MolenType";
 
 export interface MolenData {
@@ -15,7 +16,8 @@ export interface MolenData {
   north: number;
   east: number;
   lastUpdated: Date;
-  image?: Uint8Array;
+  image?: MolenImage;
+  addedImages?: MolenImage[];
 
   getBouwjaar(): string;
 }
