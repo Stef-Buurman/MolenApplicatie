@@ -1,12 +1,12 @@
 <div class="image-selector">
-  <div class="main-image">
-    <img [src]="selectedImage" alt="Selected Image" />
+  <div class="main-image" (click)="openImage()" *ngIf="selectedImage">
+    <img [src]="getSafeUrl(selectedImage.name)" alt="Selected Image" />
   </div>
   <div class="thumbnail-container">
     <div *ngFor="let image of images"
          class="{{isSelectedImage(image) ? 'thumbnail selected' : 'thumbnail'}}"
-         (click)="changeImage(image)">
-      <img [src]="image" alt="Thumbnail" />
+         (click)="changeImage(image.name)">
+      <img [src]="getSafeUrl(image.name)" alt="Thumbnail" />
     </div>
   </div>
 </div>
