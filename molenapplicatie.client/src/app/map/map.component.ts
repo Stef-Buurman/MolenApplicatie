@@ -9,7 +9,7 @@ import { Toasts } from '../../Utils/Toasts';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
-  styleUrl: './map.component.css'
+  styleUrl: './map.component.scss'
 })
 export class MapComponent {
   molens: MolenDataClass[] = [];

@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';import { Toasts } from '../../
 @Component({
   selector: 'app-image-selector',
   templateUrl: './image-selector.component.html',
-  styleUrl: './image-selector.component.css'
+  styleUrl: './image-selector.component.scss'
 })
 export class ImageSelectorComponent {
   @Input() images: MolenImage[] = [];

@@ -8,7 +8,7 @@ import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData'
 @Component({
   selector: 'app-confirmation-dialog',
   templateUrl: './confirmation-dialog.component.html',
-  styleUrl: './confirmation-dialog.component.css'
+  styleUrl: './confirmation-dialog.component.scss'
 })
 export class ConfirmationDialogComponent {
   public APIKey: string = "";

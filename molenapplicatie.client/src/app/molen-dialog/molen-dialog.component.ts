@@ -11,7 +11,7 @@ import { MolenData } from '../../Interfaces/MolenData';
 @Component({
   selector: 'app-molen-dialog',
   templateUrl: './molen-dialog.component.html',
-  styleUrl: './molen-dialog.component.css'
+  styleUrl: './molen-dialog.component.scss'
 })
 export class MolenDialogComponent {
   public molen?: MolenDataClass;
