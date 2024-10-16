@@ -46,6 +46,7 @@ namespace MolenApplicatie.Server.Services
             allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
             foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
             {
+                Thread.Sleep(1000);
                 var x = await GetMolenDataByTBNumber(Ten_Brugge_Nr.Ten_Brugge_Nr);
                 if (x.Item1 == null) continue;
                 Data.Add(x.Item1);
@@ -67,7 +68,6 @@ namespace MolenApplicatie.Server.Services
             List<MolenType> NewAddedTypes = new List<MolenType>();
             try
             {
-                Thread.Sleep(1000);
                 HttpResponseMessage response = await _client.GetAsync(baseUrl + Ten_Brugge_Nr);
                 response.EnsureSuccessStatusCode();
 
@@ -338,6 +338,40 @@ namespace MolenApplicatie.Server.Services
                 }
             }
             return await _db.Table<MolenTBN>().ToListAsync();
+        }
+
+        public async Task<(List<MolenData> MolenData, bool isDone)> UpdateDataOfLastUpdatedMolens()
+        {
+            MolenData newestUpdateTimeMolen = await _db.FindWithQueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated DESC LIMIT 1");
+            Console.WriteLine(newestUpdateTimeMolen.Ten_Brugge_Nr);
+            if (newestUpdateTimeMolen != null && newestUpdateTimeMolen.LastUpdated >= DateTime.Now.AddHours(-1))
+            {
+                return (null, false);
+            }
+            List<MolenData> oldestUpdateTimesMolens = await _db.QueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated ASC LIMIT 50");
+            foreach (var molen in oldestUpdateTimesMolens)
+            {
+                var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr);
+                MolenData newMolenData = result.Item1;
+                if (newMolenData != null)
+                {
+                    molen.Name = newMolenData.Name;
+                    molen.Bouwjaar = newMolenData.Bouwjaar;
+                    molen.Bouwjaar_start = newMolenData.Bouwjaar_start;
+                    molen.Bouwjaar_einde = newMolenData.Bouwjaar_einde;
+                    molen.Herbouwd_jaar = newMolenData.Herbouwd_jaar;
+                    molen.Functie = newMolenData.Functie;
+                    molen.Plaats = newMolenData.Plaats;
+                    molen.Adres = newMolenData.Adres;
+                    molen.Image = newMolenData.Image;
+                    molen.ModelType = newMolenData.ModelType;
+                    molen.North = newMolenData.North;
+                    molen.East = newMolenData.East;
+                    molen.LastUpdated = newMolenData.LastUpdated;
+                    await _db.UpdateAsync(molen);
+                }
+            }
+            return (oldestUpdateTimesMolens, true);
         }
     }
 }

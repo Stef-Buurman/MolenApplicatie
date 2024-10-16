@@ -64,5 +64,16 @@ namespace MolenApplicatie.Server.Controllers
                 return BadRequest(new { message = result.message });
             }
         }
+
+        [HttpGet("update_oldest_molens")]
+        public async Task<IActionResult> UpdateOldestMolens()
+        {
+            var result = await _NewMolenDataService.UpdateDataOfLastUpdatedMolens();
+            if (result.isDone)
+            {
+                return Ok(result.MolenData);
+            }
+            return BadRequest("Kan niet updaten, wacht een uur en probeer het opnieuw.");
+        }
     }
 }
