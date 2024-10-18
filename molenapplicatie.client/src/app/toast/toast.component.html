@@ -1,0 +1,9 @@
+<div *ngIf="type" class="toast {{isVisible ? 'show' : ''}}" [ngClass]="type" (mouseenter)="pauseTimer()" (mouseleave)="resumeTimer()" (click)="close()">
+  <img *ngIf="type == ToastType.Error" src="Assets/Background/Buurman-en-Buurman-Error.png" alt="Alternate Text" />
+  <img *ngIf="type == ToastType.Success" src="Assets/Background/Buurman-en-Buurman-Success.png" alt="Alternate Text" />
+  <div *ngIf="title" class="information">
+    <strong>{{ title }}</strong>
+    <span>{{ message }}</span>
+  </div>
+  <span *ngIf="!title">{{ message }}</span>
+</div>

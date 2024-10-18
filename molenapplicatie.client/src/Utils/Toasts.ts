@@ -1,30 +1,65 @@
-import { ToastrService } from 'ngx-toastr';
-import { ToastLocation } from '../Enums/ToastLocation';
-import { Injectable } from '@angular/core';
+import { ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector, Renderer2, RendererFactory2, ViewContainerRef } from '@angular/core';
+import { Subject } from 'rxjs';
+import { ToastType } from '../Enums/ToastType';
+import { Toast } from '../Interfaces/Toast';
+import { BehaviorSubject } from 'rxjs';
+import { ToastComponent } from '../app/toast/toast.component';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Toasts {
-  constructor(private toastr: ToastrService) { }
+  private renderer: Renderer2;
 
-  showSuccess(message: string, title?: string, positionClass: ToastLocation = ToastLocation.BottomRight) {
-    this.toastr.success(message, title || 'Success', { positionClass });
+  constructor(
+    private rendererFactory: RendererFactory2,
+    private appRef: ApplicationRef,
+    private injector: Injector
+  ) {
+    this.renderer = this.rendererFactory.createRenderer(null, null);
   }
 
-  showError(message: string, title?: string, positionClass: ToastLocation = ToastLocation.BottomRight) {
-    this.toastr.error(message, title || 'Error', { positionClass });
+  showSuccess(message: string, title?: string) {
+    this.showToast(title || 'Success', message, ToastType.Success);
   }
 
-  showInfo(message: string, title?: string, positionClass: ToastLocation = ToastLocation.BottomRight) {
-    this.toastr.info(message, title || 'Information', { positionClass });
+  showError(message: string, title?: string) {
+    this.showToast(title || 'Error', message, ToastType.Error);
   }
 
-  showWarning(message: string, title?: string, positionClass: ToastLocation = ToastLocation.BottomRight) {
-    this.toastr.warning(message, title || 'Warning', { positionClass });
+  showInfo(message: string, title?: string) {
+    this.showToast(title || 'Informatie', message, ToastType.Info);
   }
 
-  showCustom(message: string, title: string, options: { [key: string]: any }) {
-    this.toastr.show(message, title, options);
+  showWarning(message: string, title?: string) {
+    this.showToast(title || 'Waarschuwing!', message, ToastType.Warning);
+  }
+
+  setViewContainerRef(vcr: ViewContainerRef) {
+    this.viewContainerRef = vcr;
+  }
+
+  private viewContainerRef!: ViewContainerRef;
+
+  showToast(title: string, message: string, type: ToastType, duration: number = 3000) {
+    const toastContainer = document.getElementById('toast-container');
+
+    if (!toastContainer || !this.viewContainerRef) return;
+
+    const componentRef: ComponentRef<ToastComponent> = this.viewContainerRef.createComponent(ToastComponent);
+
+    componentRef.instance.title = title;
+    componentRef.instance.message = message;
+    componentRef.instance.type = type;
+    componentRef.instance.duration = duration;
+
+    componentRef.instance.closeToast.subscribe(() => {
+      this.viewContainerRef.remove(this.viewContainerRef.indexOf(componentRef.hostView));
+    });
+
+    toastContainer.appendChild(componentRef.location.nativeElement);
+
+    // Attach the component view to the application
+    this.appRef.attachView(componentRef.hostView);
   }
 }

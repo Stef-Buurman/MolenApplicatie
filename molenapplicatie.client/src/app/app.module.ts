@@ -12,6 +12,8 @@ import { ImageSelectorComponent } from './image-selector/image-selector.componen
 import { ImageDialogComponent } from './image-dialog/image-dialog.component';
 import { ToastrModule } from 'ngx-toastr';
 import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
+import { ToastComponent } from './toast/toast.component';
+import { Toasts } from '../Utils/Toasts';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,8 @@ import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-
     MolenDialogComponent,
     ImageSelectorComponent,
     ImageDialogComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    ToastComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -29,7 +32,7 @@ import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-
     AppRoutingModule,
     MatDialogModule,
     FormsModule,
-    ToastrModule.forRoot(),
+    ToastrModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]
