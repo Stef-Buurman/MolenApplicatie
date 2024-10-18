@@ -12,8 +12,7 @@ import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData'
   styleUrl: './image-dialog.component.scss'
 })
 export class ImageDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: {
-    selectedImage: MolenImage, onDelete: (name: string) => boolean },
+  constructor(@Inject(MAT_DIALOG_DATA) public data: {selectedImage: MolenImage},
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog) { }
 
@@ -26,16 +25,17 @@ export class ImageDialogComponent {
       data:{
         title: 'Delete image',
         message: 'Are you sure you want to delete this image?',
-        api_key_usage: false,
-        onConfirm: () => this.deleteImage()
+        api_key_usage: false
       } as ConfirmationDialogData
     });
-  }
 
-  deleteImage(): void {
-    if (this.data.onDelete(this.data.selectedImage.name)) {
-      this.onClose();
-    }
+    dialogRef.afterClosed().subscribe({
+      next: (result: boolean) => {
+        if (result) {
+          this.dialogRef.close({ status: DialogReturnStatus.Deleted });
+        }
+      }
+    })
   }
 
   downloadImage() {

@@ -1,6 +1,6 @@
 <div class="image-selector">
-  <div class="main-image" (click)="openImage()" *ngIf="selectedImage">
-    <img [src]="getSafeUrl(selectedImage.name)" alt="Selected Image" />
+  <div class="main-image" *ngIf="selectedImage">
+    <img (click)="openImage()" [src]="getSafeUrl(selectedImage.name)" alt="Selected Image" />
   </div>
   <div class="thumbnail-container">
     <div *ngFor="let image of images"

@@ -25,7 +25,6 @@ export class MapComponent {
         this.initMap();
       },
       error: (error) => {
-        console.error(error);
         this.toasts.showError(error.message, error.status);
       }
     });

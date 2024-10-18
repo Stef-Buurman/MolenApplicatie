@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Inject, Input, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MolenImage } from '../../Class/MolenImage';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
@@ -11,26 +11,35 @@ import { Toasts } from '../../Utils/Toasts';
   templateUrl: './confirmation-dialog.component.html',
   styleUrl: './confirmation-dialog.component.scss'
 })
-export class ConfirmationDialogComponent {
+export class ConfirmationDialogComponent implements OnDestroy {
   public APIKey: string = "";
+  private confirmation: boolean = false;
+  private onCloseCalled: boolean = false;
   constructor(@Inject(MAT_DIALOG_DATA) public data: ConfirmationDialogData,
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private toasts: Toasts,
     private http: HttpClient) { }
 
-  onClose(isSure: boolean): void {
-    if (!isSure) this.toasts.showInfo("Er is niets veranderd!");
+  onClose(isSure: boolean | undefined = undefined): void {
+    this.onCloseCalled = true;
+
+    if (isSure == undefined) {
+      isSure = this.confirmation;
+    }
+
+    if (!isSure) {
+      this.toasts.showInfo("Er is niets veranderd!");
+    }
+
     this.dialogRef.close(isSure);
   }
 
   confirm(): void {
-    if (this.data.onConfirm != undefined) {
-      if (this.data.api_key_usage) {
-        this.data.onConfirm(this.APIKey);
-      } else {
-        this.data.onConfirm();
-      }
-    }
-    this.onClose(true);
+    this.confirmation = true;
+    this.onClose();
+  }
+
+  ngOnDestroy(): void {
+    if (!this.onCloseCalled) this.onClose();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, SecurityContext } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SecurityContext } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
@@ -6,7 +6,8 @@ import { MolenImage } from '../../Class/MolenImage';
 import { GetSafeUrl } from '../../Utils/GetSafeUrl';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { HttpClient } from '@angular/common/http';import { Toasts } from '../../Utils/Toasts';
+import { HttpClient } from '@angular/common/http';
+import { Toasts } from '../../Utils/Toasts';
 
 @Component({
   selector: 'app-image-selector',
@@ -15,6 +16,7 @@ import { HttpClient } from '@angular/common/http';import { Toasts } from '../../
 })
 export class ImageSelectorComponent {
   @Input() images: MolenImage[] = [];
+  @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() tbNr: string = "";
 
   public selectedImage?: MolenImage;
@@ -51,18 +53,20 @@ export class ImageSelectorComponent {
 
       const dialogRef = this.dialog.open(ImageDialogComponent, {
         data: {
-          selectedImage,
-          onDelete: (name: string) => this.deleteImage(name)
+          selectedImage
         },
         panelClass: 'selected-image'
       });
 
       dialogRef.afterClosed().subscribe(
         (result: DialogReturnType) => {
-          if (result.status == DialogReturnStatus.Success) {
-            this.images = this.images.filter(x => x.name != selectedImage.name);
-            this.selectedImage = this.images[0];
-            this.toast.showSuccess("Image is deleted");
+          if (result.status == DialogReturnStatus.Deleted) {
+            if (this.deleteImage(selectedImage.name)) {
+              this.images = this.images.filter(x => x.name != selectedImage.name);
+              this.imagesChange.emit(this.images);
+              this.selectedImage = this.images[0];
+              this.toast.showSuccess("Image is deleted");
+            }
           }
           else if (result.status == DialogReturnStatus.Error) {
             this.toast.showError("Error while deleting image");
@@ -90,7 +94,6 @@ export class ImageSelectorComponent {
         return true;
       },
       error: (error) => {
-        console.log(error);
         this.toast.showError("Error while deleting image");
       }
     });

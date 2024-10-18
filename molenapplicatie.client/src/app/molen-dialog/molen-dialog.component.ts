@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -19,11 +19,13 @@ export class MolenDialogComponent {
   public file: File | null = null;
   public imagePreview: string | null = null;
   public APIKey: string = "";
+  public molenImages: MolenImage[] = [];
 
   constructor(
     private sanitizer: DomSanitizer,
     private http: HttpClient,
     private toasts: Toasts,
+    private cdr: ChangeDetectorRef,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string }
   ) { }
@@ -31,12 +33,11 @@ export class MolenDialogComponent {
   ngOnInit(): void {
     this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe({
       next: (result) => {
-        console.log(result);
         this.molen = result;
         if (this.molen == undefined) this.onClose();
+        this.molenImages = this.getAllMolenImages();
       },
       error: (error) => {
-        console.error(error);
         this.toasts.showError(error.message, error.status);
         this.onClose();
       }
@@ -80,14 +81,15 @@ export class MolenDialogComponent {
         .subscribe({
           next: (molen: MolenData) => {
             this.molen = molen;
+            this.cdr.detectChanges();
           },
           error: (error) => {
             this.status = "fail";
-            console.log(error);
             this.toasts.showError(error.message, error.status);
           },
           complete: () => {
             this.removeImg();
+            this.molenImages = this.getAllMolenImages();
             this.toasts.showSuccess("Image is saved successfully!");
           }
         });

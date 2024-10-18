@@ -1,4 +1,4 @@
-<section class="header">
+<section class="header" *ngIf="molen">
   <span *ngIf="molen">{{ molen.name }}</span>
   <div (click)="onClose()" class="container-close-btn">
 
@@ -10,12 +10,13 @@
   </div>
 </section>
 <div class="container" *ngIf="molen">
-  <div class="data-left">
-    <app-image-selector [images]="getAllMolenImages()"
+  <div class="data data-left">
+    <app-image-selector [(images)]="molenImages"
                         [tbNr]="molen.ten_Brugge_Nr">
     </app-image-selector>
   </div>
-  <div class="molen-data">
+  <div class="data molen-data">
+    <h2>Details</h2>
     <p><strong>Type:</strong> {{ molen.functie }}</p>
     <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
     <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
@@ -33,7 +34,7 @@
       </li>
     </ul>
   </div>
-  <div class="data-right">
+  <div class="data data-right">
     <h4>Upload de foto hier.</h4>
 
     <div *ngIf="!file" class="file-input-container">
