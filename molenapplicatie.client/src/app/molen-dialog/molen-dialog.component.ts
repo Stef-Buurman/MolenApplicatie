@@ -20,6 +20,7 @@ export class MolenDialogComponent {
   public imagePreview: string | null = null;
   public APIKey: string = "";
   public molenImages: MolenImage[] = [];
+  public selectedImage?: MolenImage;
 
   constructor(
     private sanitizer: DomSanitizer,
@@ -36,6 +37,7 @@ export class MolenDialogComponent {
         this.molen = result;
         if (this.molen == undefined) this.onClose();
         this.molenImages = this.getAllMolenImages();
+        this.selectedImage = this.molenImages[0];
       },
       error: (error) => {
         this.toasts.showError(error.message, error.status);
@@ -77,6 +79,8 @@ export class MolenDialogComponent {
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
 
+      var previousMolenImages: MolenImage[] = this.getAllMolenImages();
+
       this.http.post<MolenData>(`/api/upload_image/${this.molen.ten_Brugge_Nr}`, formData, { headers })
         .subscribe({
           next: (molen: MolenData) => {
@@ -90,6 +94,7 @@ export class MolenDialogComponent {
           complete: () => {
             this.removeImg();
             this.molenImages = this.getAllMolenImages();
+            this.selectedImage = this.molenImages.find(x => !previousMolenImages.find(y => y.name == x.name));
             this.toasts.showSuccess("Image is saved successfully!");
           }
         });

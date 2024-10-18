@@ -59,7 +59,6 @@ export class Toasts {
 
     toastContainer.appendChild(componentRef.location.nativeElement);
 
-    // Attach the component view to the application
-    this.appRef.attachView(componentRef.hostView);
+    //this.appRef.attachView(componentRef.hostView);
   }
 }

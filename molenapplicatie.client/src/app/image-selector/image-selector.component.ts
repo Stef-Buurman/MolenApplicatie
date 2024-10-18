@@ -17,16 +17,17 @@ import { Toasts } from '../../Utils/Toasts';
 export class ImageSelectorComponent {
   @Input() images: MolenImage[] = [];
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
+  @Input() selectedImage?: MolenImage;
+  @Output() selectedImageChange = new EventEmitter<MolenImage>();
   @Input() tbNr: string = "";
 
-  public selectedImage?: MolenImage;
   constructor(private sanitizer: DomSanitizer,
     private dialog: MatDialog,
     private toast: Toasts,
     private http: HttpClient) { }
 
   ngOnInit(): void {
-    if (this.images.length > 0) this.selectedImage = this.images[0];
+    if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
   }
 
   getImageByName(name: string): MolenImage | undefined {
@@ -64,7 +65,8 @@ export class ImageSelectorComponent {
             if (this.deleteImage(selectedImage.name)) {
               this.images = this.images.filter(x => x.name != selectedImage.name);
               this.imagesChange.emit(this.images);
-              this.selectedImage = this.images[0];
+              //this.selectedImage = this.images[0];
+              this.selectedImageChange.emit(this.images[0])
               this.toast.showSuccess("Image is deleted");
             }
           }

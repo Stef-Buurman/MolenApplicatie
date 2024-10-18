@@ -1,4 +1,4 @@
-<div class="image-selector">
+<div *ngIf="selectedImage" class="image-selector">
   <div class="main-image" *ngIf="selectedImage">
     <img (click)="openImage()" [src]="getSafeUrl(selectedImage.name)" alt="Selected Image" />
   </div>
