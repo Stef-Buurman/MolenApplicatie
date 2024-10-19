@@ -366,7 +366,7 @@ namespace MolenApplicatie.Server.Services
         {
             MolenData newestUpdateTimeMolen = await _db.FindWithQueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated DESC LIMIT 1");
             Console.WriteLine(newestUpdateTimeMolen.Ten_Brugge_Nr);
-            if (newestUpdateTimeMolen != null && newestUpdateTimeMolen.LastUpdated >= DateTime.Now.AddHours(-1))
+            if (newestUpdateTimeMolen != null && newestUpdateTimeMolen.LastUpdated >= DateTime.Now.AddMinutes(-30))
             {
                 return (null, false);
             }

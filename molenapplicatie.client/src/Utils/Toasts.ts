@@ -10,6 +10,8 @@ import { ToastComponent } from '../app/toast/toast.component';
 })
 export class Toasts {
   private renderer: Renderer2;
+  private activeToasts: ComponentRef<ToastComponent>[] = [];
+  private viewContainerRef!: ViewContainerRef;
 
   constructor(
     private rendererFactory: RendererFactory2,
@@ -19,27 +21,25 @@ export class Toasts {
     this.renderer = this.rendererFactory.createRenderer(null, null);
   }
 
-  showSuccess(message: string, title?: string) {
-    this.showToast(title || 'Success', message, ToastType.Success);
+  showSuccess(message: string, title?: string, duration: number = 3000) {
+    this.showToast(title || 'Success', message, ToastType.Success, duration);
   }
 
-  showError(message: string, title?: string) {
-    this.showToast(title || 'Error', message, ToastType.Error);
+  showError(message: string, title?: string, duration: number = 3000) {
+    this.showToast(title || 'Error', message, ToastType.Error, duration);
   }
 
-  showInfo(message: string, title?: string) {
-    this.showToast(title || 'Informatie', message, ToastType.Info);
+  showInfo(message: string, title?: string, duration: number = 3000) {
+    this.showToast(title || 'Informatie', message, ToastType.Info, duration);
   }
 
-  showWarning(message: string, title?: string) {
-    this.showToast(title || 'Waarschuwing!', message, ToastType.Warning);
+  showWarning(message: string, title?: string, duration: number = 3000) {
+    this.showToast(title || 'Waarschuwing!', message, ToastType.Warning, duration);
   }
 
   setViewContainerRef(vcr: ViewContainerRef) {
     this.viewContainerRef = vcr;
   }
-
-  private viewContainerRef!: ViewContainerRef;
 
   showToast(title: string, message: string, type: ToastType, duration: number = 3000) {
     const toastContainer = document.getElementById('toast-container');
@@ -54,11 +54,39 @@ export class Toasts {
     componentRef.instance.duration = duration;
 
     componentRef.instance.closeToast.subscribe(() => {
-      this.viewContainerRef.remove(this.viewContainerRef.indexOf(componentRef.hostView));
+      this.clearToast(componentRef);
     });
 
     toastContainer.appendChild(componentRef.location.nativeElement);
+    this.activeToasts.push(componentRef);
+  }
 
-    //this.appRef.attachView(componentRef.hostView);
+  clearAllToasts() {
+    this.activeToasts.forEach(toast => {
+      const index = this.viewContainerRef.indexOf(toast.hostView);
+      if (index !== -1) {
+        this.viewContainerRef.remove(index);
+      }
+    });
+    this.activeToasts = [];
+  }
+
+  clearToast(toast: ComponentRef<ToastComponent>) {
+    const index = this.viewContainerRef.indexOf(toast.hostView);
+    this.clearToastByIndex(index)
+  }
+
+  clearToastByIndex(index: number) {
+    if (index >= 0 && index < this.activeToasts.length) {
+      const toast = this.activeToasts[index];
+      if (toast != null) {
+        this.viewContainerRef.remove(index);
+        this.activeToasts = this.activeToasts.filter(t => t !== toast);
+      }
+    }
+  }
+
+  removeLastAddedToast() {
+    this.clearToastByIndex(this.activeToasts.length - 1);
   }
 }
