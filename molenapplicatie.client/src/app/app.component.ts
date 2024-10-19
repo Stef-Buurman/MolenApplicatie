@@ -8,9 +8,14 @@ import { ToastType } from '../Enums/ToastType';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
+  map: any;
   constructor(private toastService: Toasts, private vcr: ViewContainerRef) { }
 
   ngOnInit() {
     this.toastService.setViewContainerRef(this.vcr);
+  }
+
+  test() {
+    this.map.setView([5, 4.4], 10);
   }
 }

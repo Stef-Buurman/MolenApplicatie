@@ -65,7 +65,6 @@ export class ImageSelectorComponent {
             if (this.deleteImage(selectedImage.name)) {
               this.images = this.images.filter(x => x.name != selectedImage.name);
               this.imagesChange.emit(this.images);
-              //this.selectedImage = this.images[0];
               this.selectedImageChange.emit(this.images[0])
               this.toast.showSuccess("Image is deleted");
             }
@@ -92,11 +91,11 @@ export class ImageSelectorComponent {
       next: (result) => {
         this.images = this.images.filter(x => x.name != imageName);
         this.selectedImage = this.images[0];
-        this.toast.showSuccess("Image is deleted");
+        this.toast.showSuccess("Foto is verwijderd");
         return true;
       },
       error: (error) => {
-        this.toast.showError("Error while deleting image");
+        this.toast.showError(error.error.message);
       }
     });
     return false;

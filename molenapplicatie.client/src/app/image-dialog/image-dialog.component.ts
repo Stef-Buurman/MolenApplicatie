@@ -23,8 +23,8 @@ export class ImageDialogComponent {
   openDeleteDialog(): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data:{
-        title: 'Delete image',
-        message: 'Are you sure you want to delete this image?',
+        title: 'Foto verwijderen',
+        message: 'Weet je zeker dat je deze foto wilt verwijderen?',
         api_key_usage: false
       } as ConfirmationDialogData
     });
