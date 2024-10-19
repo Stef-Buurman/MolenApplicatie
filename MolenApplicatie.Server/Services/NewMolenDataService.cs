@@ -24,6 +24,7 @@ namespace MolenApplicatie.Server.Services
             _client = new HttpClient();
             _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
             InitializeDB();
+            allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
             _molenService = new MolenService();
         }
 
@@ -80,6 +81,7 @@ namespace MolenApplicatie.Server.Services
                 var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
                 if (divs != null)
                 {
+                    Console.WriteLine(Ten_Brugge_Nr);
                     Dictionary<string, object> data = new Dictionary<string, object>();
                     MolenData newMolenData = new MolenData() { Id = -1 };
                     foreach (var div in divs)
@@ -179,12 +181,14 @@ namespace MolenApplicatie.Server.Services
                                         molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                                         NewAddedTypes.Add(molenType);
                                         newMolenData.ModelType.Add(molenType);
+                                        Console.WriteLine("1111111111");
                                     }
                                     else
                                     {
                                         var existingType = MolenTypes.Concat(NewAddedTypes).FirstOrDefault(x => x.Name == molenType.Name);
                                         if (existingType != null && newMolenData.ModelType.Find(x => x.Name == existingType.Name) == null)
                                         {
+                                            Console.WriteLine(existingType.Name);
                                             newMolenData.ModelType.Add(existingType);
                                         }
                                     }
@@ -196,7 +200,9 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
-                    if (!allowedTypes.Any(x => newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower()) && newMolenData.ModelType.Count > 0))
+                    Console.WriteLine(newMolenData.ModelType.Count());
+
+                    if (!allowedTypes.Any(x => newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower()) && newMolenData.ModelType.Count() > 0))
                     {
                         return (null, null);
                     }
@@ -267,45 +273,55 @@ namespace MolenApplicatie.Server.Services
             return (null, null);
         }
 
-        public async Task<List<MolenTBN>> GetAllActiveTBNR()
-        {
-            await InitializeDB();
-            List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>().ToListAsync();
+        //public async Task<List<MolenTBN>> GetAllActiveTBNR()
+        //{
+        //    await InitializeDB();
+        //    List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>().ToListAsync();
+        //    List<MolenTBN> allReadMolenTBN = await ReadAllMolenTBN();
 
-            for (int i = 1; i <= 13; i++)
-            {
-                HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
-                string responseBody = await response.Content.ReadAsStringAsync();
+        //    foreach(MolenTBN readMolenTBN in allReadMolenTBN)
+        //    {
+        //        if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr).Count() == 0)
+        //        {
+        //            await _db.InsertAsync(readMolenTBN);
+        //        }
+        //    }
 
-                var doc = new HtmlDocument();
-                doc.LoadHtml(responseBody);
-                var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
-                if (divs != null)
-                {
-                    foreach (var div in divs)
-                    {
-                        var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
-                        if (!string.IsNullOrEmpty(url))
-                        {
-                            url = url.Substring(0, url.IndexOf('?'));
-                            string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
 
-                            Match match = Regex.Match(url, pattern);
+            //for (int i = 1; i <= 13; i++)
+            //{
+            //    HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
+            //    string responseBody = await response.Content.ReadAsStringAsync();
 
-                            if (match.Success)
-                            {
-                                url = match.Groups[1].Value;
-                                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
-                                {
-                                    await _db.InsertAsync(new MolenTBN() { Ten_Brugge_Nr = url });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return await _db.Table<MolenTBN>().ToListAsync();
-        }
+            //    var doc = new HtmlDocument();
+            //    doc.LoadHtml(responseBody);
+            //    var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
+            //    if (divs != null)
+            //    {
+            //        foreach (var div in divs)
+            //        {
+            //            var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
+            //            if (!string.IsNullOrEmpty(url))
+            //            {
+            //                url = url.Substring(0, url.IndexOf('?'));
+            //                string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
+
+            //                Match match = Regex.Match(url, pattern);
+
+            //                if (match.Success)
+            //                {
+            //                    url = match.Groups[1].Value;
+            //                    if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
+            //                    {
+            //                        await _db.InsertAsync(new MolenTBN() { Ten_Brugge_Nr = url });
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+        //    return await _db.Table<MolenTBN>().ToListAsync();
+        //}
         public async Task<List<MolenData>> GetAllMolenDataDB()
         {
             await InitializeDB();
@@ -349,29 +365,84 @@ namespace MolenApplicatie.Server.Services
                 return (null, false);
             }
             List<MolenData> oldestUpdateTimesMolens = await _db.QueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated ASC LIMIT 50");
+            List<MolenData> updatedMolens = new List<MolenData>();
             foreach (var molen in oldestUpdateTimesMolens)
             {
                 var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr);
-                MolenData newMolenData = result.Item1;
-                if (newMolenData != null)
-                {
-                    molen.Name = newMolenData.Name;
-                    molen.Bouwjaar = newMolenData.Bouwjaar;
-                    molen.Bouwjaar_start = newMolenData.Bouwjaar_start;
-                    molen.Bouwjaar_einde = newMolenData.Bouwjaar_einde;
-                    molen.Herbouwd_jaar = newMolenData.Herbouwd_jaar;
-                    molen.Functie = newMolenData.Functie;
-                    molen.Plaats = newMolenData.Plaats;
-                    molen.Adres = newMolenData.Adres;
-                    molen.Image = newMolenData.Image;
-                    molen.ModelType = newMolenData.ModelType;
-                    molen.North = newMolenData.North;
-                    molen.East = newMolenData.East;
-                    molen.LastUpdated = newMolenData.LastUpdated;
-                    await _db.UpdateAsync(molen);
-                }
+                updatedMolens.Add(result.Item1);
             }
             return (oldestUpdateTimesMolens, true);
+        }
+
+        public async Task<List<MolenTBN>> ReadAllMolenTBN()
+        {
+            List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
+
+            int amountDivsAtNull = 0;
+            int i = 1;
+
+            while (amountDivsAtNull <= 1)
+            {
+                HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var doc = new HtmlDocument();
+                doc.LoadHtml(responseBody);
+                var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
+                if(divs == null || divs.Count() == 0)
+                {
+                    amountDivsAtNull++;
+                }
+                if (divs != null)
+                {
+                    foreach (var div in divs)
+                    {
+                        var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            url = url.Substring(0, url.IndexOf('?'));
+                            string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
+
+                            Match match = Regex.Match(url, pattern);
+
+                            if (match.Success)
+                            {
+                                url = match.Groups[1].Value;
+                                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
+                                {
+                                    alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
+                                }
+                            }
+                        }
+                    }
+                }
+                i++;
+            }
+
+            return alleMolenTBNR;
+        }
+
+        public async Task<List<MolenData>> SearchForNewMolens()
+        {
+            await InitializeDB();
+            List<MolenData> allAddedMolens = new List<MolenData>();
+            List<MolenTBN> allFoundMolenTBN = await ReadAllMolenTBN();
+            List<MolenTBN> allCurrentMolenTBN = await _db.Table<MolenTBN>().ToListAsync();
+
+            foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
+            {
+                if (allCurrentMolenTBN.Where(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr).Count() == 0)
+                {
+                    await _db.InsertAsync(readMolenTBN);
+                    var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
+                    if(molen.Item1 != null)
+                    {
+                        allAddedMolens.Add(molen.Item1);
+                    }
+                }
+            }
+
+            return allAddedMolens;
         }
     }
 }

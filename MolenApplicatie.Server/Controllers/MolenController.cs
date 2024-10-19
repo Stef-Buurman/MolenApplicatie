@@ -35,12 +35,12 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> UploadImage(string tbNumber, IFormFile image)
         {
             if (image == null || image.Length == 0)
-                return BadRequest("No image provided");
+                return BadRequest("Geen foto meegestuurd!");
 
             MolenData molen = await _MolenService.GetMolenByTBN(tbNumber);
-            if (molen == null) return NotFound("Molen not found");
+            if (molen == null) return NotFound("Molen niet gevonden!");
             IFormFile savedImage = await _MolenService.SaveMolenImage(molen.Id, tbNumber, image);
-            if (savedImage == null) return BadRequest("An error occured while saving the image");
+            if (savedImage == null) return BadRequest("Er is iets misgegaan met het opslaan van de foto!");
 
             return Ok(await _MolenService.GetMolenByTBN(tbNumber));
         }
@@ -74,6 +74,12 @@ namespace MolenApplicatie.Server.Controllers
                 return Ok(result.MolenData);
             }
             return BadRequest("Kan niet updaten, wacht een uur en probeer het opnieuw.");
+        }
+
+        [HttpGet("search_for_new_molens")]
+        public async Task<IActionResult> GetNewAddedMolens()
+        {
+            return Ok(await _NewMolenDataService.SearchForNewMolens());
         }
     }
 }
