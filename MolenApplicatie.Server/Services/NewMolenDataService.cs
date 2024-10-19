@@ -95,15 +95,23 @@ namespace MolenApplicatie.Server.Services
                                 case "geo positie":
                                     string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
                                     var match = Regex.Match(dd, pattern);
-                                    if (match.Success)
+                                    if(Ten_Brugge_Nr == "12170")
                                     {
-                                        if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
+                                        newMolenData.North = 51.91575984198239;
+                                        newMolenData.East = 6.577599354094867;
+                                    }
+                                    else
+                                    {
+                                        if (match.Success)
                                         {
-                                            newMolenData.North = NorthValue;
-                                        }
-                                        if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
-                                        {
-                                            newMolenData.East = EastValue;
+                                            if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
+                                            {
+                                                newMolenData.North = NorthValue;
+                                            }
+                                            if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
+                                            {
+                                                newMolenData.East = EastValue;
+                                            }
                                         }
                                     }
                                     break;
@@ -181,14 +189,12 @@ namespace MolenApplicatie.Server.Services
                                         molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                                         NewAddedTypes.Add(molenType);
                                         newMolenData.ModelType.Add(molenType);
-                                        Console.WriteLine("1111111111");
                                     }
                                     else
                                     {
                                         var existingType = MolenTypes.Concat(NewAddedTypes).FirstOrDefault(x => x.Name == molenType.Name);
                                         if (existingType != null && newMolenData.ModelType.Find(x => x.Name == existingType.Name) == null)
                                         {
-                                            Console.WriteLine(existingType.Name);
                                             newMolenData.ModelType.Add(existingType);
                                         }
                                     }
