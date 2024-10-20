@@ -8,6 +8,7 @@ body {
 /*Global dialog styling*/
 
 .cdk-overlay-pane.mat-mdc-dialog-panel {
+    z-index:1002;
   max-width: 100vw !important;
   max-height: 95vh !important;
   position: absolute;
@@ -181,4 +182,9 @@ body {
   flex-direction: column-reverse;
   gap: 10px;
   z-index: 9999;
+}
+
+
+.leaflet-top.leaflet-left {
+  z-index: 900;
 }

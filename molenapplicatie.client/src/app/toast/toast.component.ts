@@ -19,7 +19,10 @@ export class ToastComponent implements OnInit {
   isVisible = false;
   private timeoutId: any;
 
+  random_error: number = -1;
+
   ngOnInit() {
+    this.random_error = Math.floor(Math.random() * 3);
     setTimeout(() => {
       this.isVisible = true;
       this.startTimer();

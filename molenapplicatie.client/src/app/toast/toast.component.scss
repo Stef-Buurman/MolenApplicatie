@@ -1,3 +1,5 @@
+@import '../../Utils/Variables.scss';
+
 .toast img {
   width: 100%;
   max-width: 100px;
@@ -21,6 +23,22 @@
   box-shadow: 0px 0px 20px -5px rgba(0,0,0,0.75);
   opacity: 0;
   transform: translateY(20px);
+}
+
+.toast1{
+    img{
+        width:auto;
+    }
+}
+
+.toast2 {
+  img {
+    width: auto;
+  }
+}
+
+.Info img{
+     width:auto;
 }
 
 .toast:hover {
@@ -70,4 +88,10 @@
   font-size: 16px;
   cursor: pointer;
   padding: 5px 10px;
+}
+
+@media screen and (max-width: $Media_width) {
+  .toast {
+    max-width: 83vw;
+  }
 }

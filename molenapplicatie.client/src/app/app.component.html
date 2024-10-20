@@ -1,9 +1,23 @@
-<header>
-  <h2>Buurman en Buurman molens</h2>
+<header *ngIf="!error">
+  <!--<h2>Buurman en Buurman molens</h2>
   <button (click)="test()">xxxxx</button>
   <button (click)="updateMolens()">Update molens</button>
-  <button>Zoek voor nieuwe molens</button>
+  <button>Zoek voor nieuwe molens</button>-->
+  <div class="{{visible ? 'responsive' : ''}} topInfo" id="mytopInfo">
+    <span>Buurman en Buurman molens</span>
+    <div (click)="updateMolens()">Update molens</div>
+    <div (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+    <div (click)="test()">test</div>
+    <div class="icon" (click)="openInfoMenu()">
+      <i class="fa fa-bars"></i>
+    </div>
+  </div>
 </header>
-<div class="container">
-  <app-map [(map)]="map"></app-map>
+<div *ngIf="!error" class="container">
+  <app-map [(map)]="map" [(error)]="error"></app-map>
+</div>
+
+<div *ngIf="error" class="ErrorDiv">
+  <span>De molens kunnen niet gevonden worden!</span> <br/>
+  <img src="Assets/Background/Error.png" alt="Alternate Text" />
 </div>

@@ -14,7 +14,10 @@ import { Toasts } from '../../Utils/Toasts';
 export class MapComponent {
   @Input() map: any;
   @Output() mapChange = new EventEmitter<any>();
+  @Input() error: boolean = false;
+  @Output() errorChange = new EventEmitter<boolean>();
   molens: MolenDataClass[] = [];
+  molenDataError: boolean = false;
 
   constructor(private http: HttpClient,
     private toasts: Toasts,
@@ -27,7 +30,12 @@ export class MapComponent {
         this.initMap();
       },
       error: (error) => {
-        this.toasts.showError(error.message, error.status);
+        this.errorChange.emit(true);
+        this.toasts.showError("De molens kunnen niet geladen worden!");
+      },
+      complete: () => {
+        this.errorChange.emit(false);
+        this.toasts.showSuccess("Molens zijn geladen!");
       }
     });
   }
