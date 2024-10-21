@@ -34,6 +34,7 @@ namespace MolenApplicatie.Server.Services
             await _db.CreateTableAsync<MolenData>();
             await _db.CreateTableAsync<MolenType>();
             await _db.CreateTableAsync<MolenTypeAssociation>();
+            await _db.CreateTableAsync<LastSearchedForNewData>();
             return 1;
         }
 
@@ -52,7 +53,6 @@ namespace MolenApplicatie.Server.Services
                 if (x.Item1 == null) continue;
                 Data.Add(x.Item1);
                 keyValuePairs.Add(x.Item2);
-                Console.WriteLine(Ten_Brugge_Nr.Id);
             }
 
             File.WriteAllText(PathAlleInformatieMolens, JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
@@ -81,7 +81,6 @@ namespace MolenApplicatie.Server.Services
                 var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
                 if (divs != null)
                 {
-                    Console.WriteLine(Ten_Brugge_Nr);
                     Dictionary<string, object> data = new Dictionary<string, object>();
                     MolenData newMolenData = new MolenData() { Id = -1 };
                     foreach (var div in divs)
@@ -95,7 +94,7 @@ namespace MolenApplicatie.Server.Services
                                 case "geo positie":
                                     string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
                                     var match = Regex.Match(dd, pattern);
-                                    if(Ten_Brugge_Nr == "12170")
+                                    if (Ten_Brugge_Nr == "12170")
                                     {
                                         newMolenData.North = 51.91575984198239;
                                         newMolenData.East = 6.577599354094867;
@@ -206,8 +205,6 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
-                    Console.WriteLine(newMolenData.ModelType.Count());
-
                     if (!allowedTypes.Any(x => newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower()) && newMolenData.ModelType.Count() > 0))
                     {
                         return (null, null);
@@ -294,38 +291,38 @@ namespace MolenApplicatie.Server.Services
         //    }
 
 
-            //for (int i = 1; i <= 13; i++)
-            //{
-            //    HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
-            //    string responseBody = await response.Content.ReadAsStringAsync();
+        //for (int i = 1; i <= 13; i++)
+        //{
+        //    HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
+        //    string responseBody = await response.Content.ReadAsStringAsync();
 
-            //    var doc = new HtmlDocument();
-            //    doc.LoadHtml(responseBody);
-            //    var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
-            //    if (divs != null)
-            //    {
-            //        foreach (var div in divs)
-            //        {
-            //            var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
-            //            if (!string.IsNullOrEmpty(url))
-            //            {
-            //                url = url.Substring(0, url.IndexOf('?'));
-            //                string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
+        //    var doc = new HtmlDocument();
+        //    doc.LoadHtml(responseBody);
+        //    var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
+        //    if (divs != null)
+        //    {
+        //        foreach (var div in divs)
+        //        {
+        //            var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
+        //            if (!string.IsNullOrEmpty(url))
+        //            {
+        //                url = url.Substring(0, url.IndexOf('?'));
+        //                string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
 
-            //                Match match = Regex.Match(url, pattern);
+        //                Match match = Regex.Match(url, pattern);
 
-            //                if (match.Success)
-            //                {
-            //                    url = match.Groups[1].Value;
-            //                    if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
-            //                    {
-            //                        await _db.InsertAsync(new MolenTBN() { Ten_Brugge_Nr = url });
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
+        //                if (match.Success)
+        //                {
+        //                    url = match.Groups[1].Value;
+        //                    if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
+        //                    {
+        //                        await _db.InsertAsync(new MolenTBN() { Ten_Brugge_Nr = url });
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
         //    return await _db.Table<MolenTBN>().ToListAsync();
         //}
         public async Task<List<MolenData>> GetAllMolenDataDB()
@@ -362,13 +359,12 @@ namespace MolenApplicatie.Server.Services
             return await _db.Table<MolenTBN>().ToListAsync();
         }
 
-        public async Task<(List<MolenData> MolenData, bool isDone)> UpdateDataOfLastUpdatedMolens()
+        public async Task<(List<MolenData> MolenData, bool isDone, TimeSpan timeToWait)> UpdateDataOfLastUpdatedMolens()
         {
             MolenData newestUpdateTimeMolen = await _db.FindWithQueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated DESC LIMIT 1");
-            Console.WriteLine(newestUpdateTimeMolen.Ten_Brugge_Nr);
             if (newestUpdateTimeMolen != null && newestUpdateTimeMolen.LastUpdated >= DateTime.Now.AddMinutes(-30))
             {
-                return (null, false);
+                return (null, false, newestUpdateTimeMolen.LastUpdated.AddMinutes(30) - DateTime.Now);
             }
             List<MolenData> oldestUpdateTimesMolens = await _db.QueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated ASC LIMIT 50");
             List<MolenData> updatedMolens = new List<MolenData>();
@@ -377,7 +373,7 @@ namespace MolenApplicatie.Server.Services
                 var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr);
                 updatedMolens.Add(result.Item1);
             }
-            return (oldestUpdateTimesMolens, true);
+            return (oldestUpdateTimesMolens, true, TimeSpan.FromMinutes(30));
         }
 
         public async Task<List<MolenTBN>> ReadAllMolenTBN()
@@ -395,7 +391,7 @@ namespace MolenApplicatie.Server.Services
                 var doc = new HtmlDocument();
                 doc.LoadHtml(responseBody);
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
-                if(divs == null || divs.Count() == 0)
+                if (divs == null || divs.Count() == 0)
                 {
                     amountDivsAtNull++;
                 }
@@ -428,27 +424,59 @@ namespace MolenApplicatie.Server.Services
             return alleMolenTBNR;
         }
 
-        public async Task<List<MolenData>> SearchForNewMolens()
+        private DateTime? lastExecutionTime = null;
+        private readonly TimeSpan cooldownTime = TimeSpan.FromHours(1);
+
+        public async Task<(List<MolenData> MolenData, TimeSpan timeToWait)> SearchForNewMolens()
         {
+            var newestSearch = await _db.QueryAsync<LastSearchedForNewData>("SELECT * FROM LastSearchedForNewData ORDER BY LastSearched DESC LIMIT 1");
+            if (newestSearch.Count > 0 && newestSearch[0].LastSearched >= DateTime.Now.Add(cooldownTime * -1))
+            {
+                return (null, cooldownTime - (DateTime.Now - newestSearch[0].LastSearched));
+            }
+
             await InitializeDB();
             List<MolenData> allAddedMolens = new List<MolenData>();
+            List<MolenTBN> allAddedMolenTBN = new List<MolenTBN>();
             List<MolenTBN> allFoundMolenTBN = await ReadAllMolenTBN();
-            List<MolenTBN> allCurrentMolenTBN = await _db.Table<MolenTBN>().ToListAsync();
 
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
-                if (allCurrentMolenTBN.Where(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr).Count() == 0)
+                if (allAddedMolens.Count == 1) break;
+                if (await _db.FindAsync<MolenTBN>(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr) == null)
                 {
                     await _db.InsertAsync(readMolenTBN);
                     var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
-                    if(molen.Item1 != null)
+                    if (molen.Item1 != null)
+                    {
+                        allAddedMolens.Add(molen.Item1);
+                    }
+                }
+                else if (await _molenService.GetMolenByTBN(readMolenTBN.Ten_Brugge_Nr) == null)
+                {
+                    var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
+                    if (molen.Item1 != null)
                     {
                         allAddedMolens.Add(molen.Item1);
                     }
                 }
             }
 
-            return allAddedMolens;
+            await AddDateTimeFromSearches();
+            return (allAddedMolens, cooldownTime);
+        }
+
+
+        public async Task<bool> AddDateTimeFromSearches()
+        {
+            await InitializeDB();
+            var searchesLongerThanOneDay = await _db.QueryAsync<LastSearchedForNewData>("SELECT * FROM LastSearchedForNewData WHERE LastSearched < ?", new object[] { DateTime.Now.AddDays(-1) });
+            foreach (var search in searchesLongerThanOneDay)
+            {
+                await _db.DeleteAsync(search);
+            }
+            await _db.InsertAsync(new LastSearchedForNewData() { LastSearched = DateTime.Now });
+            return true;
         }
     }
 }

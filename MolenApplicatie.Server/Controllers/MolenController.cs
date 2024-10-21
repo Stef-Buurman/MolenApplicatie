@@ -73,13 +73,18 @@ namespace MolenApplicatie.Server.Controllers
             {
                 return Ok(result.MolenData);
             }
-            return BadRequest("Kan niet updaten, wacht een uur en probeer het opnieuw.");
+            return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
         }
 
         [HttpGet("search_for_new_molens")]
         public async Task<IActionResult> GetNewAddedMolens()
         {
-            return Ok(await _NewMolenDataService.SearchForNewMolens());
+            var result = await _NewMolenDataService.SearchForNewMolens();
+            if (result.MolenData == null)
+            {
+                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
+            }
+            return Ok(result);
         }
     }
 }

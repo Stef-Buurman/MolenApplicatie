@@ -36,6 +36,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenData> GetFullDataOfMolen(MolenData molen)
         {
+            if (molen == null) return null;
             molen.ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { molen.Id });
 

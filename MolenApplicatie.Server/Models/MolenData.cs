@@ -1,10 +1,8 @@
 ﻿using SQLite;
-using Reinforced.Typings.Attributes;
 using MolenApplicatie.Models;
 
 namespace MolenApplicatie.Server.Models
 {
-    [TsInterface]
     public class MolenData
     {
         [PrimaryKey, AutoIncrement]
