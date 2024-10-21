@@ -84,7 +84,7 @@ namespace MolenApplicatie.Server.Controllers
             {
                 return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
             }
-            return Ok(result);
+            return Ok(result.MolenData);
         }
     }
 }
