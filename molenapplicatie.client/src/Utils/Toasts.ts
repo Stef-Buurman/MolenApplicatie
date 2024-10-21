@@ -25,7 +25,7 @@ export class Toasts {
     this.showToast(title || 'Success', message, ToastType.Success, duration);
   }
 
-  showError(message: string, title?: string, duration: number = 300000) {
+  showError(message: string, title?: string, duration: number = 3000) {
     this.showToast(title || 'Error', message, ToastType.Error, duration);
   }
 

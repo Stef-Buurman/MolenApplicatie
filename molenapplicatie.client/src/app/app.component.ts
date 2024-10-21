@@ -13,6 +13,9 @@ export class AppComponent implements OnInit {
   map: any;
   visible: boolean = false;
   error: boolean = false;
+  private NewMolensLastExecutionTime: number | null = null;
+  private UpdateLastExecutionTime: number | null = null;
+  private readonly cooldownTime = 10 * 60 * 1000;
   constructor(private toastService: Toasts,
     private vcr: ViewContainerRef,
     private http: HttpClient) { }
@@ -31,7 +34,13 @@ export class AppComponent implements OnInit {
   }
 
   updateMolens() {
-    this.toastService.showInfo("Molens worden geupdate...", "Informatie", 10000);
+    const currentTime = Date.now();
+    if (this.UpdateLastExecutionTime && currentTime - this.UpdateLastExecutionTime < this.cooldownTime) {
+      this.toastService.showWarning("Dit kan eens elke 10 minuten!");
+      return;
+    }
+
+    this.toastService.showInfo("Molens worden geupdate... (Dit kan even duren)", "Informatie", 60000);
     this.http.get<MolenData[]>('/api/update_oldest_molens').subscribe({
       next: (result) => {
 
@@ -40,18 +49,27 @@ export class AppComponent implements OnInit {
         console.log(error);
         this.toastService.removeLastAddedToast();
         this.toastService.showError(error.error);
+        this.UpdateLastExecutionTime = null
       },
       complete: () => {
         this.toastService.removeLastAddedToast();
         this.toastService.showSuccess("Molens zijn geupdate!");
       }
     });
+
+    this.UpdateLastExecutionTime = currentTime;
   }
 
   searchForNewMolens() {
-    this.toastService.showInfo("Nieuwe molens worden gezocht...", "Informatie", 10000);
+    const currentTime = Date.now();
+    if (this.NewMolensLastExecutionTime && currentTime - this.NewMolensLastExecutionTime < this.cooldownTime) {
+      this.toastService.showWarning("Dit kan eens elke 10 minuten!");
+      return;
+    }
+
+    this.toastService.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)", "Informatie", 60000);
     this.http.get<MolenData[]>('/api/search_for_new_molens').subscribe({
-      next: (result) => {
+      next: (result:MolenData[]) => {
         console.log(result);
         this.toastService.removeLastAddedToast();
         if (result.length == 0) {
@@ -59,6 +77,7 @@ export class AppComponent implements OnInit {
         }
         else if (result.length == 1) {
           this.toastService.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
+          this.map.setView([result[0].north, result[0].east], 13);
         }
         else {
           this.toastService.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");
@@ -68,7 +87,10 @@ export class AppComponent implements OnInit {
         console.log(error);
         this.toastService.removeLastAddedToast();
         this.toastService.showError(error.error);
+        this.NewMolensLastExecutionTime = null;
       }
     });
+
+    //this.NewMolensLastExecutionTime = currentTime;
   }
 }

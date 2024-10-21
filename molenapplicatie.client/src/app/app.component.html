@@ -1,13 +1,11 @@
 <header *ngIf="!error">
-  <!--<h2>Buurman en Buurman molens</h2>
-  <button (click)="test()">xxxxx</button>
-  <button (click)="updateMolens()">Update molens</button>
-  <button>Zoek voor nieuwe molens</button>-->
   <div class="{{visible ? 'responsive' : ''}} topInfo" id="mytopInfo">
-    <span>Buurman en Buurman molens</span>
+    <img class="logo" src="Assets/Background/Buurman-Buurman-logo.webp" alt="Alternate Text" />
+    <span>Molens</span>
     <div (click)="updateMolens()">Update molens</div>
     <div (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
-    <div (click)="test()">test</div>
+    <img class="buurmanEnBuurmanImg" src="Assets/Background/Buurman-Buurman-events.png" alt="Alternate Text" />
+    <!--<div (click)="test()">test</div>-->
     <div class="icon" (click)="openInfoMenu()">
       <i class="fa fa-bars"></i>
     </div>

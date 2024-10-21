@@ -77,7 +77,8 @@ export class MapComponent {
 
   private onMarkerClick(tenBruggeNr: any): void {
     const dialogRef = this.dialog.open(MolenDialogComponent, {
-      data: { tenBruggeNr }
+      data: { tenBruggeNr },
+      panelClass: 'molen-details'
     });
   }
 }
