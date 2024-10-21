@@ -424,7 +424,6 @@ namespace MolenApplicatie.Server.Services
             return alleMolenTBNR;
         }
 
-        private DateTime? lastExecutionTime = null;
         private readonly TimeSpan cooldownTime = TimeSpan.FromHours(1);
 
         public async Task<(List<MolenData> MolenData, TimeSpan timeToWait)> SearchForNewMolens()
