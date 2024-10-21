@@ -36,7 +36,7 @@ export class AppComponent implements OnInit {
   updateMolens() {
     const currentTime = Date.now();
     if (this.UpdateLastExecutionTime && currentTime - this.UpdateLastExecutionTime < this.cooldownTime) {
-      this.toastService.showWarning("Dit kan eens elke 10 minuten!");
+      this.toastService.showWarning("Dit kan eens elke 30 minuten!");
       return;
     }
 
@@ -63,7 +63,7 @@ export class AppComponent implements OnInit {
   searchForNewMolens() {
     const currentTime = Date.now();
     if (this.NewMolensLastExecutionTime && currentTime - this.NewMolensLastExecutionTime < this.cooldownTime) {
-      this.toastService.showWarning("Dit kan eens elke 10 minuten!");
+      this.toastService.showWarning("Dit kan eens elke 60 minuten!");
       return;
     }
 
@@ -91,6 +91,6 @@ export class AppComponent implements OnInit {
       }
     });
 
-    //this.NewMolensLastExecutionTime = currentTime;
+    this.NewMolensLastExecutionTime = currentTime;
   }
 }
