@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 
@@ -30,6 +31,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _MolenService.GetMolenByTBN(tbNumber));
         }
 
+        [FileUploadFilter]
         [HttpPost]
         [Route("upload_image/{tbNumber}")]
         public async Task<IActionResult> UploadImage(string tbNumber, IFormFile image)
@@ -51,6 +53,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _NewMolenDataService.GetAllMolenData());
         }
 
+        [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
         public async Task<IActionResult> DeleteMolenImage(string tbNumber, string imageName)
         {

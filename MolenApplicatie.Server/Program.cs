@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Http.Features;
+using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Environment.WebRootPath = "/var/www/app/wwwroot";
@@ -12,6 +15,7 @@ builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
 });
+builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
 
 var app = builder.Build();
 
