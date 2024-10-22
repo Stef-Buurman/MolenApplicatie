@@ -441,7 +441,7 @@ namespace MolenApplicatie.Server.Services
 
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
-                if (allAddedMolens.Count == 1) break;
+                if (allAddedMolens.Count == 50) break;
                 if (await _db.FindAsync<MolenTBN>(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr) == null)
                 {
                     await _db.InsertAsync(readMolenTBN);
