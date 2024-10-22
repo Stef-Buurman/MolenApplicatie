@@ -35,7 +35,7 @@
     </ul>
   </div>
   <div class="data data-right">
-    <h4>Upload de foto hier.</h4>
+    <h2>Upload de foto hier.</h2><br />
 
     <div *ngIf="!file" class="file-input-container">
       <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload/>
@@ -47,7 +47,7 @@
       <section class="file-info">
         <button (click)="removeImg()" class="close-btn">&times;</button>
         <br />
-        File details:
+        <strong>File details:</strong>
         <ul>
           <li>Name: {{file.name}}</li>
           <li>Type: {{file.type}}</li>

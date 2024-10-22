@@ -2,7 +2,7 @@
 
 .header {
   border-bottom: 1px solid black;
-  font-size: 30px;
+  font-size: 40px;
   padding: 8px 6% 8px 6%;
   font-weight: 500;
   display: flex;
@@ -31,20 +31,26 @@
   padding: 10px;
 }
 
+.data {
+  ul, p, strong {
+    font-size: 20px;
+  }
+}
+
 .image-selector {
   margin-top: 20px;
 }
 
 .image-preview {
-  margin-bottom:10px;
-  border:1px solid grey;
-  border-radius:10px;
-  padding:2px;
+  margin-bottom: 10px;
+  border: 1px solid grey;
+  border-radius: 10px;
+  padding: 2px;
 }
 
-.image-preview span{
-    font-size:20px;
-    font-weight:500;
+.image-preview span {
+  font-size: 20px;
+  font-weight: 500;
 }
 
 .image-preview img {
@@ -112,12 +118,14 @@
 @media only screen and (max-width: $Media_width) {
   .container {
     width: 95vw;
-    display:block;
+    display: block;
   }
-  .data{
-      width:90%;
+
+  .data {
+    width: 90%;
   }
-  .data-right{
-      padding-bottom:50px;
+
+  .data-right {
+    padding-bottom: 50px;
   }
 }
