@@ -73,7 +73,7 @@ export class MolenDialogComponent {
       this.status = "uploading";
 
       const headers = new HttpHeaders({
-        'API_Key': this.APIKey,
+        'Authorization': this.APIKey,
       });
 
       const formData = new FormData();

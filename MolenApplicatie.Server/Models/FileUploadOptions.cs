@@ -2,6 +2,6 @@
 {
     public class FileUploadOptions
     {
-        public string ApiToken { get; set; }
+        public string Authorization { get; set; }
     }
 }

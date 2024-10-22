@@ -9,18 +9,20 @@ namespace MolenApplicatie.Server.Filters
         public async Task OnActionExecutionAsync(ActionExecutingContext actionContext, ActionExecutionDelegate next)
         {
             var context = actionContext.HttpContext;
-            if (!context.Request.Headers.ContainsKey("ApiToken"))
+            if (!context.Request.Headers.ContainsKey("Authorization"))
             {
                 context.Response.StatusCode = 401;
                 return;
             }
+
             var helloOptions =
               context.RequestServices.GetService<IOptions<FileUploadOptions>>() switch
               {
                   { Value: var __ } => __,
-                  _ => new FileUploadOptions() { ApiToken = Guid.NewGuid().ToString() }
+                  _ => new FileUploadOptions() { Authorization = Guid.NewGuid().ToString() }
               };
-            if (context.Request.Headers["ApiToken"] != helloOptions.ApiToken)
+
+            if (context.Request.Headers["Authorization"] != helloOptions.Authorization)
             {
                 context.Response.StatusCode = 401;
                 return;
