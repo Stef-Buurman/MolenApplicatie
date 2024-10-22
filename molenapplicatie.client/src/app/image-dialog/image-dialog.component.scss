@@ -27,6 +27,15 @@
   flex-direction: column;
 }
 
+.deleteButtoDisabled {
+  padding: 7px 13px;
+  border: none;
+  border-radius: 1px;
+  background-color: #8c0202;
+  border-radius: 0 30px 0 0;
+  cursor: default;
+}
+
 .deleteButton {
   color: #eee;
   padding: 7px 13px;

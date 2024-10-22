@@ -1,6 +1,5 @@
 .confirmation-dialog {
   border: 1px solid #ccc;
-  border-radius: 20px;
   width: 300px;
   background-color: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -46,4 +45,8 @@ button {
 .deny_btn:hover {
   color: black;
   background-color: red;
+}
+
+.api_input{
+  width:100%;
 }

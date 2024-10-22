@@ -89,7 +89,11 @@ export class MolenDialogComponent {
           },
           error: (error) => {
             this.status = "fail";
-            this.toasts.showError(error.message, error.status);
+            if (error.status == 401) {
+              this.toasts.showError("Er is een verkeerde api key ingevuld!");
+            } else {
+              this.toasts.showError(error.error.message);
+            }
           },
           complete: () => {
             this.removeImg();

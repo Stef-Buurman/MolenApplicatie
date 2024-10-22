@@ -51,10 +51,12 @@ export class ImageSelectorComponent {
     if (this.selectedImage) {
       this.selectedImage.image = this.getSafeUrl(this.selectedImage.name);
       var selectedImage: MolenImage = this.selectedImage;
+      var canBeDeleted: boolean = selectedImage.canBeDeleted;
 
       const dialogRef = this.dialog.open(ImageDialogComponent, {
         data: {
-          selectedImage
+          selectedImage,
+          canBeDeleted
         },
         panelClass: 'selected-image'
       });
@@ -95,7 +97,11 @@ export class ImageSelectorComponent {
         return true;
       },
       error: (error) => {
-        this.toast.showError(error.error.message);
+        if (error.status == 401) {
+          this.toast.showError("Er is een verkeerde api key ingevuld!");
+        } else {
+          this.toast.showError(error.error.message);
+        }
       }
     });
     return false;
