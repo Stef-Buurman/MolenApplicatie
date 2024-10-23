@@ -1,0 +1,25 @@
+@import '../../Utils/Variables.scss';
+
+.ErrorDiv {
+  background-color: black;
+  height: 100vh;
+  text-align: center;
+  font-size: 50px;
+  color: white;
+}
+
+img {
+  height: 90vh;
+}
+
+@media only screen and (max-width: $Media_width) {
+  img {
+    height: auto !important;
+    margin-top:150px;
+    width: 100%;
+  }
+
+  .ErrorDiv {
+    font-size: 30px;
+  }
+}

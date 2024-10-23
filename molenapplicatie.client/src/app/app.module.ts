@@ -14,6 +14,8 @@ import { ToastrModule } from 'ngx-toastr';
 import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 import { ToastComponent } from './toast/toast.component';
 import { Toasts } from '../Utils/Toasts';
+import { LoaderComponent } from './loader/loader.component';
+import { ErrorMessageComponent } from './error-message/error-message.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +25,9 @@ import { Toasts } from '../Utils/Toasts';
     ImageSelectorComponent,
     ImageDialogComponent,
     ConfirmationDialogComponent,
-    ToastComponent
+    ToastComponent,
+    LoaderComponent,
+    ErrorMessageComponent
   ],
   imports: [
     BrowserAnimationsModule,

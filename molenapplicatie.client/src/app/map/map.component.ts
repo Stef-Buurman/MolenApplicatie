@@ -5,6 +5,7 @@ import { MolenDataClass } from '../../Class/MolenDataClass';
 import { MatDialog } from '@angular/material/dialog';
 import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
 import { Toasts } from '../../Utils/Toasts';
+import { InitializeDataStatus } from '../../Enums/InitializeDataStatus';
 
 @Component({
   selector: 'app-map',
@@ -16,6 +17,8 @@ export class MapComponent {
   @Output() mapChange = new EventEmitter<any>();
   @Input() error: boolean = false;
   @Output() errorChange = new EventEmitter<boolean>();
+  @Input() status!: InitializeDataStatus;
+  @Output() statusChange = new EventEmitter<InitializeDataStatus>();
   molens: MolenDataClass[] = [];
   molenDataError: boolean = false;
 
@@ -31,11 +34,13 @@ export class MapComponent {
       },
       error: (error) => {
         this.errorChange.emit(true);
+        this.statusChange.emit(InitializeDataStatus.Error);
         this.toasts.showError("De molens kunnen niet geladen worden!");
       },
       complete: () => {
         this.errorChange.emit(false);
         this.toasts.showSuccess("Molens zijn geladen!");
+        this.statusChange.emit(InitializeDataStatus.Success);
       }
     });
   }

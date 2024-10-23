@@ -3,6 +3,7 @@ import { Toasts } from '../Utils/Toasts';
 import { ToastType } from '../Enums/ToastType';
 import { HttpClient } from '@angular/common/http';
 import { MolenData } from '../Interfaces/MolenData';
+import { InitializeDataStatus } from '../Enums/InitializeDataStatus';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +14,9 @@ export class AppComponent implements OnInit {
   map: any;
   visible: boolean = false;
   error: boolean = false;
+  status: InitializeDataStatus = InitializeDataStatus.Initial;
+  InitializeDataStatus = InitializeDataStatus;
+  isLoading = true;
   private NewMolensLastExecutionTime: number | null = null;
   private UpdateLastExecutionTime: number | null = null;
   private readonly cooldownTime = 10 * 60 * 1000;
@@ -22,6 +26,9 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.toastService.setViewContainerRef(this.vcr);
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 0);
   }
 
   test() {
@@ -46,7 +53,6 @@ export class AppComponent implements OnInit {
 
       },
       error: (error) => {
-        console.log(error);
         this.toastService.removeLastAddedToast();
         this.toastService.showError(error.error);
         this.UpdateLastExecutionTime = null
@@ -70,7 +76,6 @@ export class AppComponent implements OnInit {
     this.toastService.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)", "Informatie", 60000);
     this.http.get<MolenData[]>('/api/search_for_new_molens').subscribe({
       next: (result:MolenData[]) => {
-        console.log(result);
         this.toastService.removeLastAddedToast();
         if (result.length == 0) {
           this.toastService.showInfo("Er zijn geen nieuwe molens gevonden!");
@@ -84,7 +89,6 @@ export class AppComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.log(error);
         this.toastService.removeLastAddedToast();
         this.toastService.showError(error.error);
         this.NewMolensLastExecutionTime = null;
