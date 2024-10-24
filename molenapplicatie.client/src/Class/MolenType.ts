@@ -1,5 +1,5 @@
 export class MolenType {
-  id: number; // Primary key, auto-increment
+  id: number;
   name: string;
 
   constructor(id: number, name: string) {
