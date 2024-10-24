@@ -4,6 +4,7 @@ import { ToastType } from '../Enums/ToastType';
 import { HttpClient } from '@angular/common/http';
 import { MolenData } from '../Interfaces/MolenData';
 import { InitializeDataStatus } from '../Enums/InitializeDataStatus';
+import { Place } from '../Interfaces/Place';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,10 @@ export class AppComponent implements OnInit {
   status: InitializeDataStatus = InitializeDataStatus.Initial;
   InitializeDataStatus = InitializeDataStatus;
   isLoading = true;
+
+  selectedPlace!: Place;
+
+
   private NewMolensLastExecutionTime: number | null = null;
   private UpdateLastExecutionTime: number | null = null;
   private readonly cooldownTime = 10 * 60 * 1000;
@@ -31,9 +36,13 @@ export class AppComponent implements OnInit {
     }, 0);
   }
 
-  test() {
-    this.map.setView([51.6914369, 4.2138731], 13);
-    //http://api.geonames.org/searchJSON?country=NL&maxRows=500&username=weetikveel12321
+  onPlaceChange(selectedPlace: Place) {
+    console.log(selectedPlace)
+    if (!selectedPlace && this.selectedPlace) return;
+    else if (!selectedPlace) selectedPlace = this.selectedPlace;
+    var zoom: Number = 13;
+    if (selectedPlace.population == 0) zoom = 15;
+    this.map.setView([selectedPlace.lat, selectedPlace.lon], zoom);
   }
 
   openInfoMenu() {
@@ -47,7 +56,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.toastService.showInfo("Molens worden geupdate... (Dit kan even duren)", "Informatie", 60000);
+    this.toastService.showInfo("Molens worden geupdate... (Dit kan even duren)", "Informatie", 5000);
     this.http.get<MolenData[]>('/api/update_oldest_molens').subscribe({
       next: (result) => {
 
@@ -73,7 +82,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.toastService.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)", "Informatie", 60000);
+    this.toastService.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)", "Informatie", 5000);
     this.http.get<MolenData[]>('/api/search_for_new_molens').subscribe({
       next: (result:MolenData[]) => {
         this.toastService.removeLastAddedToast();

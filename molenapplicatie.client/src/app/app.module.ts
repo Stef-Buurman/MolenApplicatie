@@ -16,6 +16,7 @@ import { ToastComponent } from './toast/toast.component';
 import { Toasts } from '../Utils/Toasts';
 import { LoaderComponent } from './loader/loader.component';
 import { ErrorMessageComponent } from './error-message/error-message.component';
+import { DropdownComponent } from './dropdown/dropdown.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { ErrorMessageComponent } from './error-message/error-message.component';
     ConfirmationDialogComponent,
     ToastComponent,
     LoaderComponent,
-    ErrorMessageComponent
+    ErrorMessageComponent,
+    DropdownComponent
   ],
   imports: [
     BrowserAnimationsModule,

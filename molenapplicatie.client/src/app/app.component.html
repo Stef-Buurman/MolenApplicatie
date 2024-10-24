@@ -6,8 +6,11 @@
       <img class="logo" src="Assets/Background/Buurman-Buurman-logo.webp" alt="Alternate Text" />
       <span>Molens</span>
     </section>
-    <div (click)="updateMolens()">Update molens</div>
-    <div (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+    <div *ngIf="visible" class="placeSearch">
+      <app-dropdown [(selectedPlace)]="selectedPlace" (selectedPlaceChange)="onPlaceChange($event)"></app-dropdown>
+    </div>
+    <div *ngIf="visible" class="topButton" (click)="updateMolens()">Update molens</div>
+    <div *ngIf="visible" class="topButton" (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
     <img class="buurmanEnBuurmanImg" src="Assets/Background/Buurman-Buurman-events.png" alt="Alternate Text" />
     <div class="icon" (click)="openInfoMenu()">
       <i class="fa fa-bars"></i>
@@ -15,7 +18,17 @@
   </div>
 </header>
 <div *ngIf="!error" class="container">
-  <app-map [(map)]="map" [(error)]="error" [(status)]="status"></app-map>
+  <div class="allButtons">
+    <h2>Menu</h2>
+    <div class="placeSearch">
+      <app-dropdown [(selectedPlace)]="selectedPlace" (selectedPlaceChange)="onPlaceChange($event)"></app-dropdown>
+    </div>
+    <div class="topButton" (click)="updateMolens()">Update molens</div>
+    <div class="topButton" (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+  </div>
+  <div class="mapContainer">
+    <app-map [(map)]="map" [(error)]="error" [(status)]="status"></app-map>
+  </div>
 </div>
 
 <app-error-message *ngIf="error">app-error-message</app-error-message>
