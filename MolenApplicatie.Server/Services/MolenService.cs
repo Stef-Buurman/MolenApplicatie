@@ -9,29 +9,21 @@ using MolenApplicatie.Models;
 
 namespace MolenApplicatie.Server.Services
 {
-    public class MolenService
+    public class MolenService : DbConnection
     {
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
         private List<string> allowedTypes = new List<string>();
 
-        private readonly SQLiteAsyncConnection _db;
+        //private readonly SQLiteAsyncConnection _db;
+        private DbConnection _db;
 
         public MolenService()
         {
             _client = new HttpClient();
-            _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
-            InitializeDB();
-        }
-
-        public async Task<int> InitializeDB()
-        {
-            await _db.CreateTableAsync<MolenTBN>();
-            await _db.CreateTableAsync<MolenData>();
-            await _db.CreateTableAsync<MolenType>();
-            await _db.CreateTableAsync<MolenTypeAssociation>();
-            return 1;
+            //_db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
+            _db = new DbConnection();
         }
 
         public async Task<MolenData> GetFullDataOfMolen(MolenData molen)
@@ -71,7 +63,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<MolenType>> GetAllMolenTypes()
         {
-            List<MolenType> MolenTypes = await _db.Table<MolenType>().ToListAsync();
+            List<MolenType> MolenTypes = await _db.Table<MolenType>();
             return MolenTypes;
         }
 

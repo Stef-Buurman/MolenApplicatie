@@ -17,34 +17,21 @@ namespace MolenApplicatie.Server.Services
         private readonly MolenService _molenService;
         private List<string> allowedTypes = new List<string>();
 
-        private readonly SQLiteAsyncConnection _db;
+        private readonly DbConnection _db;
 
         public NewMolenDataService()
         {
             _client = new HttpClient();
-            _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
-            InitializeDB();
-            allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
+            _db = new DbConnection();
             _molenService = new MolenService();
-        }
-
-        public async Task<int> InitializeDB()
-        {
-            await _db.CreateTableAsync<MolenTBN>();
-            await _db.CreateTableAsync<MolenData>();
-            await _db.CreateTableAsync<MolenType>();
-            await _db.CreateTableAsync<MolenTypeAssociation>();
-            await _db.CreateTableAsync<LastSearchedForNewData>();
-            return 1;
         }
 
         public async Task<List<MolenData>> GetAllMolenData()
         {
-            await InitializeDB();
             await AddMolenTBNToDBFromJson();
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> Data = new List<MolenData>();
-            List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>().ToListAsync();
+            List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>();
             allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
             foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
             {
@@ -65,7 +52,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr)
         {
-            List<MolenType> MolenTypes = await _db.Table<MolenType>().ToListAsync();
+            List<MolenType> MolenTypes = await _db.Table<MolenType>();
             List<MolenType> NewAddedTypes = new List<MolenType>();
             try
             {
@@ -276,59 +263,9 @@ namespace MolenApplicatie.Server.Services
             return (null, null);
         }
 
-        //public async Task<List<MolenTBN>> GetAllActiveTBNR()
-        //{
-        //    await InitializeDB();
-        //    List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>().ToListAsync();
-        //    List<MolenTBN> allReadMolenTBN = await ReadAllMolenTBN();
-
-        //    foreach(MolenTBN readMolenTBN in allReadMolenTBN)
-        //    {
-        //        if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr).Count() == 0)
-        //        {
-        //            await _db.InsertAsync(readMolenTBN);
-        //        }
-        //    }
-
-
-        //for (int i = 1; i <= 13; i++)
-        //{
-        //    HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
-        //    string responseBody = await response.Content.ReadAsStringAsync();
-
-        //    var doc = new HtmlDocument();
-        //    doc.LoadHtml(responseBody);
-        //    var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
-        //    if (divs != null)
-        //    {
-        //        foreach (var div in divs)
-        //        {
-        //            var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
-        //            if (!string.IsNullOrEmpty(url))
-        //            {
-        //                url = url.Substring(0, url.IndexOf('?'));
-        //                string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
-
-        //                Match match = Regex.Match(url, pattern);
-
-        //                if (match.Success)
-        //                {
-        //                    url = match.Groups[1].Value;
-        //                    if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
-        //                    {
-        //                        await _db.InsertAsync(new MolenTBN() { Ten_Brugge_Nr = url });
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-        //    return await _db.Table<MolenTBN>().ToListAsync();
-        //}
         public async Task<List<MolenData>> GetAllMolenDataDB()
         {
-            await InitializeDB();
-            List<MolenData> MolenData = await _db.Table<MolenData>().ToListAsync();
+            List<MolenData> MolenData = await _db.Table<MolenData>();
             List<MolenData> MolenData_ = new List<MolenData>();
             string jsonString = File.ReadAllText("Json/CorrectMolenTypes.json");
             List<string> CorrectMolenTypes = JsonSerializer.Deserialize<List<string>>(jsonString);
@@ -345,8 +282,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<MolenTBN>> AddMolenTBNToDBFromJson()
         {
-            await InitializeDB();
-            List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>().ToListAsync();
+            List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>();
             string jsonString = File.ReadAllText("Json/AlleActieveMolens.json");
             List<MolenTBN> molenList = JsonSerializer.Deserialize<List<MolenTBN>>(jsonString);
             foreach (var molen in molenList)
@@ -356,7 +292,7 @@ namespace MolenApplicatie.Server.Services
                     await _db.InsertAsync(molen);
                 }
             }
-            return await _db.Table<MolenTBN>().ToListAsync();
+            return await _db.Table<MolenTBN>();
         }
 
         public async Task<(List<MolenData> MolenData, bool isDone, TimeSpan timeToWait)> UpdateDataOfLastUpdatedMolens()
@@ -434,7 +370,6 @@ namespace MolenApplicatie.Server.Services
                 return (null, cooldownTime - (DateTime.Now - newestSearch[0].LastSearched));
             }
 
-            await InitializeDB();
             List<MolenData> allAddedMolens = new List<MolenData>();
             List<MolenTBN> allAddedMolenTBN = new List<MolenTBN>();
             List<MolenTBN> allFoundMolenTBN = await ReadAllMolenTBN();
@@ -442,7 +377,7 @@ namespace MolenApplicatie.Server.Services
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
                 if (allAddedMolens.Count == 50) break;
-                if (await _db.FindAsync<MolenTBN>(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr) == null)
+                if (await _db.FindWithQueryAsync<MolenTBN>("SELECT * FROM MolenTBN WHERE Ten_Brugge_Nr = ?", readMolenTBN.Ten_Brugge_Nr) == null)
                 {
                     await _db.InsertAsync(readMolenTBN);
                     var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
@@ -468,7 +403,6 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<bool> AddDateTimeFromSearches()
         {
-            await InitializeDB();
             var searchesLongerThanOneDay = await _db.QueryAsync<LastSearchedForNewData>("SELECT * FROM LastSearchedForNewData WHERE LastSearched < ?", new object[] { DateTime.Now.AddDays(-1) });
             foreach (var search in searchesLongerThanOneDay)
             {
