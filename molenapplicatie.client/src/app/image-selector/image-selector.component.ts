@@ -70,13 +70,6 @@ export class ImageSelectorComponent {
               next: (result) => {
                 this.imagesChange.emit(this.images);
                 this.selectedImageChange.emit(this.images[0]);
-              },
-              error: (error) => {
-                if (error.status == 401) {
-                  this.toast.showError("Er is een verkeerde api key ingevuld!");
-                } else {
-                  this.toast.showError(error.error.message);
-                }
               }
             });
           }
