@@ -9,5 +9,5 @@ export enum DialogReturnStatus {
   Error = "Error",
   Information = "Information",
   Warning = "Warning",
-
+  Confirmed = "Confirmed"
 }

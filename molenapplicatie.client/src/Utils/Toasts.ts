@@ -12,6 +12,7 @@ export class Toasts {
   private renderer: Renderer2;
   private activeToasts: ComponentRef<ToastComponent>[] = [];
   private viewContainerRef!: ViewContainerRef;
+  private defaultToastTime = 4000;
 
   constructor(
     private rendererFactory: RendererFactory2,
@@ -21,19 +22,19 @@ export class Toasts {
     this.renderer = this.rendererFactory.createRenderer(null, null);
   }
 
-  showSuccess(message: string, title?: string, duration: number = 3000) {
+  showSuccess(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Success', message, ToastType.Success, duration);
   }
 
-  showError(message: string, title?: string, duration: number = 3000) {
+  showError(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Error', message, ToastType.Error, duration);
   }
 
-  showInfo(message: string, title?: string, duration: number = 3000) {
+  showInfo(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Informatie', message, ToastType.Info, duration);
   }
 
-  showWarning(message: string, title?: string, duration: number = 3000) {
+  showWarning(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Waarschuwing!', message, ToastType.Warning, duration);
   }
 
@@ -41,7 +42,7 @@ export class Toasts {
     this.viewContainerRef = vcr;
   }
 
-  showToast(title: string, message: string, type: ToastType, duration: number = 3000) {
+  showToast(title: string, message: string, type: ToastType, duration: number = this.defaultToastTime) {
     const toastContainer = document.getElementById('toast-container');
 
     if (!toastContainer || !this.viewContainerRef) return;

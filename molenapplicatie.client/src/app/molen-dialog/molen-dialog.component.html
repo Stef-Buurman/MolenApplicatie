@@ -59,7 +59,7 @@
         <span>Image Preview:</span>
         <img [src]="imagePreview" alt="Selected Image" width="300" />
       </div>
-      <span>API Key: <input matInput type="text" name="password" [(ngModel)]="APIKey" /></span>
+      <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off"/></span>
       <button (click)="onSubmit()">Upload the file</button>
     </div>
     <div *ngIf="file">

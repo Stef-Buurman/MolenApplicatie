@@ -6,6 +6,7 @@ import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../Utils/Toasts';
+import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 
 @Component({
   selector: 'app-image-dialog',
@@ -13,7 +14,7 @@ import { Toasts } from '../../Utils/Toasts';
   styleUrl: './image-dialog.component.scss'
 })
 export class ImageDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { selectedImage: MolenImage, canBeDeleted:boolean},
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { selectedImage: MolenImage, canBeDeleted: boolean },
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog,
     private toast: Toasts) { }
@@ -23,20 +24,21 @@ export class ImageDialogComponent {
   }
 
   openDeleteDialog(): void {
-    console.log(this.data)
     if (this.data.canBeDeleted) {
       const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
         data: {
           title: 'Foto verwijderen',
           message: 'Weet je zeker dat je deze foto wilt verwijderen?',
-          api_key_usage: false
+          api_key_usage: true
         } as ConfirmationDialogData
       });
 
       dialogRef.afterClosed().subscribe({
-        next: (result: boolean) => {
-          if (result) {
-            this.dialogRef.close({ status: DialogReturnStatus.Deleted });
+        next: (result: DialogReturnType) => {
+          if (result.status == DialogReturnStatus.Confirmed) {
+            this.dialogRef.close({ status: DialogReturnStatus.Deleted, api_key: result.api_key } as DialogReturnType);
+          } else {
+            this.dialogRef.close(result);
           }
         }
       })

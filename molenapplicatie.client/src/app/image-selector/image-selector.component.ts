@@ -6,8 +6,9 @@ import { MolenImage } from '../../Class/MolenImage';
 import { GetSafeUrl } from '../../Utils/GetSafeUrl';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Toasts } from '../../Utils/Toasts';
+import { catchError, Observable, Subscription, tap, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-image-selector',
@@ -63,16 +64,27 @@ export class ImageSelectorComponent {
 
       dialogRef.afterClosed().subscribe(
         (result: DialogReturnType) => {
-          if (result.status == DialogReturnStatus.Deleted) {
-            if (this.deleteImage(selectedImage.name)) {
-              this.images = this.images.filter(x => x.name != selectedImage.name);
-              this.imagesChange.emit(this.images);
-              this.selectedImageChange.emit(this.images[0])
-              this.toast.showSuccess("Image is deleted");
-            }
+          console.log(result);
+          if (result.status == DialogReturnStatus.Deleted && result.api_key) {
+            this.deleteImage(selectedImage.name, result.api_key).subscribe({
+              next: (result) => {
+                this.imagesChange.emit(this.images);
+                this.selectedImageChange.emit(this.images[0]);
+              },
+              error: (error) => {
+                if (error.status == 401) {
+                  this.toast.showError("Er is een verkeerde api key ingevuld!");
+                } else {
+                  this.toast.showError(error.error.message);
+                }
+              }
+            });
+          }
+          else if (result.status == DialogReturnStatus.Deleted && !result.api_key) {
+            this.toast.showWarning("Er is geen api key ingevuld, de foto is niet verwijderd!");
           }
           else if (result.status == DialogReturnStatus.Error) {
-            this.toast.showError("Error while deleting image");
+            this.toast.showError("Er is iets fout gegaan met het verwijderen van de foto!");
           }
         }
       )
@@ -88,22 +100,26 @@ export class ImageSelectorComponent {
     return undefined;
   }
 
-  deleteImage(imageName: string): boolean {
-    this.http.delete("/api/molen_image/" + this.tbNr + "/" + imageName).subscribe({
-      next: (result) => {
+  deleteImage(imageName: string, APIKey: string): Observable<any> {
+    console.log(APIKey);
+    const headers = new HttpHeaders({
+      'Authorization': APIKey,
+    });
+
+    return this.http.delete("/api/molen_image/" + this.tbNr + "/" + imageName, { headers }).pipe(
+      tap(() => {
         this.images = this.images.filter(x => x.name != imageName);
         this.selectedImage = this.images[0];
         this.toast.showSuccess("Foto is verwijderd");
-        return true;
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         if (error.status == 401) {
           this.toast.showError("Er is een verkeerde api key ingevuld!");
         } else {
           this.toast.showError(error.error.message);
         }
-      }
-    });
-    return false;
+        return throwError(error);
+      })
+    );
   }
 }

@@ -1,10 +1,15 @@
 import { Component, OnInit, ViewContainerRef } from '@angular/core';
 import { Toasts } from '../Utils/Toasts';
 import { ToastType } from '../Enums/ToastType';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MolenData } from '../Interfaces/MolenData';
 import { InitializeDataStatus } from '../Enums/InitializeDataStatus';
 import { Place } from '../Interfaces/Place';
+import { ConfirmationDialogData } from '../Interfaces/ConfirmationDialogData';
+import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogReturnType } from '../Interfaces/DialogReturnType';
+import { DialogReturnStatus } from '../Enums/DialogReturnStatus';
 
 @Component({
   selector: 'app-root',
@@ -25,12 +30,13 @@ export class AppComponent implements OnInit {
   private NewMolensLastExecutionTime: number | null = null;
   private UpdateLastExecutionTime: number | null = null;
   private readonly cooldownTime = 10 * 60 * 1000;
-  constructor(private toastService: Toasts,
+  constructor(private toasts: Toasts,
     private vcr: ViewContainerRef,
-    private http: HttpClient) { }
+    private http: HttpClient,
+    private dialog: MatDialog) { }
 
   ngOnInit() {
-    this.toastService.setViewContainerRef(this.vcr);
+    this.toasts.setViewContainerRef(this.vcr);
     setTimeout(() => {
       this.isLoading = false;
     }, 0);
@@ -50,60 +56,122 @@ export class AppComponent implements OnInit {
   }
 
   updateMolens() {
-    const currentTime = Date.now();
-    if (this.UpdateLastExecutionTime && currentTime - this.UpdateLastExecutionTime < this.cooldownTime) {
-      this.toastService.showWarning("Dit kan eens elke 30 minuten!");
-      return;
-    }
-
-    this.toastService.showInfo("Molens worden geupdate... (Dit kan even duren)", "Informatie", 5000);
-    this.http.get<MolenData[]>('/api/update_oldest_molens').subscribe({
-      next: (result) => {
-
-      },
-      error: (error) => {
-        this.toastService.removeLastAddedToast();
-        this.toastService.showError(error.error);
-        this.UpdateLastExecutionTime = null
-      },
-      complete: () => {
-        this.toastService.removeLastAddedToast();
-        this.toastService.showSuccess("Molens zijn geupdate!");
-      }
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        title: 'Molend updaten',
+        message: 'Weet je zeker dat je de oudste molens wilt updaten?',
+        api_key_usage: true
+      } as ConfirmationDialogData
     });
 
-    this.UpdateLastExecutionTime = currentTime;
+    dialogRef.afterClosed().subscribe({
+      next: (result: DialogReturnType) => {
+        var previousLastExcecutionTime = this.UpdateLastExecutionTime;
+        if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
+
+          const headers = new HttpHeaders({
+            'Authorization': result.api_key,
+          });
+
+          const currentTime = Date.now();
+          if (this.UpdateLastExecutionTime && currentTime - this.UpdateLastExecutionTime < this.cooldownTime) {
+            this.toasts.showWarning("Dit kan eens elke 30 minuten!");
+            return;
+          }
+
+          this.toasts.showInfo("Molens worden geupdate... (Dit kan even duren)");
+
+          this.http.get<MolenData[]>('/api/update_oldest_molens', { headers }).subscribe({
+            next: (result) => {
+              console.log(result);
+            },
+            error: (error) => {
+              if (error.status == 401) {
+                this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
+              }
+              else {
+                this.toasts.showError(error.error);
+              }
+              
+              this.UpdateLastExecutionTime = previousLastExcecutionTime;
+            },
+            complete: () => {
+              this.toasts.showSuccess("Molens zijn geupdate!");
+            }
+          });
+
+          this.UpdateLastExecutionTime = currentTime;
+        }
+        else if (result.status == DialogReturnStatus.Confirmed && !result.api_key) {
+          this.toasts.showWarning("Er is geen api key ingevuld, er is niets gebeurt!");
+        }
+        else if (result.status == DialogReturnStatus.Error) {
+          this.toasts.showError("Er is iets fout gegaan met het updaten van de molens!");
+        }
+      }
+    })
   }
 
   searchForNewMolens() {
-    const currentTime = Date.now();
-    if (this.NewMolensLastExecutionTime && currentTime - this.NewMolensLastExecutionTime < this.cooldownTime) {
-      this.toastService.showWarning("Dit kan eens elke 60 minuten!");
-      return;
-    }
-
-    this.toastService.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)", "Informatie", 5000);
-    this.http.get<MolenData[]>('/api/search_for_new_molens').subscribe({
-      next: (result:MolenData[]) => {
-        this.toastService.removeLastAddedToast();
-        if (result.length == 0) {
-          this.toastService.showInfo("Er zijn geen nieuwe molens gevonden!");
-        }
-        else if (result.length == 1) {
-          this.toastService.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
-          this.map.setView([result[0].north, result[0].east], 13);
-        }
-        else {
-          this.toastService.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");
-        }
-      },
-      error: (error) => {
-        this.toastService.removeLastAddedToast();
-        this.toastService.showError(error.error);
-        this.NewMolensLastExecutionTime = null;
-      }
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        title: 'Nieuwe molens',
+        message: 'Weet je zeker dat je voor nieuwe molens wilt zoeken?',
+        api_key_usage: true
+      } as ConfirmationDialogData
     });
 
-    this.NewMolensLastExecutionTime = currentTime;
+    dialogRef.afterClosed().subscribe({
+      next: (result: DialogReturnType) => {
+        var previousLastExcecutionTime = this.UpdateLastExecutionTime;
+        if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
+
+          const headers = new HttpHeaders({
+            'Authorization': result.api_key,
+          });
+
+          const currentTime = Date.now();
+          if (this.NewMolensLastExecutionTime && currentTime - this.NewMolensLastExecutionTime < this.cooldownTime) {
+            this.toasts.showWarning("Dit kan eens elke 60 minuten!");
+            return;
+          }
+
+          this.toasts.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)");
+
+          this.http.get<MolenData[]>('/api/search_for_new_molens', { headers }).subscribe({
+            next: (result: MolenData[]) => {
+              if (result.length == 0) {
+                this.toasts.showInfo("Er zijn geen nieuwe molens gevonden!");
+              }
+              else if (result.length == 1) {
+                this.toasts.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
+                this.map.setView([result[0].north, result[0].east], 13);
+              }
+              else {
+                this.toasts.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");
+              }
+            },
+            error: (error) => {
+              if (error.status == 401) {
+                this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
+              }
+              else {
+                this.toasts.showError(error.error);
+              }
+
+              this.UpdateLastExecutionTime = currentTime;
+            }
+          });
+
+          this.NewMolensLastExecutionTime = currentTime;
+        }
+        else if (result.status == DialogReturnStatus.Confirmed && !result.api_key) {
+          this.toasts.showWarning("Er is geen api key ingevuld, er is niets gebeurt!");
+        }
+        else if (result.status == DialogReturnStatus.Error) {
+          this.toasts.showError("Er is iets fout gegaan met het updaten van de molens!");
+        }
+      }
+    })
   }
 }

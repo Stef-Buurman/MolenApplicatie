@@ -102,6 +102,7 @@ export class MolenDialogComponent {
             this.toasts.showSuccess("Image is saved successfully!");
           }
         });
+      this.APIKey = "";
     }
   }
 
