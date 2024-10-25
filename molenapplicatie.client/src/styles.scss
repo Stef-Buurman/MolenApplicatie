@@ -215,3 +215,9 @@ body {
 .molen-details .mdc-dialog__surface {
   overflow: hidden;
 }
+
+@media only screen and (max-width: $Media_width) {
+  .molen-details .mdc-dialog__surface {
+    overflow-y: scroll;
+  }
+}
