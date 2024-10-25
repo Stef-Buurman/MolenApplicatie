@@ -27,7 +27,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<MolenData>> GetAllMolenData()
         {
-            await AddMolenTBNToDBFromJson();
+            await AddMolenTBNToDB();
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> Data = new List<MolenData>();
             List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>();
@@ -277,11 +277,10 @@ namespace MolenApplicatie.Server.Services
             return MolenData_;
         }
 
-        public async Task<List<MolenTBN>> AddMolenTBNToDBFromJson()
+        public async Task<List<MolenTBN>> AddMolenTBNToDB()
         {
             List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>();
-            string jsonString = File.ReadAllText("Json/AlleActieveMolens.json");
-            List<MolenTBN> molenList = JsonSerializer.Deserialize<List<MolenTBN>>(jsonString);
+            List<MolenTBN> molenList = await ReadAllMolenTBN();
             foreach (var molen in molenList)
             {
                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == molen.Ten_Brugge_Nr).Count() == 0)

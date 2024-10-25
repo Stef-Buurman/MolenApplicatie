@@ -58,6 +58,14 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _MolenService.GetMolenByTBN(tbNumber));
         }
 
+        [HttpGet]
+        [Route("get_molen_tbn")]
+        public async Task<IActionResult> GetMolenTBN()
+        {
+            return Ok(await _NewMolenDataService.AddMolenTBNToDB());
+        }
+
+        [FileUploadFilter]
         [HttpGet("get_all_molen_data")]
         public async Task<IActionResult> GetAllMolenData()
         {

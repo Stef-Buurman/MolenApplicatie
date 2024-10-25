@@ -79,26 +79,35 @@ export class AppComponent implements OnInit {
             return;
           }
 
+          var isDone: boolean = false;
+
           this.toasts.showInfo("Molens worden geupdate... (Dit kan even duren)");
 
           this.http.get<MolenData[]>('/api/update_oldest_molens', { headers }).subscribe({
             next: (result) => {
-              console.log(result);
+              this.toasts.showSuccess("Er zijn " + result.length + " molens geupdate.");
             },
             error: (error) => {
+              isDone = true;
               if (error.status == 401) {
                 this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
               }
-              else {
+              else if (error) {
                 this.toasts.showError(error.error);
               }
-              
+
               this.UpdateLastExecutionTime = previousLastExcecutionTime;
             },
             complete: () => {
-              this.toasts.showSuccess("Molens zijn geupdate!");
+              isDone = true;
             }
           });
+
+          setTimeout(() => {
+            if (!isDone) {
+              this.toasts.showInfo("Jaja, ik ben nog bezig voor je.");
+            }
+          }, 15000);
 
           this.UpdateLastExecutionTime = currentTime;
         }
@@ -136,6 +145,8 @@ export class AppComponent implements OnInit {
             return;
           }
 
+          var isDone: boolean = false;
+
           this.toasts.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)");
 
           this.http.get<MolenData[]>('/api/search_for_new_molens', { headers }).subscribe({
@@ -152,16 +163,26 @@ export class AppComponent implements OnInit {
               }
             },
             error: (error) => {
+              isDone = true;
               if (error.status == 401) {
                 this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
               }
-              else {
+              else if (error) {
                 this.toasts.showError(error.error);
               }
 
               this.UpdateLastExecutionTime = currentTime;
+            },
+            complete: () => {
+              isDone = true;
             }
           });
+
+          setTimeout(() => {
+            if (!isDone) {
+              this.toasts.showInfo("Jaja, ik ben nog bezig voor je.");
+            }
+          }, 15000);
 
           this.NewMolensLastExecutionTime = currentTime;
         }
