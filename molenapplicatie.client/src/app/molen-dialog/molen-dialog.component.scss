@@ -56,8 +56,9 @@
 .image-preview img {
   display: block;
   margin: 0 auto;
-  max-width: 70%;
+  max-width: 100%;
   width: auto;
+  max-height: 42vh;
 }
 
 .close-btn {
