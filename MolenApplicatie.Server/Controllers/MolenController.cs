@@ -79,6 +79,7 @@ namespace MolenApplicatie.Server.Controllers
             }
         }
 
+        [FileUploadFilter]
         [HttpGet("update_oldest_molens")]
         public async Task<IActionResult> UpdateOldestMolens()
         {
@@ -90,6 +91,7 @@ namespace MolenApplicatie.Server.Controllers
             return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
         }
 
+        [FileUploadFilter]
         [HttpGet("search_for_new_molens")]
         public async Task<IActionResult> GetNewAddedMolens()
         {

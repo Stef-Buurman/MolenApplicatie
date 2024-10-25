@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Services;
 
 namespace MolenApplicatie.Server.Controllers
@@ -15,6 +16,7 @@ namespace MolenApplicatie.Server.Controllers
             _PlacesService = placesService;
         }
 
+        [FileUploadFilter]
         [HttpGet("read_all_netherlands_places")]
         public async Task<IActionResult> ReadAllNetherlandsPlaces()
         {
