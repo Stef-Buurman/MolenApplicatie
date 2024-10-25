@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MolenApplicatie.Server.Filters;
-using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 
 namespace MolenApplicatie.Server.Controllers

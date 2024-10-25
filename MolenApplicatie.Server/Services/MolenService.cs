@@ -16,13 +16,11 @@ namespace MolenApplicatie.Server.Services
         private readonly HttpClient _client;
         private List<string> allowedTypes = new List<string>();
 
-        //private readonly SQLiteAsyncConnection _db;
         private DbConnection _db;
 
         public MolenService()
         {
             _client = new HttpClient();
-            //_db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
             _db = new DbConnection();
         }
 
@@ -82,19 +80,24 @@ namespace MolenApplicatie.Server.Services
             return MolenData;
         }
 
-        public async Task<IFormFile> SaveMolenImage(int id, string TBN, IFormFile file)
+        public async Task<(IFormFile file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)
         {
+            var maxSavedFilesAmount = 5;
             using (var memoryStream = new MemoryStream())
             {
+                string folderName = $"MolenAddedImages/{TBN}";
+                if(Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
+                {
+                    return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
+                }
+
                 var fileExtension = Path.GetExtension(file.FileName);
                 if (fileExtension == null ||
                     (fileExtension.ToLower() != ".jpg"
                     && fileExtension.ToLower() != ".jpeg"
-                    && fileExtension.ToLower() != ".png")) return null;
+                    && fileExtension.ToLower() != ".png")) return (null, "Dit soort bestand wordt niet ondersteund!");
                 await file.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
-
-                string folderName = $"MolenAddedImages/{TBN}";
 
                 if (!Directory.Exists(folderName))
                 {
@@ -107,7 +110,7 @@ namespace MolenApplicatie.Server.Services
                 }
                 File.WriteAllBytes(FileDirectory, imageBytes);
             }
-            return file;
+            return (file, "");
         }
 
         public async Task<(bool status, string message)> DeleteImageFromMolen(string tbNummer, string imgName)

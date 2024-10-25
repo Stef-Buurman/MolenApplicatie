@@ -41,8 +41,19 @@ namespace MolenApplicatie.Server.Controllers
 
             MolenData molen = await _MolenService.GetMolenByTBN(tbNumber);
             if (molen == null) return NotFound("Molen niet gevonden!");
-            IFormFile savedImage = await _MolenService.SaveMolenImage(molen.Id, tbNumber, image);
-            if (savedImage == null) return BadRequest("Er is iets misgegaan met het opslaan van de foto!");
+            var result = await _MolenService.SaveMolenImage(molen.Id, tbNumber, image);
+            IFormFile savedImage = result.file;
+            if (savedImage == null)
+            {
+                if(result.errorMessage == null || result.errorMessage == "")
+                {
+                    return BadRequest("Er is iets misgegaan met het opslaan van de foto!");
+                }
+                else
+                {
+                    return BadRequest(result.errorMessage);
+                }
+            }
 
             return Ok(await _MolenService.GetMolenByTBN(tbNumber));
         }
