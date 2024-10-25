@@ -15,7 +15,6 @@ namespace MolenApplicatie.Server.Services
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
         private readonly MolenService _molenService;
-        private List<string> allowedTypes = new List<string>();
 
         private readonly DbConnection _db;
 
@@ -32,7 +31,6 @@ namespace MolenApplicatie.Server.Services
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> Data = new List<MolenData>();
             List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>();
-            allowedTypes = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("Json/CorrectMolenTypes.json"));
             foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
             {
                 Thread.Sleep(1000);
@@ -66,6 +64,7 @@ namespace MolenApplicatie.Server.Services
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='attrib']");
                 var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
                 var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
+                Console.WriteLine(divs.Count);
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
@@ -169,7 +168,7 @@ namespace MolenApplicatie.Server.Services
                                 foreach (string type in dd.Split(','))
                                 {
                                     var molenType = new MolenType() { Name = type.Trim() };
-                                    if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && allowedTypes.Contains(molenType.Name.ToLower()))
+                                    if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
                                     {
                                         await _db.InsertAsync(molenType);
                                         molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
@@ -192,7 +191,7 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
-                    if (!allowedTypes.Any(x => newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower()) && newMolenData.ModelType.Count() > 0))
+                    if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
                     {
                         return (null, null);
                     }
@@ -267,12 +266,10 @@ namespace MolenApplicatie.Server.Services
         {
             List<MolenData> MolenData = await _db.Table<MolenData>();
             List<MolenData> MolenData_ = new List<MolenData>();
-            string jsonString = File.ReadAllText("Json/CorrectMolenTypes.json");
-            List<string> CorrectMolenTypes = JsonSerializer.Deserialize<List<string>>(jsonString);
             foreach (var molen in MolenData)
             {
                 MolenData CompleteMolen = await _molenService.GetFullDataOfMolen(molen);
-                if (CorrectMolenTypes.Any(correct => molen.ModelType.Any(complete => complete.Name.ToLower() == correct.ToLower())))
+                if (Globals.AllowedMolenTypes.Any(correct => molen.ModelType.Any(complete => complete.Name.ToLower() == correct.ToLower())))
                 {
                     MolenData_.Add(CompleteMolen);
                 }
@@ -304,6 +301,7 @@ namespace MolenApplicatie.Server.Services
             }
             List<MolenData> oldestUpdateTimesMolens = await _db.QueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated ASC LIMIT 50");
             List<MolenData> updatedMolens = new List<MolenData>();
+
             foreach (var molen in oldestUpdateTimesMolens)
             {
                 var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr);
@@ -377,7 +375,9 @@ namespace MolenApplicatie.Server.Services
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
                 if (allAddedMolens.Count == 50) break;
-                if (await _db.FindWithQueryAsync<MolenTBN>("SELECT * FROM MolenTBN WHERE Ten_Brugge_Nr = ?", readMolenTBN.Ten_Brugge_Nr) == null)
+
+                var results = await _db.QueryAsync<MolenTBN>("SELECT * FROM MolenTBN WHERE Ten_Brugge_Nr = ?", readMolenTBN.Ten_Brugge_Nr);
+                if (results?.Count == 0)
                 {
                     await _db.InsertAsync(readMolenTBN);
                     var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
