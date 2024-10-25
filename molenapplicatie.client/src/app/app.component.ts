@@ -58,7 +58,7 @@ export class AppComponent implements OnInit {
   updateMolens() {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
-        title: 'Molend updaten',
+        title: 'Molens updaten',
         message: 'Weet je zeker dat je de oudste molens wilt updaten?',
         api_key_usage: true
       } as ConfirmationDialogData
