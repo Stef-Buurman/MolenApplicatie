@@ -3,6 +3,8 @@
 .container {
   margin: auto;
   width: 95%;
+  color: #0058A2;
+  display: flex;
 }
 
 header, .mapContainer {
@@ -13,23 +15,6 @@ header, .mapContainer {
 .container, .mapContainer {
   height: 90vh;
 }
-
-@media only screen and (max-width: $Media_width) {
-  .container, header {
-    width: 85%;
-  }
-
-  .container {
-    height: 88vh;
-    margin-top: 50px
-  }
-}
-
-.container {
-  color: #0058A2;
-  display: flex;
-}
-
 
 .topInfo {
   overflow: hidden;
@@ -94,6 +79,15 @@ header, .mapContainer {
 }
 
 @media screen and (max-width: $Media_width) {
+  .container, header {
+    width: 85%;
+  }
+
+  .container {
+    height: 88vh;
+    width: 100%;
+    margin-top: 70px;
+  }
   .topInfo .placeSearch {
     float: right;
     display: block;
@@ -107,11 +101,6 @@ header, .mapContainer {
 
   .topInfo .topButton:not(:last-child), .topInfo .placeSearch, .topInfo .placeSearch, .container .allButtons{
     display: none;
-  }
-
-  .container {
-      width:100%;
-    margin-top: 70px;
   }
 
   .topInfo {
