@@ -85,8 +85,15 @@ namespace MolenApplicatie.Server.Services
             var maxSavedFilesAmount = 5;
             using (var memoryStream = new MemoryStream())
             {
-                string folderName = $"MolenAddedImages/{TBN}";
-                if(Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
+                string folderName = $"MolenAddedImages";
+
+                if (!Directory.Exists(folderName))
+                {
+                    Directory.CreateDirectory(folderName);
+                }
+                folderName += "/" + TBN;
+
+                if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
                 {
                     return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
                 }
