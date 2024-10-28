@@ -9,6 +9,7 @@ namespace MolenApplicatie.Server.Services
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
+        private readonly string folderNameMolenImages = $"MolenAddedImages";
         private List<string> allowedTypes = new List<string>();
 
         private DbConnection _db;
@@ -50,7 +51,21 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<MolenData>> GetAllMolenLatLon()
         {
-            List<MolenData> MolenData = await _db.QueryAsync<MolenData>("SELECT Ten_Brugge_Nr, North, East FROM MolenData");
+            List<MolenData> MolenData = await _db.QueryAsync<MolenData>("SELECT Id, Ten_Brugge_Nr, North, East FROM MolenData");
+            for (int i = 0; i < MolenData.Count; i++)
+            {
+                MolenData[i].ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
+                "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { MolenData[i].Id });
+                if (Directory.Exists(folderNameMolenImages) && Directory.Exists(folderNameMolenImages + "/" + MolenData[i].Ten_Brugge_Nr) 
+                    && Directory.EnumerateFiles(folderNameMolenImages + "/" + MolenData[i].Ten_Brugge_Nr).Any())
+                {
+                    MolenData[i].HasImage = true;
+                }
+                else
+                {
+                    MolenData[i].HasImage = false;
+                }
+            }
             return MolenData;
         }
 
@@ -80,7 +95,7 @@ namespace MolenApplicatie.Server.Services
             var maxSavedFilesAmount = 5;
             using (var memoryStream = new MemoryStream())
             {
-                string folderName = $"MolenAddedImages";
+                string folderName = folderNameMolenImages;
 
                 if (!Directory.Exists(folderName))
                 {

@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { ChangeDetectorRef, Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -13,7 +13,7 @@ import { MolenData } from '../../Interfaces/MolenData';
   templateUrl: './molen-dialog.component.html',
   styleUrl: './molen-dialog.component.scss'
 })
-export class MolenDialogComponent {
+export class MolenDialogComponent implements OnDestroy{
   public molen?: MolenDataClass;
   public status: "initial" | "uploading" | "success" | "fail" = "initial";
   public file: File | null = null;
@@ -21,6 +21,8 @@ export class MolenDialogComponent {
   public APIKey: string = "";
   public molenImages: MolenImage[] = [];
   public selectedImage?: MolenImage;
+
+  private imageAdded: boolean = false;
 
   constructor(
     private sanitizer: DomSanitizer,
@@ -46,8 +48,12 @@ export class MolenDialogComponent {
     });
   }
 
+  ngOnDestroy(): void {
+    this.onClose();
+  }
+
   onClose(): void {
-    this.dialogRef.close();
+    this.dialogRef.close(this.imageAdded);
   }
 
   removeImg(): void {
@@ -100,6 +106,7 @@ export class MolenDialogComponent {
             this.molenImages = this.getAllMolenImages();
             this.selectedImage = this.molenImages.find(x => !previousMolenImages.find(y => y.name == x.name));
             this.toasts.showSuccess("Image is saved successfully!");
+            this.imageAdded = true;
           }
         });
       this.APIKey = "";

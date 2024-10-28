@@ -19,6 +19,7 @@ export class MolenDataClass implements MolenData {
   lastUpdated: Date;
   addedImages?: MolenImage[];
   image?: MolenImage;
+  hasImage: boolean;
 
   constructor(
     id: number,
@@ -31,6 +32,7 @@ export class MolenDataClass implements MolenData {
     east: number,
     modelType: MolenType[] = [],
     lastUpdated: Date,
+    hasImage: boolean,
     bouwjaar?: number,
     herbouwd_jaar?: string,
     bouwjaarStart?: number,
@@ -54,6 +56,7 @@ export class MolenDataClass implements MolenData {
     this.lastUpdated = lastUpdated;
     this.addedImages = addedImages;
     this.image = image;
+    this.hasImage = hasImage;
   }
 
   getBouwjaar(): string {

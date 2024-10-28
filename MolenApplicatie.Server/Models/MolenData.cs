@@ -23,6 +23,9 @@ namespace MolenApplicatie.Server.Models
 
         [Ignore]
         public List<MolenImage> AddedImages { get; set; } = new List<MolenImage>();
+
+        [Ignore]
+        public bool HasImage { get; set; }
         public double North { get; set; }
         public double East { get; set; }
         public DateTime LastUpdated { get; set; }

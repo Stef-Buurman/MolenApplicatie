@@ -18,6 +18,7 @@ export interface MolenData {
   lastUpdated: Date;
   image?: MolenImage;
   addedImages?: MolenImage[];
+  hasImage: boolean;
 
   getBouwjaar(): string;
 }

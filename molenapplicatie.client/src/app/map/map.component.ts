@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
 import { Toasts } from '../../Utils/Toasts';
 import { InitializeDataStatus } from '../../Enums/InitializeDataStatus';
+import { MarkerInfo } from '../../Interfaces/MarkerInfo';
 
 @Component({
   selector: 'app-map',
@@ -21,6 +22,7 @@ export class MapComponent {
   @Output() statusChange = new EventEmitter<InitializeDataStatus>();
   molens: MolenDataClass[] = [];
   molenDataError: boolean = false;
+  markers: MarkerInfo[] = [];
 
   constructor(private http: HttpClient,
     private toasts: Toasts,
@@ -61,29 +63,87 @@ export class MapComponent {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
 
-    const customIcon = L.icon({
-      iconUrl: 'Assets/Icons/grondzeiler.png',
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
-    });
-
     this.molens.forEach(molen => {
-      if (this.map) {
-        const marker = L.marker([molen.north, molen.east], { icon: customIcon }).addTo(this.map);
+      this.addMarker(molen);
 
-        marker.on('click', () => {
-          this.onMarkerClick(molen.ten_Brugge_Nr);
-        });
-      }
     });
     this.mapChange.emit(this.map);
   }
 
-  private onMarkerClick(tenBruggeNr: any): void {
+  addMarker(molen: MolenDataClass): void {
+    if (this.map) {
+      var iconLocation = 'Assets/Icons/Molens/';
+      var icon = 'windmolen_verdwenen';
+
+      if (molen.modelType.some(m => m.name.toLowerCase() === "weidemolen")) {
+        icon = 'weidemolen';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "paltrokmolen")) {
+        icon = 'paltrokmolen';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "standerdmolen")) {
+        icon = 'standerdmolen';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "wipmolen" || m.name.toLowerCase() === "spinnenkop")) {
+        icon = 'wipmolen';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "grondzeiler")) {
+        icon = 'grondzeiler';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "stellingmolen")) {
+        icon = 'stellingmolen';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "beltmolen")) {
+        icon = 'beltmolen';
+      }
+
+      if (molen.hasImage) {
+        icon += '_has_image';
+      }
+
+      icon += '.png';
+
+      const customIcon = L.icon({
+        iconUrl: iconLocation + icon,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+
+      const marker = L.marker([molen.north, molen.east], { icon: customIcon }).addTo(this.map);
+
+      marker.on('click', () => {
+        this.onMarkerClick(molen.ten_Brugge_Nr);
+      });
+
+      this.markers.push({ marker, tenBruggeNumber: molen.ten_Brugge_Nr });
+    }
+  }
+
+  private onMarkerClick(tenBruggeNr: string): void {
     const dialogRef = this.dialog.open(MolenDialogComponent, {
       data: { tenBruggeNr },
       panelClass: 'molen-details'
+    });
+
+    dialogRef.afterClosed().subscribe({
+      next: (result) => {
+        if (result) {
+          const markerInfoIndex = this.markers.findIndex(info => info.tenBruggeNumber === tenBruggeNr);
+          if (markerInfoIndex !== -1) {
+            const markerInfo = this.markers[markerInfoIndex];
+            markerInfo.marker.remove();
+            this.markers.splice(markerInfoIndex, 1);
+
+            var molen = this.molens.find(molen => molen.ten_Brugge_Nr === tenBruggeNr);
+            if (molen) {
+              molen.hasImage = true;
+              this.addMarker(molen);
+              this.mapChange.emit(this.map);
+            }
+          }
+        }
+      }
     });
   }
 }
