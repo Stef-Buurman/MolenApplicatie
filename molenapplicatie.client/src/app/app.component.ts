@@ -40,9 +40,6 @@ export class AppComponent implements OnInit {
     this.toasts.setViewContainerRef(this.vcr);
     setTimeout(() => {
       this.isLoadingVisible = false;
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 500);
     }, 1250);
   }
 
