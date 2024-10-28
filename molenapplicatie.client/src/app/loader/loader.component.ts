@@ -1,17 +1,20 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Component({
   selector: 'app-loader',
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss'
 })
-export class LoaderComponent implements OnInit {
+export class LoaderComponent implements OnChanges {
   @Input() isLoadingVisible: boolean = true;
   @Input() isLoading: boolean = true;
+  @Input() TimeToWait: number = 1000;
 
-  ngOnInit(): void {
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 500);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.isLoadingVisible) {
+      setTimeout(() => {
+        this.isLoading = !this.isLoading;
+      }, 500);
+    }
   }
 }

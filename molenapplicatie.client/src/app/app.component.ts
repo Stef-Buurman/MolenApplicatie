@@ -22,7 +22,6 @@ export class AppComponent implements OnInit {
   error: boolean = false;
   status: InitializeDataStatus = InitializeDataStatus.Initial;
   InitializeDataStatus = InitializeDataStatus;
-  isLoading = true;
   isLoadingVisible = true;
 
   selectedPlace!: Place;
