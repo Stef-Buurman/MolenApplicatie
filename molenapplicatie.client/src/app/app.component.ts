@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
   status: InitializeDataStatus = InitializeDataStatus.Initial;
   InitializeDataStatus = InitializeDataStatus;
   isLoading = true;
+  isLoadingVisible = true;
 
   selectedPlace!: Place;
 
@@ -38,12 +39,14 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.toasts.setViewContainerRef(this.vcr);
     setTimeout(() => {
-      this.isLoading = false;
-    }, 0);
+      this.isLoadingVisible = false;
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 500);
+    }, 1250);
   }
 
   onPlaceChange(selectedPlace: Place) {
-    console.log(selectedPlace)
     if (!selectedPlace && this.selectedPlace) return;
     else if (!selectedPlace) selectedPlace = this.selectedPlace;
     var zoom: Number = 13;

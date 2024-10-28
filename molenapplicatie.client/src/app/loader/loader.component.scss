@@ -1,6 +1,15 @@
 @import '../../Utils/Variables.scss';
 
+.loadingVisible {
+  opacity: 1;
+}
+
+.loadingNotVisible {
+  opacity: 0;
+}
+
 .loader-container {
+  transition: opacity 0.5s ease;
   position: fixed;
   width: 100%;
   height: 100%;
