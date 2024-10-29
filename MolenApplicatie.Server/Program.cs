@@ -4,8 +4,14 @@ using MolenApplicatie.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction())
+{
+    builder.Environment.WebRootPath = "/var/www/app/wwwroot";
+}
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
