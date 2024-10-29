@@ -33,7 +33,7 @@ namespace MolenApplicatie.Server.Services
             List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>();
             foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
                 var x = await GetMolenDataByTBNumber(Ten_Brugge_Nr.Ten_Brugge_Nr);
                 if (x.Item1 == null) continue;
                 Data.Add(x.Item1);
