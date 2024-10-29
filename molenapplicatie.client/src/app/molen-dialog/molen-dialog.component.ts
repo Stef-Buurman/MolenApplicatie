@@ -36,6 +36,7 @@ export class MolenDialogComponent implements OnDestroy{
   ngOnInit(): void {
     this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe({
       next: (result) => {
+        console.log(result)
         this.molen = result;
         if (this.molen == undefined) this.onClose();
         this.molenImages = this.getAllMolenImages();
