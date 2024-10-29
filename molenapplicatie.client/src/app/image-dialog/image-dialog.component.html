@@ -1,5 +1,5 @@
 <div class="selectedImage">
-  <img [src]="data.selectedImage.image" alt="Alternate Text" />
+  <img [src]="getFilePath()" alt="Alternate Text" />
   <div class="button-container">
     <div class="image-buttons">
       <button class="btn {{data.canBeDeleted ? 'deleteButton' : 'deleteButtoDisabled'}}" (click)="openDeleteDialog()"><i class="fas fa-trash"></i> Delete</button>

@@ -19,6 +19,14 @@ export class ImageDialogComponent {
     private dialog: MatDialog,
     private toast: Toasts) { }
 
+
+  getFilePath(): string | undefined {
+    if (this.data && this.data.selectedImage) {
+      return this.data.selectedImage.filePath;
+    }
+    return undefined;
+  }
+
   onClose(): void {
     this.dialogRef.close();
   }
