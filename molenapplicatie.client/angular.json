@@ -38,8 +38,7 @@
 						"assets": [
               {
                 "glob": "**/*",
-                "input": "public",
-                "ignore": [ "MolenAddedImages/**/*", "MolenImages/**/*" ]
+                "input": "public"
               }
 						],
 						"styles": [
