@@ -30,7 +30,7 @@ namespace MolenApplicatie.Server.Services
             var mainImagePath = $"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg";
             if (File.Exists(mainImagePath))
             {
-                molen.Image = new MolenImage(mainImagePath, molen.Ten_Brugge_Nr);
+                molen.Image = new MolenImage(mainImagePath.Replace("wwwroot/", ""), molen.Ten_Brugge_Nr);
             }
 
             var addedImagesFolder = $"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}";
@@ -44,7 +44,7 @@ namespace MolenApplicatie.Server.Services
 
                 foreach (string imageFile in imageFiles)
                 {
-                    molen.AddedImages.Add(new MolenImage(imageFile, Path.GetFileName(imageFile), true));
+                    molen.AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true));
                 }
             }
             return molen;
