@@ -27,7 +27,7 @@ namespace MolenApplicatie.Server.Controllers
                 .Select(file => new MolenImage2(
                     file, // Original file path
                     Path.GetFileName(file),
-                    $"{Request.Scheme}://{Request.Host}/images/{Path.GetFileName(file)}", // Construct URL
+                    $"{Request.Scheme}://{Request.Host}/MolenImages/{Path.GetFileName(file)}", // Construct URL
                     true // or false based on your logic
                 ))
                 .ToList();

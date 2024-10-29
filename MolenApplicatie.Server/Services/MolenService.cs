@@ -9,7 +9,7 @@ namespace MolenApplicatie.Server.Services
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
-        private readonly string folderNameMolenImages = $"MolenAddedImages";
+        private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
         private List<string> allowedTypes = new List<string>();
 
         private DbConnection _db;
@@ -27,13 +27,13 @@ namespace MolenApplicatie.Server.Services
             molen.ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { molen.Id });
 
-            var mainImagePath = $"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg";
+            var mainImagePath = $"wwwroot/{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg";
             if (File.Exists(mainImagePath))
             {
                 molen.Image = new MolenImage(mainImagePath, molen.Ten_Brugge_Nr);
             }
 
-            var addedImagesFolder = $"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}";
+            var addedImagesFolder = $"wwwroot/{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}";
             if (Directory.Exists(addedImagesFolder))
             {
                 string[] imageFiles = Directory.GetFiles(addedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
@@ -136,9 +136,9 @@ namespace MolenApplicatie.Server.Services
             MolenData molen = await GetMolenByTBN(tbNummer);
             if (molen == null) return (false, "Molen not found");
             if (molen.AddedImages.Find(x => x.Name == imgName) == null) return (false, "Image not found");
-            if (File.Exists($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}"))
+            if (File.Exists($"wwwroot/{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}"))
             {
-                File.Delete($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}");
+                File.Delete($"wwwroot/{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}");
             }
             return (true, "Image deleted");
         }
