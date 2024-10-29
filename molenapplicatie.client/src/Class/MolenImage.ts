@@ -2,14 +2,14 @@ import { SafeUrl } from "@angular/platform-browser";
 
 export class MolenImage {
   molenTbNummer: string;
-  content: Uint8Array;
+  filePath: string;
   name: string;
   canBeDeleted: boolean;
   image?: SafeUrl;
 
-  constructor(molenTbNummer: string, image: Uint8Array, name: string, canBeDeleted = false) {
+  constructor(molenTbNummer: string, filePath: string, name: string, canBeDeleted = false) {
     this.molenTbNummer = molenTbNummer;
-    this.content = image;
+    this.filePath = filePath;
     this.name = name;
     this.canBeDeleted = canBeDeleted;
   }

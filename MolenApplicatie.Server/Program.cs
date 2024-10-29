@@ -2,12 +2,9 @@ using Microsoft.AspNetCore.Http.Features;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Environment.WebRootPath = "/var/www/app/wwwroot";
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<NewMolenDataService>();
@@ -20,7 +17,6 @@ builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("
 
 var app = builder.Build();
 
-app.UseDefaultFiles();
 app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())

@@ -50,7 +50,6 @@ export class ImageSelectorComponent {
 
   openImage(): void {
     if (this.selectedImage) {
-      this.selectedImage.image = this.getSafeUrl(this.selectedImage.name);
       var selectedImage: MolenImage = this.selectedImage;
       var canBeDeleted: boolean = selectedImage.canBeDeleted;
 
@@ -64,8 +63,7 @@ export class ImageSelectorComponent {
 
       dialogRef.afterClosed().subscribe(
         (result: DialogReturnType) => {
-          console.log(result);
-          if (result.status == DialogReturnStatus.Deleted && result.api_key) {
+          if (result && result.status == DialogReturnStatus.Deleted && result.api_key) {
             this.deleteImage(selectedImage.name, result.api_key).subscribe({
               next: (result) => {
                 this.imagesChange.emit(this.images);
@@ -80,10 +78,10 @@ export class ImageSelectorComponent {
               }
             });
           }
-          else if (result.status == DialogReturnStatus.Deleted && !result.api_key) {
+          else if (result && result.status == DialogReturnStatus.Deleted && !result.api_key) {
             this.toast.showWarning("Er is geen api key ingevuld, de foto is niet verwijderd!");
           }
-          else if (result.status == DialogReturnStatus.Error) {
+          else if (result && result.status == DialogReturnStatus.Error) {
             this.toast.showError("Er is iets fout gegaan met het verwijderen van de foto!");
           }
         }
@@ -91,17 +89,8 @@ export class ImageSelectorComponent {
     }
   }
 
-  getSafeUrl(imgName: string): SafeUrl | undefined {
-    var image = this.getImageByName(imgName);
-
-    if (image != undefined) {
-      return GetSafeUrl(this.sanitizer, image.content);
-    }
-    return undefined;
-  }
 
   deleteImage(imageName: string, APIKey: string): Observable<any> {
-    console.log(APIKey);
     const headers = new HttpHeaders({
       'Authorization': APIKey,
     });

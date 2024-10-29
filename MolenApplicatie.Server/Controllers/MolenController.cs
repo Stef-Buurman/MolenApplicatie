@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MolenApplicatie.Models;
 using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
@@ -16,6 +17,22 @@ namespace MolenApplicatie.Server.Controllers
         {
             _MolenService = molenService;
             _NewMolenDataService = newMolenDataService;
+        }
+
+        [HttpGet("get-image-urls")]
+        public IActionResult GetImageUrls()
+        {
+            var imageDirectory = "wwwroot/MolenImages";
+            var images = Directory.GetFiles(imageDirectory)
+                .Select(file => new MolenImage2(
+                    file, // Original file path
+                    Path.GetFileName(file),
+                    $"{Request.Scheme}://{Request.Host}/images/{Path.GetFileName(file)}", // Construct URL
+                    true // or false based on your logic
+                ))
+                .ToList();
+
+            return Ok(images);
         }
 
         [HttpGet("all_molen_locations")]
