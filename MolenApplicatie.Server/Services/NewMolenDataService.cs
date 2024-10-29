@@ -203,19 +203,19 @@ namespace MolenApplicatie.Server.Services
                         {
                             var imageResponse = await _client.GetAsync(src);
                             byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
-                            newMolenData.Image = new MolenImage(image, newMolenData.Ten_Brugge_Nr, false);
                             if (!Directory.Exists(Globals.MolenImagesFolder))
                             {
                                 Directory.CreateDirectory(Globals.MolenImagesFolder);
                             }
                             if (!File.Exists($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}"))
                             {
-                                File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Image.Content);
+                                File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
                             }
-                            else if (File.ReadAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg").Length != newMolenData.Image.Content.Length)
+                            else if (File.ReadAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg").Length != image.Length)
                             {
-                                File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Image.Content);
+                                File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
                             }
+                            newMolenData.Image = new MolenImage($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Ten_Brugge_Nr, false);
                         }
                     }
 

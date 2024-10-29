@@ -23,18 +23,20 @@ namespace MolenApplicatie.Server.Services
         public async Task<MolenData> GetFullDataOfMolen(MolenData molen)
         {
             if (molen == null) return null;
+
             molen.ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { molen.Id });
 
-            if (File.Exists($"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg"))
+            var mainImagePath = $"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg";
+            if (File.Exists(mainImagePath))
             {
-                byte[] image = await File.ReadAllBytesAsync($"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}.jpg");
-                molen.Image = new MolenImage(image, molen.Ten_Brugge_Nr);
+                molen.Image = new MolenImage(mainImagePath, molen.Ten_Brugge_Nr);
             }
 
-            if (Directory.Exists($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}"))
+            var addedImagesFolder = $"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}";
+            if (Directory.Exists(addedImagesFolder))
             {
-                string[] imageFiles = Directory.GetFiles($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}", "*.*", SearchOption.TopDirectoryOnly)
+                string[] imageFiles = Directory.GetFiles(addedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
                                                .Where(file => file.ToLower().EndsWith(".jpg") ||
                                                               file.ToLower().EndsWith(".jpeg") ||
                                                               file.ToLower().EndsWith(".png"))
@@ -42,8 +44,7 @@ namespace MolenApplicatie.Server.Services
 
                 foreach (string imageFile in imageFiles)
                 {
-                    byte[] imageBytes = File.ReadAllBytes(imageFile);
-                    molen.AddedImages.Add(new MolenImage(imageBytes, Path.GetFileName(imageFile), true));
+                    molen.AddedImages.Add(new MolenImage(imageFile, Path.GetFileName(imageFile), true));
                 }
             }
             return molen;
