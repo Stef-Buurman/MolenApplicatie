@@ -12,3 +12,4 @@ jobs:
     - name: say hello
       run: |
           echo "hallo"
+          echo "hallo2"
