@@ -7,7 +7,6 @@ namespace MolenApplicatie.Server.Services
     public class MolenService : DbConnection
     {
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
-        readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
         private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
         private List<string> allowedTypes = new List<string>();

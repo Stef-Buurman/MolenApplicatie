@@ -7,7 +7,6 @@ namespace MolenApplicatie.Server.Services
     public class PlacesService
     {
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
-        readonly string baseUrl = "http://api.geonames.org/searchJSON?country=NL&maxRows=500&featureClass=P&continentCode=&username=weetikveel12321&startRow=";
         private readonly HttpClient _client;
         private List<string> allowedTypes = new List<string>();
 

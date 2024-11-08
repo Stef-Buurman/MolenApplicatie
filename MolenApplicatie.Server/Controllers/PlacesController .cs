@@ -9,7 +9,6 @@ namespace MolenApplicatie.Server.Controllers
     public class PlacesController : ControllerBase
     {
         private readonly PlacesService _PlacesService;
-        private readonly NewMolenDataService _NewMolenDataService;
 
         public PlacesController(PlacesService placesService)
         {
