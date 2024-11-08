@@ -12,7 +12,7 @@
 <div class="container" *ngIf="molen">
   <div class="data data-left">
     <app-image-selector [(images)]="molenImages" [(selectedImage)]="selectedImage"
-                        [tbNr]="molen.ten_Brugge_Nr">
+                        [tbNr]="molen.ten_Brugge_Nr" [(imagesRemoved)]="imagesRemoved">
     </app-image-selector>
   </div>
   <div class="data molen-data">

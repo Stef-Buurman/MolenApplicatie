@@ -3,7 +3,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 import { MolenImage } from '../../Class/MolenImage';
-import { GetSafeUrl } from '../../Utils/GetSafeUrl';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -20,6 +19,8 @@ export class ImageSelectorComponent {
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() selectedImage?: MolenImage;
   @Output() selectedImageChange = new EventEmitter<MolenImage>();
+  @Input() imagesRemoved?: boolean;
+  @Output() imagesRemovedChange = new EventEmitter<boolean>();
   @Input() tbNr: string = "";
 
   constructor(private sanitizer: DomSanitizer,
@@ -28,6 +29,7 @@ export class ImageSelectorComponent {
     private http: HttpClient) { }
 
   ngOnInit(): void {
+    console.log(this.images)
     if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
   }
 
@@ -75,6 +77,9 @@ export class ImageSelectorComponent {
                 } else {
                   this.toast.showError(error.error.message);
                 }
+              },
+              complete: () => {
+                this.imagesRemovedChange.emit(true);
               }
             });
           }

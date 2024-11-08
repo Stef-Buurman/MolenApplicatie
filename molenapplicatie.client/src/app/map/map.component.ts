@@ -7,6 +7,9 @@ import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
 import { Toasts } from '../../Utils/Toasts';
 import { InitializeDataStatus } from '../../Enums/InitializeDataStatus';
 import { MarkerInfo } from '../../Interfaces/MarkerInfo';
+import { DialogReturnType } from '../../Interfaces/DialogReturnType';
+import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
+import { MolenDialogReturnType } from '../../Interfaces/MolenDialogReturnType';
 
 @Component({
   selector: 'app-map',
@@ -127,21 +130,22 @@ export class MapComponent {
     });
 
     dialogRef.afterClosed().subscribe({
-      next: (result) => {
-        if (result) {
-          const markerInfoIndex = this.markers.findIndex(info => info.tenBruggeNumber === tenBruggeNr);
-          if (markerInfoIndex !== -1) {
-            const markerInfo = this.markers[markerInfoIndex];
-            markerInfo.marker.remove();
-            this.markers.splice(markerInfoIndex, 1);
-
-            var molen = this.molens.find(molen => molen.ten_Brugge_Nr === tenBruggeNr);
-            if (molen) {
-              molen.hasImage = true;
-              this.addMarker(molen);
-              this.mapChange.emit(this.map);
-            }
+      next: (result: MolenDialogReturnType) => {
+        var molen = this.molens.find(molen => molen.ten_Brugge_Nr === tenBruggeNr);
+        var marker = this.markers.find(marker => marker.tenBruggeNumber === tenBruggeNr);
+        if (molen) {
+          if (result.MolenImages.length > 1 || (result.MolenImages.length == 1 && result.MolenImages[0].name != tenBruggeNr)) {
+            molen.hasImage = true;
           }
+          else {
+            molen.hasImage = false;
+          }
+          molen.addedImages = result.MolenImages;
+          if (marker) {
+            marker.marker.remove();
+          }
+          if (molen) this.addMarker(molen);
+          this.mapChange.emit(this.map);
         }
       }
     });
