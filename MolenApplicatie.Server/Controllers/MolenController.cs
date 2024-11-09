@@ -19,22 +19,6 @@ namespace MolenApplicatie.Server.Controllers
             _NewMolenDataService = newMolenDataService;
         }
 
-        [HttpGet("get-image-urls")]
-        public IActionResult GetImageUrls()
-        {
-            var imageDirectory = "wwwroot/MolenImages";
-            var images = Directory.GetFiles(imageDirectory)
-                .Select(file => new MolenImage2(
-                    file, // Original file path
-                    Path.GetFileName(file),
-                    $"{Request.Scheme}://{Request.Host}/MolenImages/{Path.GetFileName(file)}", // Construct URL
-                    true // or false based on your logic
-                ))
-                .ToList();
-
-            return Ok(images);
-        }
-
         [HttpGet("all_molen_locations")]
         public async Task<IActionResult> GetAllMolenLocations()
         {
@@ -62,7 +46,7 @@ namespace MolenApplicatie.Server.Controllers
             IFormFile savedImage = result.file;
             if (savedImage == null)
             {
-                if(result.errorMessage == null || result.errorMessage == "")
+                if (result.errorMessage == null || result.errorMessage == "")
                 {
                     return BadRequest("Er is iets misgegaan met het opslaan van de foto!");
                 }
