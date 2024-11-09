@@ -37,22 +37,16 @@ export class MolenDialogComponent implements OnDestroy{
     private toasts: Toasts,
     private cdr: ChangeDetectorRef,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string }
+    @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string , molen:MolenData}
   ) { }
 
   ngOnInit(): void {
-    this.http.get<MolenDataClass>('/api/molen/' + this.data.tenBruggeNr).subscribe({
-      next: (result) => {
-        this.molen = result;
-        if (this.molen == undefined) this.onClose();
-        this.molenImages = this.getAllMolenImages();
-        this.selectedImage = this.molenImages[0];
-      },
-      error: (error) => {
-        this.toasts.showError(error.message, error.status);
-        this.onClose();
-      }
-    });
+    if (!this.data.molen) {
+      this.onClose();
+    }
+    this.molen = this.data.molen;
+    this.molenImages = this.getAllMolenImages();
+    this.selectedImage = this.molenImages[0];
   }
 
   ngOnDestroy(): void {
@@ -60,9 +54,7 @@ export class MolenDialogComponent implements OnDestroy{
   }
 
   onClose(): void {
-    this.dialogRef.close({
-      MolenImages: this.molenImages
-    } as MolenDialogReturnType);
+    this.dialogRef.close(this.molenImages);
   }
 
   removeImg(): void {

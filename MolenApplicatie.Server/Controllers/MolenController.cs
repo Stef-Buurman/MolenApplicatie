@@ -19,6 +19,13 @@ namespace MolenApplicatie.Server.Controllers
             _NewMolenDataService = newMolenDataService;
         }
 
+        [HttpGet("all_molens")]
+        public async Task<IActionResult> GetAllMolens()
+        {
+            var locations = await _MolenService.GetAllMolenData();
+            return Ok(locations);
+        }
+
         [HttpGet("all_molen_locations")]
         public async Task<IActionResult> GetAllMolenLocations()
         {

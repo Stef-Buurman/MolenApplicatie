@@ -9,7 +9,9 @@ import { InitializeDataStatus } from '../../Enums/InitializeDataStatus';
 import { MarkerInfo } from '../../Interfaces/MarkerInfo';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { MolenDialogReturnType } from '../../Interfaces/MolenDialogReturnType';
+import { MolenData } from '../../Interfaces/MolenData';
+import { MolenImage } from '../../Class/MolenImage';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-map',
@@ -32,7 +34,7 @@ export class MapComponent {
     private dialog: MatDialog) { }
 
   getMolens(): void {
-    this.http.get<MolenDataClass[]>('/api/all_molen_locations').subscribe({
+    this.http.get<MolenDataClass[]>('/api/all_molens').subscribe({
       next: (result) => {
         this.molens = result;
         this.initMap();
@@ -116,38 +118,55 @@ export class MapComponent {
       const marker = L.marker([molen.north, molen.east], { icon: customIcon }).addTo(this.map);
 
       marker.on('click', () => {
-        this.onMarkerClick(molen.ten_Brugge_Nr);
+        this.onMarkerClick(molen.ten_Brugge_Nr, molen);
       });
 
       this.markers.push({ marker, tenBruggeNumber: molen.ten_Brugge_Nr });
     }
   }
 
-  private onMarkerClick(tenBruggeNr: string): void {
+  private onMarkerClick(tenBruggeNr: string, molen: MolenData): void {
     const dialogRef = this.dialog.open(MolenDialogComponent, {
-      data: { tenBruggeNr },
+      data: { tenBruggeNr, molen },
       panelClass: 'molen-details'
     });
 
     dialogRef.afterClosed().subscribe({
-      next: (result: MolenDialogReturnType) => {
+      next: (MolenImages: MolenImage[]) => {
         var molen = this.molens.find(molen => molen.ten_Brugge_Nr === tenBruggeNr);
         var marker = this.markers.find(marker => marker.tenBruggeNumber === tenBruggeNr);
         if (molen) {
-          if (result.MolenImages.length > 1 || (result.MolenImages.length == 1 && result.MolenImages[0].name != tenBruggeNr)) {
+          var previousHasImage: boolean = molen.hasImage;
+          if (MolenImages.length > 1 || (MolenImages.length == 1 && MolenImages[0].name != tenBruggeNr)) {
             molen.hasImage = true;
           }
           else {
             molen.hasImage = false;
           }
-          molen.addedImages = result.MolenImages;
-          if (marker) {
-            marker.marker.remove();
+          if (previousHasImage != molen.hasImage) {
+            if (marker) {
+              marker.marker.remove();
+            }
+            this.getMolenByTenBruggeNr(molen.ten_Brugge_Nr).subscribe({
+              next: (newMolenData) => {
+                if (newMolenData) this.addMarker(newMolenData);
+                this.mapChange.emit(this.map);
+              },
+              error: (err) => {
+                if (molen) {
+                  molen.addedImages = MolenImages;
+                  this.addMarker(molen);
+                  this.mapChange.emit(this.map);
+                }
+              }
+            });
           }
-          if (molen) this.addMarker(molen);
-          this.mapChange.emit(this.map);
         }
       }
     });
+  }
+
+  private getMolenByTenBruggeNr(ten_Brugge_Nr: string): Observable<MolenDataClass> {
+    return this.http.get<MolenDataClass>('/api/molen/' + ten_Brugge_Nr);
   }
 }

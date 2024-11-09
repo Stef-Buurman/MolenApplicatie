@@ -19,6 +19,16 @@ namespace MolenApplicatie.Server.Services
             _db = new DbConnection();
         }
 
+        public async Task<List<MolenData>> GetAllMolenData()
+        {
+            List<MolenData> MolenData = await _db.Table<MolenData>();
+            for (int i = 0; i < MolenData.Count; i++)
+            {
+                MolenData[i] = await GetFullDataOfMolen(MolenData[i]);
+            }
+            return MolenData;
+        }
+
         public async Task<MolenData> GetFullDataOfMolen(MolenData molen)
         {
             if (molen == null) return null;
@@ -44,6 +54,15 @@ namespace MolenApplicatie.Server.Services
                 foreach (string imageFile in imageFiles)
                 {
                     molen.AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true));
+                }
+
+                if(imageFiles.Count() > 0)
+                {
+                    molen.HasImage = true;
+                }
+                else
+                {
+                    molen.HasImage = false;
                 }
             }
             return molen;
