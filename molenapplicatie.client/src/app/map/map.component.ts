@@ -1,17 +1,10 @@
-import { Component, AfterViewInit, input, Input, EventEmitter, Output } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import * as L from 'leaflet';
-import { MolenDataClass } from '../../Class/MolenDataClass';
-import { MatDialog } from '@angular/material/dialog';
-import { MolenDialogComponent } from '../molen-dialog/molen-dialog.component';
-import { Toasts } from '../../Utils/Toasts';
-import { InitializeDataStatus } from '../../Enums/InitializeDataStatus';
-import { MarkerInfo } from '../../Interfaces/MarkerInfo';
-import { DialogReturnType } from '../../Interfaces/DialogReturnType';
-import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { MolenData } from '../../Interfaces/MolenData';
-import { MolenImage } from '../../Class/MolenImage';
-import { Observable } from 'rxjs';
+import { Component } from "@angular/core";
+import { MolenDataClass } from "../../Class/MolenDataClass";
+import { ErrorService } from "../../Services/ErrorService";
+import { MapService } from "../../Services/MapService";
+import { MolenService } from "../../Services/MolenService";
+import { SharedDataService } from "../../Services/SharedDataService";
+import { Toasts } from "../../Utils/Toasts";
 
 @Component({
   selector: 'app-map',
@@ -19,154 +12,35 @@ import { Observable } from 'rxjs';
   styleUrl: './map.component.scss'
 })
 export class MapComponent {
-  @Input() map: any;
-  @Output() mapChange = new EventEmitter<any>();
-  @Input() error: boolean = false;
-  @Output() errorChange = new EventEmitter<boolean>();
-  @Input() status!: InitializeDataStatus;
-  @Output() statusChange = new EventEmitter<InitializeDataStatus>();
+  private map: L.Map | null = null;
   molens: MolenDataClass[] = [];
   molenDataError: boolean = false;
-  markers: MarkerInfo[] = [];
 
-  constructor(private http: HttpClient,
-    private toasts: Toasts,
-    private dialog: MatDialog) { }
+  constructor(private toasts: Toasts,
+    private errors: ErrorService,
+    private sharedData: SharedDataService,
+    private molenService: MolenService,
+    private mapService: MapService) { }
 
   getMolens(): void {
-    this.http.get<MolenDataClass[]>('/api/all_molens').subscribe({
+    this.molenService.getAllMolens().subscribe({
       next: (result) => {
         this.molens = result;
-        this.initMap();
+        this.mapService.initMap(result);
       },
       error: (error) => {
-        this.errorChange.emit(true);
-        this.statusChange.emit(InitializeDataStatus.Error);
+        this.errors.AddError(error);
         this.toasts.showError("De molens kunnen niet geladen worden!");
       },
       complete: () => {
-        this.errorChange.emit(false);
         this.toasts.showSuccess("Molens zijn geladen!");
-        this.statusChange.emit(InitializeDataStatus.Success);
+        this.sharedData.IsLoadingFalse();
       }
     });
-  }
-
-  test() {
-    this.map.setView([5, 4.4], 10);
   }
 
   ngAfterViewInit(): void {
+    this.sharedData.IsLoadingTrue();
     this.getMolens();
-  }
-
-  private initMap(): void {
-    this.map = L.map('map');
-    this.map.setView([52, 4.4], 10);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(this.map);
-
-    this.molens.forEach(molen => {
-      this.addMarker(molen);
-
-    });
-    this.mapChange.emit(this.map);
-  }
-
-  addMarker(molen: MolenDataClass): void {
-    if (this.map) {
-      var iconLocation = 'Assets/Icons/Molens/';
-      var icon = 'windmolen_verdwenen';
-
-      if (molen.modelType.some(m => m.name.toLowerCase() === "weidemolen")) {
-        icon = 'weidemolen';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "paltrokmolen")) {
-        icon = 'paltrokmolen';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "standerdmolen")) {
-        icon = 'standerdmolen';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "wipmolen" || m.name.toLowerCase() === "spinnenkop")) {
-        icon = 'wipmolen';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "grondzeiler")) {
-        icon = 'grondzeiler';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "stellingmolen")) {
-        icon = 'stellingmolen';
-      }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "beltmolen")) {
-        icon = 'beltmolen';
-      }
-
-      if (molen.hasImage) {
-        icon += '_has_image';
-      }
-
-      icon += '.png';
-
-      const customIcon = L.icon({
-        iconUrl: iconLocation + icon,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-
-      const marker = L.marker([molen.north, molen.east], { icon: customIcon }).addTo(this.map);
-
-      marker.on('click', () => {
-        this.onMarkerClick(molen.ten_Brugge_Nr, molen);
-      });
-
-      this.markers.push({ marker, tenBruggeNumber: molen.ten_Brugge_Nr });
-    }
-  }
-
-  private onMarkerClick(tenBruggeNr: string, molen: MolenData): void {
-    const dialogRef = this.dialog.open(MolenDialogComponent, {
-      data: { tenBruggeNr, molen },
-      panelClass: 'molen-details'
-    });
-
-    dialogRef.afterClosed().subscribe({
-      next: (MolenImages: MolenImage[]) => {
-        var molen = this.molens.find(molen => molen.ten_Brugge_Nr === tenBruggeNr);
-        var marker = this.markers.find(marker => marker.tenBruggeNumber === tenBruggeNr);
-        if (molen) {
-          var previousHasImage: boolean = molen.hasImage;
-          if (MolenImages.length > 1 || (MolenImages.length == 1 && MolenImages[0].name != tenBruggeNr)) {
-            molen.hasImage = true;
-          }
-          else {
-            molen.hasImage = false;
-          }
-          if (previousHasImage != molen.hasImage) {
-            if (marker) {
-              marker.marker.remove();
-            }
-            this.getMolenByTenBruggeNr(molen.ten_Brugge_Nr).subscribe({
-              next: (newMolenData) => {
-                if (newMolenData) this.addMarker(newMolenData);
-                this.mapChange.emit(this.map);
-              },
-              error: (err) => {
-                if (molen) {
-                  molen.addedImages = MolenImages;
-                  this.addMarker(molen);
-                  this.mapChange.emit(this.map);
-                }
-              }
-            });
-          }
-        }
-      }
-    });
-  }
-
-  private getMolenByTenBruggeNr(ten_Brugge_Nr: string): Observable<MolenDataClass> {
-    return this.http.get<MolenDataClass>('/api/molen/' + ten_Brugge_Nr);
   }
 }

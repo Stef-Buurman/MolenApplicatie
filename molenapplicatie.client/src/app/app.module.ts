@@ -17,6 +17,9 @@ import { Toasts } from '../Utils/Toasts';
 import { LoaderComponent } from './loader/loader.component';
 import { ErrorMessageComponent } from './error-message/error-message.component';
 import { DropdownComponent } from './dropdown/dropdown.component';
+import { MapRootComponent } from './map-root/map-root.component';
+import { ErrorService } from '../Services/ErrorService';
+import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-details.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +32,9 @@ import { DropdownComponent } from './dropdown/dropdown.component';
     ToastComponent,
     LoaderComponent,
     ErrorMessageComponent,
-    DropdownComponent
+    DropdownComponent,
+    MapRootComponent,
+    OpenMolenDetailsComponent
   ],
   imports: [
     BrowserAnimationsModule,

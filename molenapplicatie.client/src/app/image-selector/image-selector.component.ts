@@ -29,7 +29,6 @@ export class ImageSelectorComponent {
     private http: HttpClient) { }
 
   ngOnInit(): void {
-    console.log(this.images)
     if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
   }
 
