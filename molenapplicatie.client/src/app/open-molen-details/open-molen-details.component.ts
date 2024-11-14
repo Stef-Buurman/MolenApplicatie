@@ -59,7 +59,7 @@ export class OpenMolenDetailsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe({
       next: (MolenImages: MolenImage[]) => {
-        var oldmolen = this.allMolens?.find(molen => molen.ten_Brugge_Nr === molen.ten_Brugge_Nr);
+        var oldmolen = this.allMolens?.find(mol => mol.ten_Brugge_Nr === molen.ten_Brugge_Nr);
         var marker = this.mapService.markers.find(marker => marker.tenBruggeNumber === molen.ten_Brugge_Nr);
         if (oldmolen) {
           var previousHasImage: boolean = oldmolen.hasImage;
