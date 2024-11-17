@@ -1,14 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Observable, of } from 'rxjs';
 import { MolenDataClass } from '../../Class/MolenDataClass';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { MolenImage } from '../../Class/MolenImage';
-import { Toasts } from '../../Utils/Toasts';
 import { MolenData } from '../../Interfaces/MolenData';
-import { DialogReturnType } from '../../Interfaces/DialogReturnType';
-import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { MolenDialogReturnType } from '../../Interfaces/MolenDialogReturnType';
+import { MolenService } from '../../Services/MolenService';
+import { Toasts } from '../../Utils/Toasts';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -25,28 +22,41 @@ export class MolenDialogComponent implements OnDestroy{
   public selectedImage?: MolenImage;
 
   public imagesAdded: boolean = false;
-  public imagesRemoved: boolean = false;
   get HasImagesLeft(): boolean {
     if (this.molen == undefined || this.molen.addedImages == undefined) return false;
     return this.molen.addedImages.length > 0;
   }
 
-  constructor(
-    private sanitizer: DomSanitizer,
-    private http: HttpClient,
-    private toasts: Toasts,
+  deleteImageFunction = this.deleteImage.bind(this);
+
+  constructor(private toasts: Toasts,
     private cdr: ChangeDetectorRef,
+    private molenService: MolenService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string , molen:MolenData}
   ) { }
 
   ngOnInit(): void {
-    if (!this.data.molen) {
+    if (!this.data.molen && !this.data.tenBruggeNr) {
       this.onClose();
     }
-    this.molen = this.data.molen;
-    this.molenImages = this.getAllMolenImages();
-    this.selectedImage = this.molenImages[0];
+    if (this.data.molen) {
+      this.molen = this.data.molen;
+      this.molenImages = this.getAllMolenImages();
+      this.selectedImage = this.molenImages[0];
+    }
+    if (this.data.tenBruggeNr) {
+      this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
+        next: (molen: MolenData) => {
+          this.molen = molen;
+          this.molenImages = this.getAllMolenImages();
+          this.selectedImage = this.molenImages[0];
+        },
+        error: (error) => {
+          this.toasts.showError(error.error.message);
+        }
+      })
+    }
   }
 
   ngOnDestroy(): void {
@@ -59,6 +69,13 @@ export class MolenDialogComponent implements OnDestroy{
 
   removeImg(): void {
     this.file = null;
+  }
+
+  deleteImage(imgName: string, api_key: string): Observable<any> {
+    if (!this.molen || !this.molen.ten_Brugge_Nr) {
+      return of();
+    }
+    return this.molenService.deleteImage(this.molen.ten_Brugge_Nr, imgName, api_key);
   }
 
   onFileSelected(event: any): void {
@@ -79,17 +96,12 @@ export class MolenDialogComponent implements OnDestroy{
     if (this.file && this.molen) {
       this.status = "uploading";
 
-      const headers = new HttpHeaders({
-        'Authorization': this.APIKey,
-      });
-
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
 
       var previousMolenImages: MolenImage[] = this.getAllMolenImages();
 
-      this.http.post<MolenData>(`/api/upload_image/${this.molen.ten_Brugge_Nr}`, formData, { headers })
-        .subscribe({
+      this.molenService.uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey).subscribe({
           next: (molen: MolenData) => {
             this.molen = molen;
             this.cdr.detectChanges();

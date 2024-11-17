@@ -12,7 +12,7 @@
 <div class="container" *ngIf="molen">
   <div class="data data-left">
     <app-image-selector [(images)]="molenImages" [(selectedImage)]="selectedImage"
-                        [tbNr]="molen.ten_Brugge_Nr" [(imagesRemoved)]="imagesRemoved">
+                        [tbNr]="molen.ten_Brugge_Nr" [deleteFunction]="deleteImageFunction">
     </app-image-selector>
   </div>
   <div class="data molen-data">
@@ -38,7 +38,7 @@
     <h2>Upload de foto hier.</h2><br />
 
     <div *ngIf="!file" class="file-input-container">
-      <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload/>
+      <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload />
       <label for="fileInput" class="file-label">Choose File</label>
     </div>
 
@@ -59,7 +59,7 @@
         <span>Image Preview:</span>
         <img [src]="imagePreview" alt="Selected Image" width="300" />
       </div>
-      <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off"/></span>
+      <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off" /></span>
       <button (click)="onSubmit()">Upload the file</button>
     </div>
     <div *ngIf="file">

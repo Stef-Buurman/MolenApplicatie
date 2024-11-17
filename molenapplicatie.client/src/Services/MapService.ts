@@ -5,7 +5,6 @@ import * as L from 'leaflet';
 import { MolenDataClass } from '../Class/MolenDataClass';
 import { MarkerInfo } from '../Interfaces/MarkerInfo';
 import { MolenData } from '../Interfaces/MolenData';
-import { MolenService } from './MolenService';
 
 @Injectable({
   providedIn: 'root'
@@ -17,8 +16,21 @@ export class MapService {
     return this._markers;
   }
   constructor(private dialog: MatDialog,
-    private molenService: MolenService,
     private router: Router) { }
+
+
+  getMarker(tbn:string): MarkerInfo | undefined {
+    return this.markers.find(marker => marker.tenBruggeNumber == tbn);
+  }
+
+  updateMarker(tbn: string, molen:MolenData) {
+    var marker = this.getMarker(tbn);
+    if (marker) {
+      marker.marker.remove();
+      this._markers = this.markers.filter(mark => mark.tenBruggeNumber != tbn);
+      this.addMarker(molen);
+    }
+  }
 
   setView(coords: L.LatLngExpression, zoom: number): void {
     if (this.map) {
@@ -52,7 +64,6 @@ export class MapService {
   }
 
   addMarker(molen: MolenDataClass): void {
-
     if (this.map) {
       var iconLocation = 'Assets/Icons/Molens/';
       var icon = 'windmolen_verdwenen';

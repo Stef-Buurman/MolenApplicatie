@@ -12,9 +12,7 @@ import { Toasts } from "../../Utils/Toasts";
   styleUrl: './map.component.scss'
 })
 export class MapComponent {
-  private map: L.Map | null = null;
   molens: MolenDataClass[] = [];
-  molenDataError: boolean = false;
 
   constructor(private toasts: Toasts,
     private errors: ErrorService,

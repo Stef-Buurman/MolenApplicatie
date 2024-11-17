@@ -1,13 +1,11 @@
-import { Component, EventEmitter, Input, Output, SecurityContext } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { Observable } from 'rxjs';
 import { MolenImage } from '../../Class/MolenImage';
-import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { Toasts } from '../../Utils/Toasts';
-import { catchError, Observable, Subscription, tap, throwError } from 'rxjs';
+import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 
 @Component({
   selector: 'app-image-selector',
@@ -19,14 +17,11 @@ export class ImageSelectorComponent {
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() selectedImage?: MolenImage;
   @Output() selectedImageChange = new EventEmitter<MolenImage>();
-  @Input() imagesRemoved?: boolean;
-  @Output() imagesRemovedChange = new EventEmitter<boolean>();
   @Input() tbNr: string = "";
+  @Input() deleteFunction!: (imgName: string, api_key:string) => Observable<any>;
 
-  constructor(private sanitizer: DomSanitizer,
-    private dialog: MatDialog,
-    private toast: Toasts,
-    private http: HttpClient) { }
+  constructor(private dialog: MatDialog,
+    private toast: Toasts) { }
 
   ngOnInit(): void {
     if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
@@ -64,12 +59,8 @@ export class ImageSelectorComponent {
 
       dialogRef.afterClosed().subscribe(
         (result: DialogReturnType) => {
-          if (result && result.status == DialogReturnStatus.Deleted && result.api_key) {
-            this.deleteImage(selectedImage.name, result.api_key).subscribe({
-              next: (result) => {
-                this.imagesChange.emit(this.images);
-                this.selectedImageChange.emit(this.images[0]);
-              },
+          if (result && result.status == DialogReturnStatus.Deleted && result.api_key && this.deleteFunction != undefined) {
+            this.deleteFunction(selectedImage.name, result.api_key).subscribe({
               error: (error) => {
                 if (error.status == 401) {
                   this.toast.showError("Er is een verkeerde api key ingevuld!");
@@ -78,7 +69,11 @@ export class ImageSelectorComponent {
                 }
               },
               complete: () => {
-                this.imagesRemovedChange.emit(true);
+                this.images = this.images.filter(x => x.name != selectedImage.name);
+                this.imagesChange.emit(this.images);
+                this.selectedImage = this.images[0]
+                this.selectedImageChange.emit(this.images[0]);
+                this.toast.showSuccess("De foto is verwijderd!");
               }
             });
           }
@@ -91,23 +86,5 @@ export class ImageSelectorComponent {
         }
       )
     }
-  }
-
-
-  deleteImage(imageName: string, APIKey: string): Observable<any> {
-    const headers = new HttpHeaders({
-      'Authorization': APIKey,
-    });
-
-    return this.http.delete("/api/molen_image/" + this.tbNr + "/" + imageName, { headers }).pipe(
-      tap(() => {
-        this.images = this.images.filter(x => x.name != imageName);
-        this.selectedImage = this.images[0];
-        this.toast.showSuccess("Foto is verwijderd");
-      }),
-      catchError((error) => {
-        return throwError(error);
-      })
-    );
   }
 }
