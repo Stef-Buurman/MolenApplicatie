@@ -1,6 +1,7 @@
 <header *ngIf="!error">
   <div class="{{visible ? 'responsive' : ''}} topInfo" id="mytopInfo">
     <section class="logo-div">
+      <span class="MolenImageCountPhone">{{getMolenWithImageAmount}}</span>
       <img class="logo" src="Assets/Background/Buurman-Buurman-logo.webp" alt="Alternate Text" />
       <span>Molens</span>
     </section>
@@ -23,6 +24,7 @@
     </div>
     <div class="topButton" (click)="updateMolens()">Update molens</div>
     <div class="topButton" (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+    <div class="MolenImageCount"> {{getMolenWithImageAmount}} molens met een foto</div>
   </div>
   <div class="mapContainer">
     <app-map></app-map>

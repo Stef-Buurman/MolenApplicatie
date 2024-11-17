@@ -28,6 +28,15 @@ header, .mapContainer {
   height: 60px;
 }
 
+.MolenImageCount {
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.MolenImageCountPhone {
+  display: none;
+}
+
 .topInfo span {
   font-size: 30px;
   font-weight: 900;
@@ -165,5 +174,15 @@ header, .mapContainer {
 
   .topInfo .logo-div {
     height: 60px;
+  }
+
+  .MolenImageCountPhone {
+    display: block;
+    position: absolute;
+    left: 7vw;
+    top: 3vh;
+    text-align: left !important;
+    line-height: 20px !important;
+    font-size: 22px !important;
   }
 }

@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, ViewContainerRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
@@ -10,7 +10,6 @@ import { Place } from '../../Interfaces/Place';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
-import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 
@@ -33,13 +32,15 @@ export class MapRootComponent implements OnInit {
     return this.errors.HasError;
   }
 
+  get getMolenWithImageAmount(): number {
+    return this.molenService.getMolenWithImageAmount();
+  }
+
   constructor(private route: ActivatedRoute,
     private toasts: Toasts,
-    private vcr: ViewContainerRef,
     private http: HttpClient,
     private dialog: MatDialog,
     private errors: ErrorService,
-    private sharedData: SharedDataService,
     private molenService: MolenService,
     private mapService: MapService) { }
 
