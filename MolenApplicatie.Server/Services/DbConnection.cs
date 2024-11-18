@@ -7,12 +7,12 @@ namespace MolenApplicatie.Server.Services
     public class DbConnection
     {
         private readonly HttpClient _client;
-        private readonly SQLiteAsyncConnection _db;
+        public readonly SQLiteAsyncConnection _db;
 
-        public DbConnection()
+        public DbConnection(string dbRoute)
         {
             _client = new HttpClient();
-            _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
+            _db = new SQLiteAsyncConnection(dbRoute);
             InitializeDB().Wait();
         }
 
@@ -116,8 +116,8 @@ namespace MolenApplicatie.Server.Services
         {
             try
             {
-                var result = await _db.ExecuteScalarAsync<object>(query, args);
-                return (T)result;
+                var result = await _db.ExecuteScalarAsync<T>(query, args);
+                return result;
             }
             catch (Exception ex)
             {
