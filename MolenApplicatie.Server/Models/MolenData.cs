@@ -13,6 +13,14 @@ namespace MolenApplicatie.Server.Models
         public int? Bouwjaar_start { get; set; }
         public int? Bouwjaar_einde { get; set; }
         public string Functie { get; set; }
+        public string Toestand { get; set; }
+        public string Opvolger { get; set; }
+        public string Voorganger { get; set; }
+        public string VerplaatstNaar { get; set; }
+        public string AfkomstigVan { get; set; }
+        public string Krachtbron { get; set; }
+        public string Website { get; set; }
+        public bool OpenVoorPubliek { get; set; }
         public string Ten_Brugge_Nr { get; set; }
         public string Plaats { get; set; }
         public string Adres { get; set; }
@@ -23,6 +31,9 @@ namespace MolenApplicatie.Server.Models
 
         [Ignore]
         public List<MolenImage> AddedImages { get; set; } = new List<MolenImage>();
+
+        [Ignore]
+        public List<MolenYearInfo> AddedDisappearedYears { get; set; } = new List<MolenYearInfo>();
 
         [Ignore]
         public bool HasImage { get; set; }
