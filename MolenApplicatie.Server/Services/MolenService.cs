@@ -4,7 +4,7 @@ using MolenApplicatie.Models;
 
 namespace MolenApplicatie.Server.Services
 {
-    public class MolenService : DbConnection
+    public class MolenService
     {
         readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         private readonly HttpClient _client;
@@ -16,7 +16,7 @@ namespace MolenApplicatie.Server.Services
         public MolenService()
         {
             _client = new HttpClient();
-            _db = new DbConnection();
+            _db = new DbConnection(Globals.DBBestaandeMolens);
         }
 
         public async Task<List<MolenData>> GetAllMolenData()
