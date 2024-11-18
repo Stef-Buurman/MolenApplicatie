@@ -1,6 +1,7 @@
 ﻿using MolenApplicatie.Server.Models;
 using System.Text.Json;
 using System.Globalization;
+using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -15,7 +16,7 @@ namespace MolenApplicatie.Server.Services
         public PlacesService()
         {
             _client = new HttpClient();
-            _db = new DbConnection();
+            _db = new DbConnection(Globals.DBBestaandeMolens);
         }
 
         List<string> provinces = new List<string>
