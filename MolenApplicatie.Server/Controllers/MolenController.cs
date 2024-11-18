@@ -68,7 +68,7 @@ namespace MolenApplicatie.Server.Controllers
 
         [HttpGet]
         [Route("get_molen_tbn")]
-        public async Task<IActionResult> GetMolenTBN()
+        public async Task<IActionResult> GetMolenAllActiveTBN()
         {
             return Ok(await _NewMolenDataService.AddMolenTBNToDB());
         }
@@ -87,11 +87,11 @@ namespace MolenApplicatie.Server.Controllers
             var result = await _MolenService.DeleteImageFromMolen(tbNumber, imageName);
             if (result.status)
             {
-                return Ok(new { message = result.message });
+                return Ok(await _MolenService.GetMolenByTBN(tbNumber));
             }
             else
             {
-                return BadRequest(new { message = result.message });
+                return BadRequest(result.message);
             }
         }
 
@@ -117,6 +117,32 @@ namespace MolenApplicatie.Server.Controllers
                 return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
             }
             return Ok(result.MolenData);
+        }
+
+        [FileUploadFilter]
+        [HttpGet]
+        [Route("get_all_molen_tbn")]
+        public async Task<IActionResult> GetMolenTBN()
+        {
+            return Ok(await _NewMolenDataService.ReadAllMolenTBN());
+        }
+
+        [FileUploadFilter]
+        [HttpGet]
+        [Route("read_molen/{tbNumber}")]
+        public async Task<IActionResult> GetMolenTypes(string tbNumber)
+        {
+            var results = await _NewMolenDataService.GetEveryMolenDataByTBNumber(tbNumber);
+            return Ok(results.Item1);
+        }
+
+        [FileUploadFilter]
+        [HttpGet]
+        [Route("read_all_molen")]
+        public async Task<IActionResult> GetAllMolen()
+        {
+            var results = await _NewMolenDataService.GetAllMolenData2();
+            return Ok(results);
         }
     }
 }

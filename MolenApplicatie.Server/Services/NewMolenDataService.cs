@@ -1,5 +1,4 @@
 using MolenApplicatie.Server.Models;
-using SQLite;
 using MolenApplicatie.Server.Utils;
 using System.Text.RegularExpressions;
 using System.Text.Json;
@@ -21,7 +20,7 @@ namespace MolenApplicatie.Server.Services
         public NewMolenDataService()
         {
             _client = new HttpClient();
-            _db = new DbConnection();
+            _db = new DbConnection(Globals.DBBestaandeMolens);
             _molenService = new MolenService();
         }
 
@@ -48,13 +47,246 @@ namespace MolenApplicatie.Server.Services
             return Data;
         }
 
-        public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr)
+        //public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr)
+        //{
+        //    List<MolenType> MolenTypes = await _db.Table<MolenType>();
+        //    List<MolenType> NewAddedTypes = new List<MolenType>();
+        //    try
+        //    {
+        //        HttpResponseMessage response = await _client.GetAsync(baseUrl + Ten_Brugge_Nr);
+        //        response.EnsureSuccessStatusCode();
+
+        //        string responseBody = await response.Content.ReadAsStringAsync();
+        //        var doc = new HtmlDocument();
+        //        doc.LoadHtml(responseBody);
+
+        //        var divs = doc.DocumentNode.SelectNodes("//div[@class='attrib']");
+        //        var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
+        //        var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
+        //        Console.WriteLine(divs.Count);
+        //        if (divs != null)
+        //        {
+        //            Dictionary<string, object> data = new Dictionary<string, object>();
+        //            MolenData newMolenData = new MolenData() { Id = -1 };
+        //            foreach (var div in divs)
+        //            {
+        //                var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
+        //                var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
+        //                if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
+        //                {
+        //                    switch (dt.ToLower())
+        //                    {
+        //                        case "geo positie":
+        //                            string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
+        //                            var match = Regex.Match(dd, pattern);
+        //                            if (Ten_Brugge_Nr == "12170")
+        //                            {
+        //                                newMolenData.North = 51.91575984198239;
+        //                                newMolenData.East = 6.577599354094867;
+        //                            }
+        //                            else
+        //                            {
+        //                                if (match.Success)
+        //                                {
+        //                                    if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
+        //                                    {
+        //                                        newMolenData.North = NorthValue;
+        //                                    }
+        //                                    if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
+        //                                    {
+        //                                        newMolenData.East = EastValue;
+        //                                    }
+        //                                }
+        //                            }
+        //                            break;
+        //                        case "naam":
+        //                            newMolenData.Name = dd;
+        //                            break;
+        //                        case "bouwjaar":
+        //                            if (dd.All(char.IsDigit)) newMolenData.Bouwjaar = Convert.ToInt32(dd);
+        //                            else
+        //                            {
+        //                                Regex regexSingleYear = new Regex(@"\b\d{4}\b");
+        //                                Match matchSingleYear = regexSingleYear.Match(dd);
+        //                                Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-–]\s*(\d{4})\b");
+        //                                Match matchMultiYear = regexMultiYear.Match(dd);
+
+        //                                if (matchMultiYear.Success)
+        //                                {
+        //                                    int startYear = int.Parse(matchMultiYear.Groups[1].Value);
+        //                                    int endYear = int.Parse(matchMultiYear.Groups[2].Value);
+
+        //                                    if (startYear <= endYear)
+        //                                    {
+        //                                        newMolenData.Bouwjaar_start = startYear;
+        //                                        newMolenData.Bouwjaar_einde = endYear;
+        //                                    }
+        //                                }
+        //                                else if (matchSingleYear.Success)
+        //                                {
+        //                                    newMolenData.Bouwjaar = Convert.ToInt32(matchSingleYear.Value);
+        //                                }
+        //                            }
+        //                            break;
+        //                        case "herbouwd":
+        //                            newMolenData.Herbouwd_jaar = dd;
+        //                            break;
+        //                        case "functie":
+        //                            if (newMolenData.Functie == null || newMolenData.Functie == "Onbekend")
+        //                            {
+        //                                newMolenData.Functie = dd;
+        //                            }
+        //                            break;
+        //                        case "ten bruggencate-nr.":
+        //                            newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
+        //                            break;
+        //                        case "plaats":
+        //                            newMolenData.Plaats = dd;
+        //                            break;
+        //                        case "adres":
+        //                            newMolenData.Adres = dd;
+        //                            break;
+        //                        default:
+        //                            break;
+        //                    }
+        //                    if (data.ContainsKey(dt)) data[dt] = dd;
+        //                    else data.Add(dt, dd);
+        //                }
+        //            }
+
+        //            MolenData oldMolenData = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
+        //            if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
+
+        //            if (ModelTypeDiv != null)
+        //            {
+        //                string name = "";
+        //                foreach (var modelDiv in ModelTypeDiv)
+        //                {
+        //                    var dt = modelDiv.SelectSingleNode(".//dt")?.InnerText?.Trim();
+        //                    name = dt ?? "";
+        //                    var dd = modelDiv.SelectSingleNode(".//dd")?.InnerText?.Trim();
+        //                    if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
+        //                    {
+        //                        foreach (string type in dd.Split(','))
+        //                        {
+        //                            var molenType = new MolenType() { Name = type.Trim() };
+        //                            if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
+        //                            {
+        //                                await _db.InsertAsync(molenType);
+        //                                molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+        //                                NewAddedTypes.Add(molenType);
+        //                                newMolenData.ModelType.Add(molenType);
+        //                            }
+        //                            else
+        //                            {
+        //                                var existingType = MolenTypes.Concat(NewAddedTypes).FirstOrDefault(x => x.Name == molenType.Name);
+        //                                if (existingType != null && newMolenData.ModelType.Find(x => x.Name == existingType.Name) == null)
+        //                                {
+        //                                    newMolenData.ModelType.Add(existingType);
+        //                                }
+        //                            }
+        //                        }
+        //                        NewAddedTypes.AddRange(newMolenData.ModelType);
+        //                    }
+        //                }
+        //                if (data.ContainsKey(name)) data[name] = NewAddedTypes;
+        //                else data.Add(name, NewAddedTypes);
+        //            }
+
+        //            if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
+        //            {
+        //                return (null, null);
+        //            }
+
+        //            if (Image != null)
+        //            {
+        //                var src = Image.First().GetAttributeValue("src", string.Empty);
+        //                if (!string.IsNullOrEmpty(src))
+        //                {
+        //                    var imageResponse = await _client.GetAsync(src);
+        //                    byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
+        //                    if (!Directory.Exists(Globals.MolenImagesFolder))
+        //                    {
+        //                        Directory.CreateDirectory(Globals.MolenImagesFolder);
+        //                    }
+        //                    if (!File.Exists($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}"))
+        //                    {
+        //                        File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
+        //                    }
+        //                    else if (File.ReadAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg").Length != image.Length)
+        //                    {
+        //                        File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
+        //                    }
+        //                    newMolenData.Image = new MolenImage($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Ten_Brugge_Nr, false);
+        //                }
+        //            }
+
+        //            newMolenData.LastUpdated = DateTime.Now;
+        //            if (oldMolenData == null)
+        //            {
+        //                await _db.InsertAsync(newMolenData);
+        //            }
+        //            else
+        //            {
+        //                await _db.UpdateAsync(newMolenData);
+        //            }
+
+
+        //            var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
+        //                "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
+        //            );
+        //            if (allExistingTypes != null)
+        //            {
+        //                foreach (var type in allExistingTypes)
+        //                {
+        //                    if (newMolenData.ModelType.Find(x => x.Id == type.MolenTypeId) == null)
+        //                    {
+        //                        await _db.DeleteAsync<MolenTypeAssociation>(type);
+        //                    }
+        //                }
+        //            }
+        //            foreach (var type in newMolenData.ModelType)
+        //            {
+        //                if ((allExistingTypes != null && allExistingTypes.Find(x => x.MolenTypeId == type.Id) == null) || allExistingTypes == null)
+        //                {
+        //                    await _db.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+        //                }
+        //            }
+
+        //            return (newMolenData, data);
+        //        }
+        //    }
+
+        //    catch (HttpRequestException e)
+        //    {
+        //        throw new HttpRequestException("Error: " + e.Message);
+        //    }
+        //    return (null, null);
+        //}
+
+        private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
+        public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
         {
-            List<MolenType> MolenTypes = await _db.Table<MolenType>();
+            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
+            await newDB._db.CreateTableAsync<MolenData>();
+            await newDB._db.CreateTableAsync<MolenYearInfo>();
+            List<MolenType> MolenTypes = await newDB.Table<MolenType>();
             List<MolenType> NewAddedTypes = new List<MolenType>();
+            List<MolenYearInfo> MolenRemovedYears = await newDB.Table<MolenYearInfo>();
+            MolenData FoundMolenInDb = await newDB.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData2 WHERE Ten_Brugge_Nr = '{Ten_Brugge_Nr}'");
+            if (FoundMolenInDb != null) MolenRemovedYears = MolenRemovedYears.Where(x => FoundMolenInDb.Id == x.MolenDataId).ToList();
+            List<MolenYearInfo> newAddedMolenRemovedYears = new List<MolenYearInfo>();
             try
             {
-                HttpResponseMessage response = await _client.GetAsync(baseUrl + Ten_Brugge_Nr);
+                HttpResponseMessage response;
+                if (url == null)
+                {
+                    response = await _client.GetAsync(baseUrl + Ten_Brugge_Nr);
+                }
+                else
+                {
+                    response = await _client.GetAsync(url);
+                }
                 response.EnsureSuccessStatusCode();
 
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -64,17 +296,17 @@ namespace MolenApplicatie.Server.Services
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='attrib']");
                 var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
                 var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
-                Console.WriteLine(divs.Count);
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
-                    MolenData newMolenData = new MolenData() { Id = -1 };
+                    MolenData newMolenData = new MolenData() { Id = -1, AddedDisappearedYears = FoundMolenInDb != null ? MolenRemovedYears : new List<MolenYearInfo>() };
                     foreach (var div in divs)
                     {
                         var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
                         var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
                         if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
                         {
+                            if (strings.Find(x => x.ContainsKey(dt)) == null) strings.Add(new Dictionary<string, string> { { dt, Ten_Brugge_Nr } });
                             switch (dt.ToLower())
                             {
                                 case "geo positie":
@@ -133,7 +365,10 @@ namespace MolenApplicatie.Server.Services
                                     newMolenData.Herbouwd_jaar = dd;
                                     break;
                                 case "functie":
-                                    newMolenData.Functie = dd;
+                                    if (newMolenData.Functie == null || newMolenData.Functie == "Onbekend")
+                                    {
+                                        newMolenData.Functie = dd;
+                                    }
                                     break;
                                 case "ten bruggencate-nr.":
                                     newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
@@ -144,6 +379,110 @@ namespace MolenApplicatie.Server.Services
                                 case "adres":
                                     newMolenData.Adres = dd;
                                     break;
+                                case "toestand":
+                                    newMolenData.Toestand = dd;
+                                    break;
+                                case "krachtbron":
+                                    newMolenData.Krachtbron = dd;
+                                    break;
+                                case "website":
+                                    newMolenData.Website = dd;
+                                    break;
+                                case "open voor publiek":
+                                    newMolenData.OpenVoorPubliek = dd.ToLower().Contains("ja");
+                                    break;
+                                case "opvolger":
+                                    newMolenData.Voorganger = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    break;
+                                case "voorganger":
+                                    newMolenData.Voorganger = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    break;
+                                case "verplaatst naar":
+                                    newMolenData.VerplaatstNaar = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    break;
+                                case "afkomstig van":
+                                    newMolenData.AfkomstigVan = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    break;
+                                case "verdwenen":
+
+                                    var lines = dd.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                                    if (lines.Length < MolenRemovedYears.Count) break;
+                                    MolenRemovedYears.Clear();
+                                    for (int i = 0; i < lines.Length; i++)
+                                    {
+                                        string line = lines[i].Trim();
+
+                                        // Case 1: Single year with no status on the same line
+                                        if (Regex.IsMatch(line, @"^\d{4}$") && lines.Length == 1)
+                                        {
+                                            string year = line;
+                                            string status = "gesloopt";
+
+                                            if (i + 1 < lines.Length && !Regex.IsMatch(lines[i + 1], @"^\d{4}$"))
+                                            {
+                                                status = lines[i + 1].Trim();
+                                                i++;
+                                            }
+
+                                            MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                            {
+                                                Year = Convert.ToInt32(year),
+                                                Status_after = status
+                                            };
+
+                                            if (newMolenData.AddedDisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_after == newMolenYearInfo.Status_after) == null)
+                                            {
+                                                newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                            }
+                                        }
+                                        // Case 2: Line with a prefix (like "na", "voor", etc.) before the year
+                                        else if (Regex.IsMatch(line, @"^\w+ \d{4}$"))
+                                        {
+                                            var match1 = Regex.Match(line, @"^(\w+) (\d{4})$");
+                                            string prefix = match1.Groups[1].Value.Trim();
+                                            string year = match1.Groups[2].Value;
+
+                                            MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                            {
+                                                Status_before = prefix,
+                                                Year = Convert.ToInt32(year)
+                                            };
+
+                                            if (newMolenData.AddedDisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_before == newMolenYearInfo.Status_before) == null)
+                                            {
+                                                newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                            }
+                                        }
+                                        // Case 3: Line with both a year and a status in the same line
+                                        else if (!Regex.IsMatch(line, @"^\d{4}$"))
+                                        {
+                                            var match1 = Regex.Match(line, @"(.*?)\b(\d{4})\b\s*(.*)");
+                                            if (match1.Success)
+                                            {
+                                                string prefixStatus = match1.Groups[1].Value.Trim();
+                                                string year = match1.Groups[2].Value;
+                                                string suffixStatus = match1.Groups[3].Value.Trim();
+
+                                                if (prefixStatus == "") prefixStatus = null;
+                                                if (suffixStatus == "") suffixStatus = null;
+
+                                                MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                                {
+                                                    Status_before = prefixStatus,
+                                                    Year = Convert.ToInt32(year),
+                                                    Status_after = suffixStatus
+                                                };
+
+                                                if (newMolenData.AddedDisappearedYears.Find(info => info.Year == newMolenYearInfo.Year 
+                                                && info.Status_before == newMolenYearInfo.Status_before 
+                                                && info.Status_after == newMolenYearInfo.Status_after) == null)
+                                                {
+                                                    newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
                                 default:
                                     break;
                             }
@@ -152,7 +491,7 @@ namespace MolenApplicatie.Server.Services
                         }
                     }
 
-                    MolenData oldMolenData = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
+                    MolenData oldMolenData = await newDB.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData2 WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
                     if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
 
                     if (ModelTypeDiv != null)
@@ -170,8 +509,8 @@ namespace MolenApplicatie.Server.Services
                                     var molenType = new MolenType() { Name = type.Trim() };
                                     if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
                                     {
-                                        await _db.InsertAsync(molenType);
-                                        molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+                                        await newDB.InsertAsync(molenType);
+                                        molenType.Id = await newDB.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                                         NewAddedTypes.Add(molenType);
                                         newMolenData.ModelType.Add(molenType);
                                     }
@@ -191,10 +530,10 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
-                    if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
-                    {
-                        return (null, null);
-                    }
+                    //if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
+                    //{
+                    //    return (null, null);
+                    //}
 
                     if (Image != null)
                     {
@@ -222,15 +561,48 @@ namespace MolenApplicatie.Server.Services
                     newMolenData.LastUpdated = DateTime.Now;
                     if (oldMolenData == null)
                     {
-                        await _db.InsertAsync(newMolenData);
+                        await newDB.InsertAsync(newMolenData);
+
+                        foreach (var year in newMolenData.AddedDisappearedYears)
+                        {
+                            var molenYearInfo = new MolenYearInfo
+                            {
+                                Status_before = year.Status_before,
+                                Year = year.Year,
+                                Status_after = year.Status_after,
+                                MolenDataId = newMolenData.Id
+                            };
+
+                            await newDB.InsertAsync(molenYearInfo);
+                        }
                     }
                     else
                     {
-                        await _db.UpdateAsync(newMolenData);
+                        await newDB.UpdateAsync(newMolenData);
+
+                        var molenYearInfoList = newAddedMolenRemovedYears
+                            .Select(year => new MolenYearInfo
+                            {
+                                Status_before = year.Status_before,
+                                Year = year.Year,
+                                Status_after = year.Status_after,
+                                MolenDataId = newMolenData.Id
+                            }).ToList();
+
+                        foreach (var dbRecord in molenYearInfoList)
+                        {
+                            if (MolenRemovedYears.Find(year => year.MolenDataId == dbRecord.MolenDataId 
+                            && year.Year == dbRecord.Year 
+                            && year.Status_after == dbRecord.Status_after 
+                            && year.Status_before == dbRecord.Status_before) == null)
+                            {
+                                await newDB.InsertAsync(dbRecord);
+                            }
+                        }
                     }
 
 
-                    var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
+                    var allExistingTypes = await newDB.QueryAsync<MolenTypeAssociation>(
                         "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
                     );
                     if (allExistingTypes != null)
@@ -239,7 +611,7 @@ namespace MolenApplicatie.Server.Services
                         {
                             if (newMolenData.ModelType.Find(x => x.Id == type.MolenTypeId) == null)
                             {
-                                await _db.DeleteAsync<MolenTypeAssociation>(type);
+                                await newDB.DeleteAsync<MolenTypeAssociation>(type);
                             }
                         }
                     }
@@ -247,7 +619,7 @@ namespace MolenApplicatie.Server.Services
                     {
                         if ((allExistingTypes != null && allExistingTypes.Find(x => x.MolenTypeId == type.Id) == null) || allExistingTypes == null)
                         {
-                            await _db.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+                            await newDB.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
                         }
                     }
 
@@ -260,6 +632,29 @@ namespace MolenApplicatie.Server.Services
                 throw new HttpRequestException("Error: " + e.Message);
             }
             return (null, null);
+        }
+
+
+        public async Task<string> GetTBNFromUrl(string url)
+        {
+            if (!string.IsNullOrEmpty(url))
+            {
+                int IndexOfQuest = url.IndexOf('?');
+                if (IndexOfQuest > 0)
+                {
+                    url = url.Substring(0, IndexOfQuest);
+                }
+                string pattern_voorganger = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
+
+                Match match_voorganger = Regex.Match(url, pattern_voorganger);
+
+                if (match_voorganger.Success)
+                {
+                    url = match_voorganger.Groups[1].Value;
+                    return url;
+                }
+            }
+            return null;
         }
 
         public async Task<List<MolenData>> GetAllMolenDataDB()
@@ -280,7 +675,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<MolenTBN>> AddMolenTBNToDB()
         {
             List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>();
-            List<MolenTBN> molenList = await ReadAllMolenTBN();
+            List<MolenTBN> molenList = await ReadAllActiveMolenTBN();
             foreach (var molen in molenList)
             {
                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == molen.Ten_Brugge_Nr).Count() == 0)
@@ -309,7 +704,93 @@ namespace MolenApplicatie.Server.Services
             return (oldestUpdateTimesMolens, true, TimeSpan.FromMinutes(30));
         }
 
+        public async Task<List<Dictionary<string, object>>> GetAllMolenData2()
+        {
+            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
+            List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
+            //List<MolenTBN> Data = await ReadAllMolenTBN();
+            List<MolenTBN> Data = await newDB.Table<MolenTBN>();
+            int count = 0;
+            foreach (MolenTBN tbn in Data)
+            {
+                count++;
+                Thread.Sleep(1000);
+                (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
+                Console.WriteLine("nr-" + count);
+                keyValuePairs.Add(molen.Item2);
+                if(count == 10000)
+                {
+                    break;
+                }
+            }
+
+            File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+
+            File.WriteAllText("Json/DaadwerkelijkAlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+
+            return keyValuePairs;
+        }
+
         public async Task<List<MolenTBN>> ReadAllMolenTBN()
+        {
+            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
+            List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
+
+            int amountDivsAtNull = 0;
+            int i = 1;
+
+            while (amountDivsAtNull <= 1)
+            {
+                Thread.Sleep(500);
+                HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?page=" + i);
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var doc = new HtmlDocument();
+                doc.LoadHtml(responseBody);
+                var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
+                if (divs == null || divs.Count() == 0)
+                {
+                    amountDivsAtNull++;
+                }
+                if (divs != null)
+                {
+                    foreach (var div in divs)
+                    {
+                        var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            url = url.Substring(0, url.IndexOf('?'));
+                            string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
+
+                            Match match = Regex.Match(url, pattern);
+
+                            if (match.Success)
+                            {
+                                url = match.Groups[1].Value;
+                                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
+                                {
+                                    alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
+                                }
+                            }
+                        }
+                    }
+                }
+                i++;
+            }
+            foreach (MolenTBN tbn in alleMolenTBNR)
+            {
+                await newDB.InsertAsync(tbn);
+            }
+            return alleMolenTBNR;
+        }
+
+        public async Task<List<MolenTBN>> ReadAllActiveMolenTBN()
         {
             List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
 
@@ -369,7 +850,7 @@ namespace MolenApplicatie.Server.Services
 
             List<MolenData> allAddedMolens = new List<MolenData>();
             List<MolenTBN> allAddedMolenTBN = new List<MolenTBN>();
-            List<MolenTBN> allFoundMolenTBN = await ReadAllMolenTBN();
+            List<MolenTBN> allFoundMolenTBN = await ReadAllActiveMolenTBN();
 
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
