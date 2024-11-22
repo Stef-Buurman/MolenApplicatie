@@ -7,6 +7,7 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../Utils/Toasts';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-image-dialog',
@@ -17,8 +18,12 @@ export class ImageDialogComponent {
   constructor(@Inject(MAT_DIALOG_DATA) public data: { selectedImage: MolenImage, canBeDeleted: boolean },
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog,
-    private toast: Toasts) { }
+    private toast: Toasts,
+    private http: HttpClient) { }
 
+  get image(): MolenImage {
+    return this.data.selectedImage;
+  }
 
   getFilePath(): string | undefined {
     if (this.data && this.data.selectedImage) {
@@ -55,15 +60,13 @@ export class ImageDialogComponent {
     }
   }
 
-  downloadImage() {
-    if (this.data.selectedImage.image) {
+  downloadImage(image: MolenImage) {
+    this.http.get(image.filePath, { responseType: 'blob' }).subscribe((blob) => {
       const link = document.createElement('a');
-      link.href = this.data.selectedImage.image.toString();
-      link.download = this.data.selectedImage.name;
-
-      document.body.appendChild(link);
+      link.href = URL.createObjectURL(blob);
+      link.download = image.name;
       link.click();
-      document.body.removeChild(link);
-    }
+      URL.revokeObjectURL(link.href);
+    });
   }
 }

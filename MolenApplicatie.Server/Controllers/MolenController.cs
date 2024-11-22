@@ -22,8 +22,8 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("all_molens")]
         public async Task<IActionResult> GetAllMolens()
         {
-            var locations = await _MolenService.GetAllMolenData();
-            return Ok(locations);
+            var molenData = await _MolenService.GetAllMolenData();
+            return Ok(molenData);
         }
 
         [HttpGet("all_molen_locations")]
@@ -132,7 +132,7 @@ namespace MolenApplicatie.Server.Controllers
         [Route("read_molen/{tbNumber}")]
         public async Task<IActionResult> GetMolenTypes(string tbNumber)
         {
-            var results = await _NewMolenDataService.GetEveryMolenDataByTBNumber(tbNumber);
+            var results = await _NewMolenDataService.GetMolenDataByTBNumber(tbNumber);
             return Ok(results.Item1);
         }
 

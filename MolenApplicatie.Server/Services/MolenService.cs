@@ -53,7 +53,8 @@ namespace MolenApplicatie.Server.Services
 
                 foreach (string imageFile in imageFiles)
                 {
-                    molen.AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true));
+                    var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
+                    molen.AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true, gottenDate));
                 }
 
                 if(imageFiles.Count() > 0)

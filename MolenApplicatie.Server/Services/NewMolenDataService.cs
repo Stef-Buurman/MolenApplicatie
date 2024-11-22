@@ -47,223 +47,6 @@ namespace MolenApplicatie.Server.Services
             return Data;
         }
 
-        //public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr)
-        //{
-        //    List<MolenType> MolenTypes = await _db.Table<MolenType>();
-        //    List<MolenType> NewAddedTypes = new List<MolenType>();
-        //    try
-        //    {
-        //        HttpResponseMessage response = await _client.GetAsync(baseUrl + Ten_Brugge_Nr);
-        //        response.EnsureSuccessStatusCode();
-
-        //        string responseBody = await response.Content.ReadAsStringAsync();
-        //        var doc = new HtmlDocument();
-        //        doc.LoadHtml(responseBody);
-
-        //        var divs = doc.DocumentNode.SelectNodes("//div[@class='attrib']");
-        //        var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
-        //        var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
-        //        Console.WriteLine(divs.Count);
-        //        if (divs != null)
-        //        {
-        //            Dictionary<string, object> data = new Dictionary<string, object>();
-        //            MolenData newMolenData = new MolenData() { Id = -1 };
-        //            foreach (var div in divs)
-        //            {
-        //                var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
-        //                var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
-        //                if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
-        //                {
-        //                    switch (dt.ToLower())
-        //                    {
-        //                        case "geo positie":
-        //                            string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
-        //                            var match = Regex.Match(dd, pattern);
-        //                            if (Ten_Brugge_Nr == "12170")
-        //                            {
-        //                                newMolenData.North = 51.91575984198239;
-        //                                newMolenData.East = 6.577599354094867;
-        //                            }
-        //                            else
-        //                            {
-        //                                if (match.Success)
-        //                                {
-        //                                    if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
-        //                                    {
-        //                                        newMolenData.North = NorthValue;
-        //                                    }
-        //                                    if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
-        //                                    {
-        //                                        newMolenData.East = EastValue;
-        //                                    }
-        //                                }
-        //                            }
-        //                            break;
-        //                        case "naam":
-        //                            newMolenData.Name = dd;
-        //                            break;
-        //                        case "bouwjaar":
-        //                            if (dd.All(char.IsDigit)) newMolenData.Bouwjaar = Convert.ToInt32(dd);
-        //                            else
-        //                            {
-        //                                Regex regexSingleYear = new Regex(@"\b\d{4}\b");
-        //                                Match matchSingleYear = regexSingleYear.Match(dd);
-        //                                Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-–]\s*(\d{4})\b");
-        //                                Match matchMultiYear = regexMultiYear.Match(dd);
-
-        //                                if (matchMultiYear.Success)
-        //                                {
-        //                                    int startYear = int.Parse(matchMultiYear.Groups[1].Value);
-        //                                    int endYear = int.Parse(matchMultiYear.Groups[2].Value);
-
-        //                                    if (startYear <= endYear)
-        //                                    {
-        //                                        newMolenData.Bouwjaar_start = startYear;
-        //                                        newMolenData.Bouwjaar_einde = endYear;
-        //                                    }
-        //                                }
-        //                                else if (matchSingleYear.Success)
-        //                                {
-        //                                    newMolenData.Bouwjaar = Convert.ToInt32(matchSingleYear.Value);
-        //                                }
-        //                            }
-        //                            break;
-        //                        case "herbouwd":
-        //                            newMolenData.Herbouwd_jaar = dd;
-        //                            break;
-        //                        case "functie":
-        //                            if (newMolenData.Functie == null || newMolenData.Functie == "Onbekend")
-        //                            {
-        //                                newMolenData.Functie = dd;
-        //                            }
-        //                            break;
-        //                        case "ten bruggencate-nr.":
-        //                            newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
-        //                            break;
-        //                        case "plaats":
-        //                            newMolenData.Plaats = dd;
-        //                            break;
-        //                        case "adres":
-        //                            newMolenData.Adres = dd;
-        //                            break;
-        //                        default:
-        //                            break;
-        //                    }
-        //                    if (data.ContainsKey(dt)) data[dt] = dd;
-        //                    else data.Add(dt, dd);
-        //                }
-        //            }
-
-        //            MolenData oldMolenData = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
-        //            if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
-
-        //            if (ModelTypeDiv != null)
-        //            {
-        //                string name = "";
-        //                foreach (var modelDiv in ModelTypeDiv)
-        //                {
-        //                    var dt = modelDiv.SelectSingleNode(".//dt")?.InnerText?.Trim();
-        //                    name = dt ?? "";
-        //                    var dd = modelDiv.SelectSingleNode(".//dd")?.InnerText?.Trim();
-        //                    if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
-        //                    {
-        //                        foreach (string type in dd.Split(','))
-        //                        {
-        //                            var molenType = new MolenType() { Name = type.Trim() };
-        //                            if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
-        //                            {
-        //                                await _db.InsertAsync(molenType);
-        //                                molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
-        //                                NewAddedTypes.Add(molenType);
-        //                                newMolenData.ModelType.Add(molenType);
-        //                            }
-        //                            else
-        //                            {
-        //                                var existingType = MolenTypes.Concat(NewAddedTypes).FirstOrDefault(x => x.Name == molenType.Name);
-        //                                if (existingType != null && newMolenData.ModelType.Find(x => x.Name == existingType.Name) == null)
-        //                                {
-        //                                    newMolenData.ModelType.Add(existingType);
-        //                                }
-        //                            }
-        //                        }
-        //                        NewAddedTypes.AddRange(newMolenData.ModelType);
-        //                    }
-        //                }
-        //                if (data.ContainsKey(name)) data[name] = NewAddedTypes;
-        //                else data.Add(name, NewAddedTypes);
-        //            }
-
-        //            if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
-        //            {
-        //                return (null, null);
-        //            }
-
-        //            if (Image != null)
-        //            {
-        //                var src = Image.First().GetAttributeValue("src", string.Empty);
-        //                if (!string.IsNullOrEmpty(src))
-        //                {
-        //                    var imageResponse = await _client.GetAsync(src);
-        //                    byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
-        //                    if (!Directory.Exists(Globals.MolenImagesFolder))
-        //                    {
-        //                        Directory.CreateDirectory(Globals.MolenImagesFolder);
-        //                    }
-        //                    if (!File.Exists($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}"))
-        //                    {
-        //                        File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
-        //                    }
-        //                    else if (File.ReadAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg").Length != image.Length)
-        //                    {
-        //                        File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", image);
-        //                    }
-        //                    newMolenData.Image = new MolenImage($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Ten_Brugge_Nr, false);
-        //                }
-        //            }
-
-        //            newMolenData.LastUpdated = DateTime.Now;
-        //            if (oldMolenData == null)
-        //            {
-        //                await _db.InsertAsync(newMolenData);
-        //            }
-        //            else
-        //            {
-        //                await _db.UpdateAsync(newMolenData);
-        //            }
-
-
-        //            var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
-        //                "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
-        //            );
-        //            if (allExistingTypes != null)
-        //            {
-        //                foreach (var type in allExistingTypes)
-        //                {
-        //                    if (newMolenData.ModelType.Find(x => x.Id == type.MolenTypeId) == null)
-        //                    {
-        //                        await _db.DeleteAsync<MolenTypeAssociation>(type);
-        //                    }
-        //                }
-        //            }
-        //            foreach (var type in newMolenData.ModelType)
-        //            {
-        //                if ((allExistingTypes != null && allExistingTypes.Find(x => x.MolenTypeId == type.Id) == null) || allExistingTypes == null)
-        //                {
-        //                    await _db.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
-        //                }
-        //            }
-
-        //            return (newMolenData, data);
-        //        }
-        //    }
-
-        //    catch (HttpRequestException e)
-        //    {
-        //        throw new HttpRequestException("Error: " + e.Message);
-        //    }
-        //    return (null, null);
-        //}
-
         private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
         {
@@ -473,8 +256,8 @@ namespace MolenApplicatie.Server.Services
                                                     Status_after = suffixStatus
                                                 };
 
-                                                if (newMolenData.AddedDisappearedYears.Find(info => info.Year == newMolenYearInfo.Year 
-                                                && info.Status_before == newMolenYearInfo.Status_before 
+                                                if (newMolenData.AddedDisappearedYears.Find(info => info.Year == newMolenYearInfo.Year
+                                                && info.Status_before == newMolenYearInfo.Status_before
                                                 && info.Status_after == newMolenYearInfo.Status_after) == null)
                                                 {
                                                     newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
@@ -530,11 +313,6 @@ namespace MolenApplicatie.Server.Services
                         else data.Add(name, NewAddedTypes);
                     }
 
-                    //if (!Globals.AllowedMolenTypes.Any(x => newMolenData.ModelType.Count() > 0 && newMolenData.ModelType.Any(y => y.Name.ToLower() == x.ToLower())))
-                    //{
-                    //    return (null, null);
-                    //}
-
                     if (Image != null)
                     {
                         var src = Image.First().GetAttributeValue("src", string.Empty);
@@ -556,74 +334,74 @@ namespace MolenApplicatie.Server.Services
                             }
                             newMolenData.Image = new MolenImage($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}.jpg", newMolenData.Ten_Brugge_Nr, false);
                         }
-                    }
 
-                    newMolenData.LastUpdated = DateTime.Now;
-                    if (oldMolenData == null)
-                    {
-                        await newDB.InsertAsync(newMolenData);
-
-                        foreach (var year in newMolenData.AddedDisappearedYears)
+                        newMolenData.LastUpdated = DateTime.Now;
+                        if (oldMolenData == null)
                         {
-                            var molenYearInfo = new MolenYearInfo
-                            {
-                                Status_before = year.Status_before,
-                                Year = year.Year,
-                                Status_after = year.Status_after,
-                                MolenDataId = newMolenData.Id
-                            };
+                            await newDB.InsertAsync(newMolenData);
 
-                            await newDB.InsertAsync(molenYearInfo);
-                        }
-                    }
-                    else
-                    {
-                        await newDB.UpdateAsync(newMolenData);
-
-                        var molenYearInfoList = newAddedMolenRemovedYears
-                            .Select(year => new MolenYearInfo
+                            foreach (var year in newMolenData.AddedDisappearedYears)
                             {
-                                Status_before = year.Status_before,
-                                Year = year.Year,
-                                Status_after = year.Status_after,
-                                MolenDataId = newMolenData.Id
-                            }).ToList();
+                                var molenYearInfo = new MolenYearInfo
+                                {
+                                    Status_before = year.Status_before,
+                                    Year = year.Year,
+                                    Status_after = year.Status_after,
+                                    MolenDataId = newMolenData.Id
+                                };
 
-                        foreach (var dbRecord in molenYearInfoList)
-                        {
-                            if (MolenRemovedYears.Find(year => year.MolenDataId == dbRecord.MolenDataId 
-                            && year.Year == dbRecord.Year 
-                            && year.Status_after == dbRecord.Status_after 
-                            && year.Status_before == dbRecord.Status_before) == null)
-                            {
-                                await newDB.InsertAsync(dbRecord);
+                                await newDB.InsertAsync(molenYearInfo);
                             }
                         }
-                    }
-
-
-                    var allExistingTypes = await newDB.QueryAsync<MolenTypeAssociation>(
-                        "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
-                    );
-                    if (allExistingTypes != null)
-                    {
-                        foreach (var type in allExistingTypes)
+                        else
                         {
-                            if (newMolenData.ModelType.Find(x => x.Id == type.MolenTypeId) == null)
+                            await newDB.UpdateAsync(newMolenData);
+
+                            var molenYearInfoList = newAddedMolenRemovedYears
+                                .Select(year => new MolenYearInfo
+                                {
+                                    Status_before = year.Status_before,
+                                    Year = year.Year,
+                                    Status_after = year.Status_after,
+                                    MolenDataId = newMolenData.Id
+                                }).ToList();
+
+                            foreach (var dbRecord in molenYearInfoList)
                             {
-                                await newDB.DeleteAsync<MolenTypeAssociation>(type);
+                                if (MolenRemovedYears.Find(year => year.MolenDataId == dbRecord.MolenDataId
+                                && year.Year == dbRecord.Year
+                                && year.Status_after == dbRecord.Status_after
+                                && year.Status_before == dbRecord.Status_before) == null)
+                                {
+                                    await newDB.InsertAsync(dbRecord);
+                                }
                             }
                         }
-                    }
-                    foreach (var type in newMolenData.ModelType)
-                    {
-                        if ((allExistingTypes != null && allExistingTypes.Find(x => x.MolenTypeId == type.Id) == null) || allExistingTypes == null)
-                        {
-                            await newDB.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
-                        }
-                    }
 
-                    return (newMolenData, data);
+
+                        var allExistingTypes = await newDB.QueryAsync<MolenTypeAssociation>(
+                            "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
+                        );
+                        if (allExistingTypes != null)
+                        {
+                            foreach (var type in allExistingTypes)
+                            {
+                                if (newMolenData.ModelType.Find(x => x.Id == type.MolenTypeId) == null)
+                                {
+                                    await newDB.DeleteAsync<MolenTypeAssociation>(type);
+                                }
+                            }
+                        }
+                        foreach (var type in newMolenData.ModelType)
+                        {
+                            if ((allExistingTypes != null && allExistingTypes.Find(x => x.MolenTypeId == type.Id) == null) || allExistingTypes == null)
+                            {
+                                await newDB.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+                            }
+                        }
+
+                        return (newMolenData, data);
+                    }
                 }
             }
 
