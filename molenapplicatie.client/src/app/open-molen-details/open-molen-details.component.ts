@@ -14,8 +14,6 @@ import { MolenDialogComponent } from "../molen-dialog/molen-dialog.component";
 })
 export class OpenMolenDetailsComponent implements OnInit {
   selectedTenBruggeNumber: string | undefined;
-  allMolens?: MolenData[];
-  oldmolen!: MolenData;
   constructor(private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
@@ -46,6 +44,7 @@ export class OpenMolenDetailsComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.router.navigate(['../'], { relativeTo: this.route });
+    //this.router.navigate(['/']);
   }
 }
