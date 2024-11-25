@@ -17,9 +17,14 @@ import { Toasts } from '../Utils/Toasts';
 import { LoaderComponent } from './loader/loader.component';
 import { ErrorMessageComponent } from './error-message/error-message.component';
 import { DropdownComponent } from './dropdown/dropdown.component';
-import { MapRootComponent } from './map-root/map-root.component';
+import { RootComponent } from './root/root.component';
 import { ErrorService } from '../Services/ErrorService';
 import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-details.component';
+import { MapActiveMolensComponent } from './map-active-molens/map-active-molens.component';
+import { MapExistingMolensComponent } from './map-existing-molens/map-existing-molens.component';
+import { MapRemainingMolensComponent } from './map-remaining-molens/map-remaining-molens.component';
+import { MapDisappearedMolensComponent } from './map-disappeared-molens/map-disappeared-molens.component';
+import { MolensRootActiveComponent } from './molens-root-active/molens-root-active.component';
 
 @NgModule({
   declarations: [
@@ -33,8 +38,13 @@ import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-detai
     LoaderComponent,
     ErrorMessageComponent,
     DropdownComponent,
-    MapRootComponent,
-    OpenMolenDetailsComponent
+    RootComponent,
+    OpenMolenDetailsComponent,
+    MapActiveMolensComponent,
+    MapExistingMolensComponent,
+    MapRemainingMolensComponent,
+    MapDisappearedMolensComponent,
+    MolensRootActiveComponent
   ],
   imports: [
     BrowserAnimationsModule,
