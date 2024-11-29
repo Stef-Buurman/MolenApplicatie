@@ -16,15 +16,96 @@ namespace MolenApplicatie.Server.Services
         public MolenService()
         {
             _client = new HttpClient();
-            _db = new DbConnection(Globals.DBBestaandeMolens);
+            _db = new DbConnection(Globals.DBAlleMolens);
         }
 
         public async Task<List<MolenData>> GetAllMolenData()
         {
             List<MolenData> MolenData = await _db.Table<MolenData>();
+            List<MolenType> MolenTypes = await _db.Table<MolenType>();
+            List<MolenTypeAssociation> MolenTypeAssociations = await _db.Table<MolenTypeAssociation>();
+            List<MolenYearInfo> MolenYearInfos = await _db.Table<MolenYearInfo>();
+
+            return GetFullDataOfAllMolens(MolenData, MolenTypes, MolenTypeAssociations, MolenYearInfos);
+        }
+
+        public async Task<List<MolenData>> GetAllActiveMolenData()
+        {
+            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == "werkend").ToList();
+            return GefilterdeMolenData;
+        }
+
+        public async Task<List<MolenData>> GetAllMolenDataCorrectTypes()
+        {
+            List<MolenData> alleMolenData = await GetAllMolenData();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => Globals.AllowedMolenTypes.Any(x => molen.ModelType.Count() > 0 && molen.ModelType.Any(y => y.Name.ToLower() == x.ToLower()))).ToList();
+            return GefilterdeMolenData;
+        }
+
+
+        public async Task<List<MolenData>> GetAllExistingMolens()
+        {
+            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() != "verdwenen").ToList();
+            return GefilterdeMolenData;
+        }
+
+
+        public async Task<List<MolenData>> GetAllDisappearedMolens(string provincie)
+        {
+            List<MolenData> alleMolenData = await GetAllMolenData();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == "verdwenen" && molen.Provincie == provincie).ToList();
+            return GefilterdeMolenData;
+        }
+
+        public async Task<List<MolenData>> GetAllRemainderMolens()
+        {
+            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == "restant").ToList();
+            return GefilterdeMolenData;
+        }
+
+        public List<MolenData> GetFullDataOfAllMolens(List<MolenData> MolenData, List<MolenType> MolenTypes, List<MolenTypeAssociation> MolenTypeAssociations, List<MolenYearInfo> MolenYearInfos)
+        {
             for (int i = 0; i < MolenData.Count; i++)
             {
-                MolenData[i] = await GetFullDataOfMolen(MolenData[i]);
+                //MolenData[i] = await GetFullDataOfMolen(MolenData[i]);
+                var associations = MolenTypeAssociations.FindAll(type => type.MolenDataId == MolenData[i].Id);
+                MolenData[i].ModelType = MolenTypes.FindAll(type => associations.Find(assoc => assoc.MolenTypeId == type.Id) != null);
+                var mainImagePath = $"{Globals.MolenImagesFolder}/{MolenData[i].Ten_Brugge_Nr}.jpg";
+                if (File.Exists(mainImagePath))
+                {
+                    MolenData[i].Image = new MolenImage(mainImagePath.Replace("wwwroot/", ""), MolenData[i].Ten_Brugge_Nr);
+                }
+
+                var addedImagesFolder = $"{Globals.MolenAddedImagesFolder}/{MolenData[i].Ten_Brugge_Nr}";
+                if (MolenData[i].CanAddImages && Directory.Exists(addedImagesFolder))
+                {
+                    string[] imageFiles = Directory.GetFiles(addedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
+                                                   .Where(file => file.ToLower().EndsWith(".jpg") ||
+                                                                  file.ToLower().EndsWith(".jpeg") ||
+                                                                  file.ToLower().EndsWith(".png"))
+                                                   .ToArray();
+
+                    foreach (string imageFile in imageFiles)
+                    {
+                        var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
+                        MolenData[i].AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true, gottenDate));
+                    }
+
+                    if (imageFiles.Count() > 0)
+                    {
+                        MolenData[i].HasImage = true;
+                    }
+                    else
+                    {
+                        MolenData[i].HasImage = false;
+                    }
+                }
+
+                MolenData[i].AddedDisappearedYears = MolenYearInfos.FindAll(info => info.MolenDataId == MolenData[i].Id);
+
             }
             return MolenData;
         }
@@ -43,7 +124,7 @@ namespace MolenApplicatie.Server.Services
             }
 
             var addedImagesFolder = $"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}";
-            if (Directory.Exists(addedImagesFolder))
+            if (molen.CanAddImages && Directory.Exists(addedImagesFolder))
             {
                 string[] imageFiles = Directory.GetFiles(addedImagesFolder, "*.*", SearchOption.TopDirectoryOnly)
                                                .Where(file => file.ToLower().EndsWith(".jpg") ||
@@ -57,7 +138,7 @@ namespace MolenApplicatie.Server.Services
                     molen.AddedImages.Add(new MolenImage(imageFile.Replace("wwwroot/", ""), Path.GetFileName(imageFile), true, gottenDate));
                 }
 
-                if(imageFiles.Count() > 0)
+                if (imageFiles.Count() > 0)
                 {
                     molen.HasImage = true;
                 }
@@ -66,6 +147,9 @@ namespace MolenApplicatie.Server.Services
                     molen.HasImage = false;
                 }
             }
+
+            molen.AddedDisappearedYears = await _db.QueryAsync<MolenYearInfo>("SELECT * FROM MolenYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
+
             return molen;
         }
 
@@ -76,7 +160,7 @@ namespace MolenApplicatie.Server.Services
             {
                 MolenData[i].ModelType = await _db.QueryAsync<MolenType>("SELECT * FROM MolenType WHERE Id IN " +
                 "(SELECT MolenTypeId FROM MolenTypeAssociation WHERE MolenDataId = ?)", new object[] { MolenData[i].Id });
-                if (Directory.Exists(folderNameMolenImages) && Directory.Exists(folderNameMolenImages + "/" + MolenData[i].Ten_Brugge_Nr) 
+                if (Directory.Exists(folderNameMolenImages) && Directory.Exists(folderNameMolenImages + "/" + MolenData[i].Ten_Brugge_Nr)
                     && Directory.EnumerateFiles(folderNameMolenImages + "/" + MolenData[i].Ten_Brugge_Nr).Any())
                 {
                     MolenData[i].HasImage = true;
@@ -108,6 +192,11 @@ namespace MolenApplicatie.Server.Services
                 "(SELECT Id FROM MolenType WHERE Name = ?))", new object[] { type.ToLower() });
             MolenData.ForEach(async x => await GetFullDataOfMolen(x));
             return MolenData;
+        }
+
+        public bool CanMolenHaveAddedImages(MolenData molen)
+        {
+            return molen.Toestand.ToLower() != "verdwenen";
         }
 
         public async Task<(IFormFile file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)

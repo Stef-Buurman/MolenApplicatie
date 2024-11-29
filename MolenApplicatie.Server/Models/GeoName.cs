@@ -20,6 +20,9 @@ namespace MolenApplicatie.Server.Models
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
+        [JsonPropertyName("adminName1")]
+        public int Province { get; set; }
+
         [JsonPropertyName("lat")]
         public string Latitude { get; set; }
 

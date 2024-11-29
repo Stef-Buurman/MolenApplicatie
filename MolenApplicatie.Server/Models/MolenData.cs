@@ -14,16 +14,20 @@ namespace MolenApplicatie.Server.Models
         public int? Bouwjaar_einde { get; set; }
         public string Functie { get; set; }
         public string Toestand { get; set; }
+        public string Plaats { get; set; }
+        public string Adres { get; set; }
+        public string Provincie { get; set; }
         public string Opvolger { get; set; }
         public string Voorganger { get; set; }
         public string VerplaatstNaar { get; set; }
         public string AfkomstigVan { get; set; }
         public string Krachtbron { get; set; }
         public string Website { get; set; }
+        public string WinkelInformatie { get; set; }
         public bool OpenVoorPubliek { get; set; }
         public string Ten_Brugge_Nr { get; set; }
-        public string Plaats { get; set; }
-        public string Adres { get; set; }
+        public bool CanAddImages { get; set; }
+
         [Ignore]
         public MolenImage Image { get; set; }
         [Ignore]
@@ -39,34 +43,9 @@ namespace MolenApplicatie.Server.Models
         public bool HasImage { get; set; }
         public double North { get; set; }
         public double East { get; set; }
-        public DateTime LastUpdated { get; set; }
 
-        [Ignore]
-        public string GetBouwjaar
-        {
-            get
-            {
-                if (Bouwjaar.HasValue)
-                {
-                    return Bouwjaar.ToString();
-                }
-                else if (Bouwjaar_start.HasValue && Bouwjaar_einde.HasValue)
-                {
-                    return $"{Bouwjaar_start} - {Bouwjaar_einde}";
-                }
-                else if (Bouwjaar_start.HasValue)
-                {
-                    return Bouwjaar_start.ToString();
-                }
-                else if (Bouwjaar_einde.HasValue)
-                {
-                    return Bouwjaar_einde.ToString();
-                }
-                else
-                {
-                    return "Onbekend";
-                }
-            }
-        }
+        //public double Lat { get; set; }
+        //public double Long { get; set; }
+        public DateTime LastUpdated { get; set; }
     }
 }
