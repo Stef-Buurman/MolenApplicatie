@@ -19,6 +19,13 @@ namespace MolenApplicatie.Server.Services
             _db = new DbConnection(Globals.DBAlleMolens);
         }
 
+        public async Task<List<MolenData>> GetAllMolenDataByProvincie(string provincie)
+        {
+            List<MolenData> alleMolenData = await GetAllMolenData();
+            List<MolenData> MolenDataByProvincie = alleMolenData.Where(molen => molen.Provincie != null && molen.Provincie.ToLower() == provincie.ToLower()).ToList();
+            return MolenDataByProvincie;
+        }
+
         public async Task<List<MolenData>> GetAllMolenData()
         {
             List<MolenData> MolenData = await _db.Table<MolenData>();
