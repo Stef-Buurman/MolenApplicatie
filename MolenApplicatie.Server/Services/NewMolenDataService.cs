@@ -170,9 +170,9 @@ namespace MolenApplicatie.Server.Services
                                     {
                                         provincie = gemeente[1];
                                     }
-                                    newMolenData.Provincie = provincie;
+                                    newMolenData.Provincie = provincie != null ? provincie.Trim() : null;
                                     break;
-                                case "wederopbouw":
+                                case "winkelinformatie":
                                     newMolenData.WinkelInformatie = dd;
                                     break;
                                 case "toestand":
@@ -208,7 +208,6 @@ namespace MolenApplicatie.Server.Services
                                     for (int i = 0; i < lines.Length; i++)
                                     {
                                         string line = lines[i].Trim();
-                                        Console.WriteLine(line);
 
                                         // Case 1: Single year with no status on the same line
                                         if (Regex.IsMatch(line, @"^\d{4}$") && lines.Length == 1)
@@ -331,7 +330,6 @@ namespace MolenApplicatie.Server.Services
                     if (Image != null)
                     {
                         var src = Image.First().GetAttributeValue("src", string.Empty);
-                        Console.WriteLine(src);
                         if (!string.IsNullOrEmpty(src))
                         {
                             var imageResponse = await _client.GetAsync(src);
