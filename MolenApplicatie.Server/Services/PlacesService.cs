@@ -54,7 +54,6 @@ namespace MolenApplicatie.Server.Services
                     response.EnsureSuccessStatusCode();
 
                     var jsonResponse = await response.Content.ReadAsStringAsync();
-                    //Console.WriteLine(jsonResponse);
 
                     var placesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(jsonResponse);
                     if (placesResponse != null && placesResponse.Geonames != null)
