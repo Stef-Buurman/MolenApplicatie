@@ -1,0 +1,39 @@
+<div>
+  <label>
+    <input type="radio"
+           name="options"
+           [value]="'active'"
+           [(ngModel)]="selectedOption"
+           (change)="onOptionChange($event)" />
+    Actieve molens
+  </label>
+  <br />
+  <label>
+    <input type="radio"
+           name="options"
+           [value]="'remaining'"
+           [(ngModel)]="selectedOption"
+           (change)="onOptionChange($event)" />
+    Remaining
+  </label>
+  <br />
+  <label>
+    <input type="radio"
+           name="options"
+           [value]="'existing'"
+           [(ngModel)]="selectedOption"
+           (change)="onOptionChange($event)" />
+    Existing
+  </label>
+  <br />
+  <label>
+    <input type="radio"
+           name="options"
+           [value]="'disappeared'"
+           [(ngModel)]="selectedOption"
+           (change)="onOptionChange($event)" />
+    Disappeared
+  </label>
+</div>
+
+<p>Selected Option: {{ selectedOption }}</p>
