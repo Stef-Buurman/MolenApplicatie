@@ -20,10 +20,10 @@ namespace MolenApplicatie.Server.Controllers
             _NewMolenDataService = newMolenDataService;
         }
 
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAllMolens()
+        [HttpGet("all/{provincie}")]
+        public async Task<IActionResult> GetAllMolens(string provincie)
         {
-            var molenData = await _MolenService.GetAllMolenData();
+            var molenData = await _MolenService.GetAllMolenDataByProvincie(provincie);
             return Ok(molenData);
         }
 
@@ -187,9 +187,9 @@ namespace MolenApplicatie.Server.Controllers
             var provinces = new List<string>();
             for (int i = 0; i < results.Count; i++)
             {
-                if (results[i].North != null && results[i].East != null)
+                if (results[i].Lat != null && results[i].Long != null)
                 {
-                    provinces.Add(await GetProvinceByCoordinates((double)results[i].North, (double)results[i].East));
+                    provinces.Add(await GetProvinceByCoordinates((double)results[i].Lat, (double)results[i].Long));
                 }
                 if (i == 100) break;
             }
