@@ -28,7 +28,53 @@
 
 .molen-data {
   width: 30%;
+  overflow: hidden;
+  max-height: 85vh;
   padding: 10px;
+  transition: max-width 0.3s ease-in-out;
+
+  p {
+    margin: 10px 0px 0px 0px;
+  }
+}
+
+.molen-data.expanded {
+  max-height: none;
+  overflow:scroll;
+}
+
+.molen-data-div {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  max-height: 85vh;
+  transition: max-height 0.3s ease-in-out;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.molen-data-div {
+  max-height: inherit;
+}
+
+.toggle-btn {
+  position: sticky;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10px;
+  z-index: 10;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background-color: #0056b3;
 }
 
 .data {

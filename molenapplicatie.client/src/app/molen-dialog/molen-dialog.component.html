@@ -15,24 +15,60 @@
                         [tbNr]="molen.ten_Brugge_Nr" [deleteFunction]="deleteImageFunction">
     </app-image-selector>
   </div>
-  <div class="data molen-data">
-    <h2>Details</h2>
-    <p><strong>Functie:</strong> {{ molen.functie }}</p>
-    <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
-    <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
-    <p><strong>Adres:</strong> {{ molen.adres }}</p>
-    <p><strong>Coordinates:</strong> (North: {{ molen.north }}, East: {{ molen.east }})</p>
-    <p><strong>Bouwjaar:</strong> {{ molen.getBouwjaar }}</p>
-    <p *ngIf="molen.herbouwd_jaar">
-      <strong>Herbouwd:</strong> {{molen.herbouwd_jaar}}
-    </p>
+  <div class="data molen-data" [ngClass]="{ 'expanded': isExpanded }">
+    <div class="molen-data-div">
+      <h2>Details</h2>
 
-    <strong>Model Types:</strong>
-    <ul>
-      <li *ngFor="let model of molen.modelType">
-        {{ model.name }}
-      </li>
-    </ul>
+
+      <p><strong>ID:</strong> {{ molen.id }}</p>
+      <p><strong>Name:</strong> {{ molen.name }}</p>
+      <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
+      <p><strong>Functie:</strong> {{ molen.functie }}</p>
+      <p><strong>Toestand:</strong> {{ molen.toestand || 'Onbekend' }}</p>
+      <p><strong>Bouwjaar:</strong> {{ molen.bouwjaar }}</p>
+      <p *ngIf="molen.herbouwdJaar"><strong>Herbouwd Jaar:</strong> {{ molen.herbouwdJaar }}</p>
+
+      <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
+      <p><strong>Adres:</strong> {{ molen.adres }}</p>
+      <p *ngIf="molen.provincie"><strong>Provincie:</strong> {{ molen.provincie }}</p>
+      <p *ngIf="molen.gemeente"><strong>Gemeente:</strong> {{ molen.gemeente }}</p>
+      <p *ngIf="molen.streek"><strong>Streek:</strong> {{ molen.streek }}</p>
+      <p><strong>Coordinates:</strong> Lat: {{ molen.lat }}, Long: {{ molen.long }}</p>
+
+      <p *ngIf="molen.monument"><strong>Monument:</strong> {{ molen.monument || 'Onbekend' }}</p>
+
+      <p><strong>Model Types:</strong></p>
+      <ul>
+        <li *ngFor="let model of molen.modelType">
+          {{ model.name }}
+        </li>
+      </ul>
+
+      <p *ngIf="molen.bedrijfsvaardigheid"><strong>Bedrijfsvaardigheid:</strong> {{ molen.bedrijfsvaardigheid }}</p>
+
+      <p *ngIf="molen.toelichtingNaam"><strong>Toelichting Naam:</strong> {{ molen.toelichtingNaam }}</p>
+      <!-- Opening Information -->
+      <p *ngIf="molen.openingstijden"><strong>Openingstijden:</strong> {{ molen.openingstijden }}</p>
+      <p><strong>Open voor Publiek:</strong> {{ molen.openVoorPubliek ? 'Ja' : 'Nee' }}</p>
+      <p><strong>Open op Zaterdag:</strong> {{ molen.openOpZaterdag ? 'Ja' : 'Nee' }}</p>
+      <p><strong>Open op Zondag:</strong> {{ molen.openOpZondag ? 'Ja' : 'Nee' }}</p>
+      <p><strong>Open op Afspraak:</strong> {{ molen.openOpAfspraak ? 'Ja' : 'Nee' }}</p>
+
+      <p *ngIf="molen.eigenaar"><strong>Eigenaar:</strong> {{ molen.eigenaar }}</p>
+      <p *ngIf="molen.eigendomshistorie"><strong>Eigendomshistorie:</strong> {{ molen.eigendomshistorie }}</p>
+
+      <p *ngIf="molen.geschiedenis"><strong>Geschiedenis:</strong> {{ molen.geschiedenis }}</p>
+      <p *ngIf="molen.trivia"><strong>Trivia:</strong> {{ molen.trivia }}</p>
+      <p *ngIf="molen.wetenswaardigheden"><strong>Wetenswaardigheden:</strong> {{ molen.wetenswaardigheden }}</p>
+
+      <p *ngIf="molen.rad"><strong>Rad:</strong> {{ molen.rad }}</p>
+      <p *ngIf="molen.radDiameter"><strong>Rad Diameter:</strong> {{ molen.radDiameter }}</p>
+      <p *ngIf="molen.wateras"><strong>Wateras:</strong> {{ molen.wateras }}</p>
+    </div>
+
+    <button class="toggle-btn" (click)="expandDetails()">
+      {{ isExpanded ? 'Minder zien' : 'Meer zien' }}
+    </button>
   </div>
   <div class="data data-right">
     <h2>Upload de foto hier.</h2><br />

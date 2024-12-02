@@ -27,6 +27,8 @@ export class MolenDialogComponent implements OnDestroy{
     return this.molen.addedImages.length > 0;
   }
 
+  isExpanded = false;
+
   deleteImageFunction = this.deleteImage.bind(this);
 
   constructor(private toasts: Toasts,
@@ -65,6 +67,10 @@ export class MolenDialogComponent implements OnDestroy{
 
   onClose(): void {
     this.dialogRef.close(this.molenImages);
+  }
+
+  expandDetails() {
+    this.isExpanded = !this.isExpanded
   }
 
   removeImg(): void {
