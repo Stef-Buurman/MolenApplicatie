@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
@@ -12,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './map-remaining-molens.component.html',
   styleUrl: './map-remaining-molens.component.scss'
 })
-export class MapRemainingMolensComponent {
+export class MapRemainingMolensComponent implements AfterViewInit {
   molens: MolenDataClass[] = [];
   mapId: string = "remainingMolensMap"
 
@@ -30,7 +30,7 @@ export class MapRemainingMolensComponent {
       //  this.molenService.selectedMolenTenBruggeNumber = this.selectedTenBruggeNumber;
       //  this.OpenMolenDialog(this.selectedTenBruggeNumber);
       //}
-      console.log(params.get('TenBruggeNumber'))
+      //console.log(params.get('TenBruggeNumber'))
     });
   }
 

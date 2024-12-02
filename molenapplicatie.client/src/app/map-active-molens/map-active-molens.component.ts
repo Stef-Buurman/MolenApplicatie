@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
@@ -11,7 +11,7 @@ import { Toasts } from '../../Utils/Toasts';
   templateUrl: './map-active-molens.component.html',
   styleUrl: './map-active-molens.component.scss'
 })
-export class MapActiveMolensComponent {
+export class MapActiveMolensComponent implements AfterViewInit{
   molens: MolenDataClass[] = [];
   mapId:string = "activeMolensMap"
 
@@ -24,9 +24,12 @@ export class MapActiveMolensComponent {
   getMolens(): void {
     this.molenService.getAllActiveMolens().subscribe({
       next: (result) => {
+        console.log(result)
         this.molens = result;
         this.mapService.SelectedMapId = this.mapId;
-        this.mapService.initMap(result);
+        //if (!this.mapService.doesMapIdExist(this.mapId)) {
+          this.mapService.initMap(result);
+        //}
       },
       error: (error) => {
         this.errors.AddError(error);
@@ -40,6 +43,7 @@ export class MapActiveMolensComponent {
   }
 
   ngAfterViewInit(): void {
+    console.log("x")
     this.sharedData.IsLoadingTrue();
     this.getMolens();
   }

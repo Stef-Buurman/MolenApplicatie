@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
@@ -11,7 +11,7 @@ import { Toasts } from '../../Utils/Toasts';
   templateUrl: './map-disappeared-molens.component.html',
   styleUrl: './map-disappeared-molens.component.scss'
 })
-export class MapDisappearedMolensComponent {
+export class MapDisappearedMolensComponent implements AfterViewInit {
   molens: MolenDataClass[] = [];
   mapId: string = "disappearedMolensMap"
 
