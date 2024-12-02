@@ -23,6 +23,10 @@ export class MapService {
     private router: Router,
     private route: ActivatedRoute) { }
 
+  doesMapIdExist(mapId: string): boolean {
+    return this.maps.find(map => map.MapId == mapId) != null;
+  }
+
   updateMarker(tbn: string, molen: MolenData, mapId: string | undefined = undefined) {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
@@ -39,7 +43,7 @@ export class MapService {
   setView(coords: L.LatLngExpression, zoom: number, mapId: string | undefined = undefined): void {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
-    if (indexOfMap == -1) {
+    if (indexOfMap != -1) {
       this.maps[indexOfMap].Map.setView(coords, zoom);
     } else {
       console.error('Map is not initialized.');
@@ -48,20 +52,26 @@ export class MapService {
 
   initMap(molens: MolenData[], mapId: string | undefined = undefined): void {
     if (!mapId) mapId = this.SelectedMapId;
+
+    const existingMapIndex = this.maps.findIndex(map => map.MapId === mapId);
+    if (existingMapIndex !== -1) {
+      this.maps[existingMapIndex].Map.remove();
+      this.maps.splice(existingMapIndex, 1);
+    }
+
     setTimeout(() => {
-      var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
-      if (indexOfMap == -1) {
-        this.maps.push(new MapInformation(mapId, L.map(mapId)));
-        indexOfMap = this.maps.length - 1;
-      }
-      this.maps[indexOfMap].Map.setView([52, 4.4], 10);
+      const newMap = new MapInformation(mapId, L.map(mapId!));
+      this.maps.push(newMap);
+      const mapInstance = newMap.Map;
+
+      mapInstance.setView([52, 4.4], 10);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(this.maps[indexOfMap].Map);
+      }).addTo(mapInstance);
 
       molens.forEach(molen => {
-        this.addMarker(molen, mapId);
+        this.addMarker(molen, mapId!);
       });
     });
   }
@@ -108,7 +118,7 @@ export class MapService {
         popupAnchor: [0, -32]
       });
 
-      const marker = L.marker([molen.north, molen.east], { icon: customIcon }).addTo(this.maps[indexOfMap].Map);
+      const marker = L.marker([molen.lat, molen.long], { icon: customIcon }).addTo(this.maps[indexOfMap].Map);
 
       marker.on('click', () => {
         const targetUrl = `${this.router.url}/${molen.ten_Brugge_Nr}`;
