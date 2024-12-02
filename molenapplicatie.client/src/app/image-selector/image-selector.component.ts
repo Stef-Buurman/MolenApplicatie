@@ -5,7 +5,7 @@ import { MolenImage } from '../../Class/MolenImage';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { Toasts } from '../../Utils/Toasts';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
+import { ImageDialogComponent } from '../dialogs/image-dialog/image-dialog.component';
 
 @Component({
   selector: 'app-image-selector',

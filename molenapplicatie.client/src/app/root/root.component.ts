@@ -11,7 +11,7 @@ import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { Toasts } from '../../Utils/Toasts';
-import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
 import { FilterMapComponent } from '../filter-map/filter-map.component';
 
 

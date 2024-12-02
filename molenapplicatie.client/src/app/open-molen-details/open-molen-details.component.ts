@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { MolenImage } from "../../Class/MolenImage";
 import { MolenData } from "../../Interfaces/MolenData";
 import { MolenService } from "../../Services/MolenService";
-import { MolenDialogComponent } from "../molen-dialog/molen-dialog.component";
+import { MolenDialogComponent } from "../dialogs/molen-dialog/molen-dialog.component";
 
 
 @Component({

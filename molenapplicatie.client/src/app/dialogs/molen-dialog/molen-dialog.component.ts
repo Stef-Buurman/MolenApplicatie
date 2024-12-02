@@ -1,11 +1,11 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
-import { MolenDataClass } from '../../Class/MolenDataClass';
-import { MolenImage } from '../../Class/MolenImage';
-import { MolenData } from '../../Interfaces/MolenData';
-import { MolenService } from '../../Services/MolenService';
-import { Toasts } from '../../Utils/Toasts';
+import { MolenDataClass } from '../../../Class/MolenDataClass';
+import { MolenImage } from '../../../Class/MolenImage';
+import { MolenData } from '../../../Interfaces/MolenData';
+import { MolenService } from '../../../Services/MolenService';
+import { Toasts } from '../../../Utils/Toasts';
 
 @Component({
   selector: 'app-molen-dialog',
