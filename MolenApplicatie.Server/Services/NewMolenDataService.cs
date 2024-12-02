@@ -51,14 +51,13 @@ namespace MolenApplicatie.Server.Services
         private List<string> allverdwenenMolens = new List<string>();
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
         {
-            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
-            await newDB._db.CreateTableAsync<MolenData>();
-            await newDB._db.CreateTableAsync<MolenYearInfo>();
-            List<MolenType> MolenTypes = await newDB.Table<MolenType>();
+            List<MolenType> MolenTypes = await _db.Table<MolenType>();
             List<MolenType> NewAddedTypes = new List<MolenType>();
-            List<MolenYearInfo> MolenRemovedYears = new List<MolenYearInfo>();
-            MolenData FoundMolenInDb = await newDB.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{Ten_Brugge_Nr}'");
-            List<MolenYearInfo> newAddedMolenRemovedYears = await newDB.Table<MolenYearInfo>();
+            List<VerdwenenYearInfo> MolenRemovedYears = new List<VerdwenenYearInfo>();
+            MolenData FoundMolenInDb = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{Ten_Brugge_Nr}'");
+            List<Molenmaker> molenmakers = await _db.Table<Molenmaker>();
+            List<MolenTypeAssociation> MolenTypeAssociations = await _db.Table<MolenTypeAssociation>();
+            List<VerdwenenYearInfo> newAddedMolenRemovedYears = await _db.Table<VerdwenenYearInfo>();
             try
             {
                 HttpResponseMessage response;
@@ -82,7 +81,7 @@ namespace MolenApplicatie.Server.Services
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
-                    MolenData newMolenData = new MolenData() { Id = -1, AddedDisappearedYears = FoundMolenInDb != null ? MolenRemovedYears : new List<MolenYearInfo>() };
+                    MolenData newMolenData = new MolenData() { Id = -1, DisappearedYears = FoundMolenInDb != null ? MolenRemovedYears : new List<VerdwenenYearInfo>() };
                     foreach (var div in divs)
                     {
                         var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
@@ -98,8 +97,8 @@ namespace MolenApplicatie.Server.Services
                                     var match = Regex.Match(dd, pattern);
                                     if (Ten_Brugge_Nr == "12170")
                                     {
-                                        newMolenData.North = 51.91575984198239;
-                                        newMolenData.East = 6.577599354094867;
+                                        newMolenData.Lat = 51.91575984198239;
+                                        newMolenData.Long = 6.577599354094867;
                                     }
                                     else
                                     {
@@ -107,17 +106,20 @@ namespace MolenApplicatie.Server.Services
                                         {
                                             if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
                                             {
-                                                newMolenData.North = NorthValue;
+                                                newMolenData.Lat = NorthValue;
                                             }
                                             if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
                                             {
-                                                newMolenData.East = EastValue;
+                                                newMolenData.Long = EastValue;
                                             }
                                         }
                                     }
                                     break;
                                 case "naam":
                                     newMolenData.Name = dd;
+                                    break;
+                                case "toelichting naam":
+                                    newMolenData.ToelichtingNaam = dd;
                                     break;
                                 case "bouwjaar":
                                     if (dd.All(char.IsDigit)) newMolenData.Bouwjaar = Convert.ToInt32(dd);
@@ -148,14 +150,45 @@ namespace MolenApplicatie.Server.Services
                                 case "herbouwd":
                                     newMolenData.Herbouwd_jaar = dd;
                                     break;
+                                case "bedrijfsvaardigheid":
+                                    newMolenData.Bedrijfsvaardigheid = dd;
+                                    break;
                                 case "functie":
                                     if (newMolenData.Functie == null || newMolenData.Functie == "Onbekend")
                                     {
                                         newMolenData.Functie = dd.ToLower();
                                     }
                                     break;
+                                case "molenmaker":
+                                    string molenmakerPattern = @"^(.*?),.*\((\d{4})\)$";
+                                    if (dd != null && dd != "")
+                                    {
+                                        foreach (var line in dd.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+                                        {
+                                            Match molenmakerMatch = Regex.Match(line, molenmakerPattern);
+                                            if (molenmakerMatch.Success)
+                                            {
+                                                string name = molenmakerMatch.Groups[1].Value;
+                                                string year = molenmakerMatch.Groups[2].Value;
+                                                newMolenData.MolenMakers.Add(new Molenmaker()
+                                                {
+                                                    Id = -1,
+                                                    Name = name,
+                                                    Year = year,
+                                                    MolenDataId = newMolenData.Id
+                                                });
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case "bestemming":
+                                    newMolenData.Doel = dd;
+                                    break;
                                 case "ten bruggencate-nr.":
                                     newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
+                                    break;
+                                case "monument":
+                                    newMolenData.Monument = GetUrlFromATag(dd2);
                                     break;
                                 case "plaats":
                                     newMolenData.Plaats = dd;
@@ -166,11 +199,56 @@ namespace MolenApplicatie.Server.Services
                                 case "gemeente":
                                     var gemeente = dd.Split(",");
                                     string provincie = null;
+                                    string completeGemeente = null;
                                     if (gemeente.Length >= 2 && gemeente[1] != null)
                                     {
                                         provincie = gemeente[1];
                                     }
+                                    if (gemeente.Length >= 1 && gemeente[0] != null)
+                                    {
+                                        completeGemeente = gemeente[0];
+                                    }
                                     newMolenData.Provincie = provincie != null ? provincie.Trim() : null;
+                                    newMolenData.Gemeente = completeGemeente != null ? completeGemeente.Trim() : null;
+                                    break;
+                                case "streek":
+                                    newMolenData.Streek = dd;
+                                    break;
+                                case "plaatsaanduiding":
+                                    newMolenData.Plaatsaanduiding = dd;
+                                    break;
+                                case "plaats bediening":
+                                    newMolenData.PlaatsBediening = dd;
+                                    break;
+                                case "bediening kruiwerk":
+                                    newMolenData.BedieningKruiwerk = dd;
+                                    break;
+                                case "plaats kruiwerk":
+                                    newMolenData.PlaatsKruiwerk = dd;
+                                    break;
+                                case "kruiwerk":
+                                    newMolenData.Kruiwerk = dd;
+                                    break;
+                                case "vlucht":
+                                    newMolenData.Vlucht = dd;
+                                    break;
+                                case "openingstijden":
+                                    newMolenData.Openingstijden = dd;
+                                    break;
+                                case "open voor publiek":
+                                    newMolenData.OpenVoorPubliek = dd.ToLower().Contains("ja");
+                                    break;
+                                case "open op zaterdag":
+                                    newMolenData.OpenOpZaterdag = dd.ToLower().Contains("ja");
+                                    break;
+                                case "open op zondag":
+                                    newMolenData.OpenOpZondag = dd.ToLower().Contains("ja");
+                                    break;
+                                case "open op afspraak":
+                                    newMolenData.OpenOpAfspraak = dd.ToLower().Contains("ja");
+                                    break;
+                                case "molenaar":
+                                    newMolenData.Molenaar = dd;
                                     break;
                                 case "winkelinformatie":
                                     newMolenData.WinkelInformatie = dd;
@@ -183,22 +261,91 @@ namespace MolenApplicatie.Server.Services
                                     newMolenData.Krachtbron = dd.ToLower();
                                     break;
                                 case "website":
-                                    newMolenData.Website = dd2.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
+                                    newMolenData.Website = GetUrlFromATag(dd2);
                                     break;
-                                case "open voor publiek":
-                                    newMolenData.OpenVoorPubliek = dd.ToLower().Contains("ja");
+                                case "eigenaar":
+                                    newMolenData.Eigenaar = dd;
+                                    break;
+                                case "wiekvorm":
+                                    newMolenData.Wiekvorm = dd;
+                                    break;
+                                case "wiekverbeteringen":
+                                    newMolenData.WiekVerbeteringen = dd;
+                                    break;
+                                case "literatuur":
+                                    newMolenData.Literatuur = dd;
+                                    break;
+                                case "bouwbestek":
+                                    newMolenData.Bouwbestek = dd;
+                                    break;
+                                case "bijzonderheden":
+                                    newMolenData.Bijzonderheden = dd;
+                                    break;
+                                case "museuminformatie":
+                                    newMolenData.Museuminformatie = dd;
+                                    break;
+                                case "wederopbouw":
+                                    newMolenData.Wederopbouw = dd;
+                                    break;
+                                case "over de as":
+                                    newMolenData.As = dd;
+                                    break;
+                                case "over de wieken":
+                                    newMolenData.Wieken = dd;
+                                    break;
+                                case "unieke eigenschap":
+                                    newMolenData.UniekeEigenschap = dd;
+                                    break;
+                                case "landschappelijke waarde":
+                                    newMolenData.LandschappelijkeWaarde = dd;
+                                    break;
+                                case "kadastrale aanduiding":
+                                    newMolenData.KadastraleAanduiding = dd;
                                     break;
                                 case "opvolger":
-                                    newMolenData.Opvolger = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    newMolenData.Opvolger = GetTBNFromUrl(GetUrlFromATag(dd2));
                                     break;
                                 case "voorganger":
-                                    newMolenData.Voorganger = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    newMolenData.Voorganger = GetTBNFromUrl(GetUrlFromATag(dd2));
                                     break;
                                 case "verplaatst naar":
-                                    newMolenData.VerplaatstNaar = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    newMolenData.VerplaatstNaar = GetTBNFromUrl(GetUrlFromATag(dd2));
                                     break;
                                 case "afkomstig van":
-                                    newMolenData.AfkomstigVan = await GetTBNFromUrl(div.SelectSingleNode(".//a")?.GetAttributeValue("href", string.Empty));
+                                    newMolenData.AfkomstigVan = GetTBNFromUrl(GetUrlFromATag(dd2));
+                                    break;
+                                case "plaats(en) voorheen":
+                                    newMolenData.PlaatsenVoorheen = dd;
+                                    break;
+                                case "molenerf":
+                                    newMolenData.Molenerf = dd;
+                                    break;
+                                case "trivia":
+                                    newMolenData.Trivia = dd;
+                                    break;
+                                case "geschiedenis":
+                                    newMolenData.Geschiedenis = dd;
+                                    break;
+                                case "eigendomshistorie":
+                                    newMolenData.Eigendomshistorie = dd;
+                                    break;
+                                case "wetenswaardigheden":
+                                    newMolenData.Wetenswaardigheden = dd;
+                                    break;
+                                case "recente werkzaamheden":
+                                    newMolenData.RecenteWerkzaamheden = dd;
+                                    break;
+                                case "rad":
+                                    newMolenData.Rad = dd;
+                                    break;
+                                case "rad diameter":
+                                    newMolenData.RadDiameter = dd;
+                                    break;
+                                case "wateras":
+                                    newMolenData.Wateras = dd;
+                                    break;
+                                case "toegangsprijzen":
+                                    newMolenData.Toegangsprijzen = dd;
                                     break;
                                 case "verdwenen":
                                     allverdwenenMolens.Add(newMolenData.Ten_Brugge_Nr);
@@ -221,15 +368,15 @@ namespace MolenApplicatie.Server.Services
                                                 i++;
                                             }
 
-                                            MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                            VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
                                             {
                                                 Year = Convert.ToInt32(year),
                                                 Status_after = status
                                             };
 
-                                            if (newMolenData.AddedDisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_after == newMolenYearInfo.Status_after) == null)
+                                            if (newMolenData.DisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_after == newMolenYearInfo.Status_after) == null)
                                             {
-                                                newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                                newMolenData.DisappearedYears.Add(newMolenYearInfo);
                                             }
                                         }
                                         // Case 2: Line with a prefix (like "na", "voor", etc.) before the year
@@ -239,15 +386,15 @@ namespace MolenApplicatie.Server.Services
                                             string prefix = match1.Groups[1].Value.Trim();
                                             string year = match1.Groups[2].Value;
 
-                                            MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                            VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
                                             {
                                                 Status_before = prefix,
                                                 Year = Convert.ToInt32(year)
                                             };
 
-                                            if (newMolenData.AddedDisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_before == newMolenYearInfo.Status_before) == null)
+                                            if (newMolenData.DisappearedYears.Find(info => info.Year == Convert.ToInt32(year) && info.Status_before == newMolenYearInfo.Status_before) == null)
                                             {
-                                                newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                                newMolenData.DisappearedYears.Add(newMolenYearInfo);
                                             }
                                         }
                                         // Case 3: Line with both a year and a status in the same line
@@ -263,18 +410,18 @@ namespace MolenApplicatie.Server.Services
                                                 if (prefixStatus == "") prefixStatus = null;
                                                 if (suffixStatus == "") suffixStatus = null;
 
-                                                MolenYearInfo newMolenYearInfo = new MolenYearInfo
+                                                VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
                                                 {
                                                     Status_before = prefixStatus,
                                                     Year = Convert.ToInt32(year),
                                                     Status_after = suffixStatus
                                                 };
 
-                                                if (newMolenData.AddedDisappearedYears.Find(info => info.Year == newMolenYearInfo.Year
+                                                if (newMolenData.DisappearedYears.Find(info => info.Year == newMolenYearInfo.Year
                                                 && info.Status_before == newMolenYearInfo.Status_before
                                                 && info.Status_after == newMolenYearInfo.Status_after) == null)
                                                 {
-                                                    newMolenData.AddedDisappearedYears.Add(newMolenYearInfo);
+                                                    newMolenData.DisappearedYears.Add(newMolenYearInfo);
                                                 }
                                             }
                                         }
@@ -288,7 +435,7 @@ namespace MolenApplicatie.Server.Services
                         }
                     }
 
-                    MolenData oldMolenData = await newDB.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
+                    MolenData oldMolenData = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{newMolenData.Ten_Brugge_Nr}'");
                     if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
 
                     if (ModelTypeDiv != null)
@@ -303,11 +450,12 @@ namespace MolenApplicatie.Server.Services
                             {
                                 foreach (string type in dd.Split(','))
                                 {
-                                    var molenType = new MolenType() { Name = type.Trim() };
+                                    string trimmedType = type.Trim();
+                                    var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1)};
                                     if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
                                     {
-                                        await newDB.InsertAsync(molenType);
-                                        molenType.Id = await newDB.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+                                        await _db.InsertAsync(molenType);
+                                        molenType.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                                         NewAddedTypes.Add(molenType);
                                         newMolenData.ModelType.Add(molenType);
                                     }
@@ -360,11 +508,11 @@ namespace MolenApplicatie.Server.Services
                     newMolenData.LastUpdated = DateTime.Now;
                     if (oldMolenData == null)
                     {
-                        await newDB.InsertAsync(newMolenData);
+                        await _db.InsertAsync(newMolenData);
 
-                        foreach (var year in newMolenData.AddedDisappearedYears)
+                        foreach (var year in newMolenData.DisappearedYears)
                         {
-                            var molenYearInfo = new MolenYearInfo
+                            var molenYearInfo = new VerdwenenYearInfo
                             {
                                 Status_before = year.Status_before,
                                 Year = year.Year,
@@ -372,15 +520,25 @@ namespace MolenApplicatie.Server.Services
                                 MolenDataId = newMolenData.Id
                             };
 
-                            await newDB.InsertAsync(molenYearInfo);
+                            await _db.InsertAsync(molenYearInfo);
+                        }
+
+                        foreach (var molenmaker in newMolenData.MolenMakers)
+                        {
+                            if (molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && molenmaker.MolenDataId == newMolenData.Id) == null)
+                            {
+                                molenmaker.Id = -1;
+                                molenmaker.MolenDataId = newMolenData.Id;
+                                await _db.InsertAsync(molenmaker);
+                            }
                         }
                     }
                     else
                     {
-                        await newDB.UpdateAsync(newMolenData);
+                        await _db.UpdateAsync(newMolenData);
 
                         var molenYearInfoList = MolenRemovedYears
-                            .Select(year => new MolenYearInfo
+                            .Select(year => new VerdwenenYearInfo
                             {
                                 Status_before = year.Status_before,
                                 Year = year.Year,
@@ -395,13 +553,30 @@ namespace MolenApplicatie.Server.Services
                             && year.Status_after == molenYearInfo.Status_after
                             && year.Status_before == molenYearInfo.Status_before) == null)
                             {
-                                await newDB.InsertAsync(molenYearInfo);
+                                await _db.InsertAsync(molenYearInfo);
+                            }
+                        }
+
+                        foreach (var molenmaker in newMolenData.MolenMakers)
+                        {
+                            Molenmaker foundMolenMaker = molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && molenmaker.MolenDataId == newMolenData.Id);
+                            if (foundMolenMaker == null)
+                            {
+                                molenmaker.Id = -1;
+                                molenmaker.MolenDataId = newMolenData.Id;
+                                await _db.InsertAsync(molenmaker);
+                            }
+                            else
+                            {
+                                molenmaker.Id = foundMolenMaker.Id;
+                                molenmaker.MolenDataId = newMolenData.Id;
+                                await _db.UpdateAsync(molenmaker);
                             }
                         }
                     }
 
 
-                    var allExistingTypes = await newDB.QueryAsync<MolenTypeAssociation>(
+                    var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
                         "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
                     );
 
@@ -412,14 +587,18 @@ namespace MolenApplicatie.Server.Services
                             var foundType = MolenTypes.Find(t => t.Name == type.Name);
                             if (foundType == null)
                             {
-                                await newDB.InsertAsync(type);
-                                type.Id = await newDB.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+                                await _db.InsertAsync(type);
+                                type.Id = await _db.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
                             }
                             else if (foundType != null)
                             {
                                 type.Id = foundType.Id;
                             }
-                            await newDB.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+
+                            if (MolenTypeAssociations.Find(x => x.MolenTypeId == type.Id && x.MolenDataId == newMolenData.Id) == null)
+                            {
+                                await _db.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+                            }
                         }
                     }
 
@@ -435,9 +614,9 @@ namespace MolenApplicatie.Server.Services
         }
 
 
-        public async Task<string> GetTBNFromUrl(string url)
+        public string GetTBNFromUrl(string url)
         {
-            if (!string.IsNullOrEmpty(url))
+            if (url != null && !string.IsNullOrEmpty(url))
             {
                 int IndexOfQuest = url.IndexOf('?');
                 if (IndexOfQuest > 0)
@@ -453,6 +632,16 @@ namespace MolenApplicatie.Server.Services
                     url = match_voorganger.Groups[1].Value;
                     return url;
                 }
+            }
+            return null;
+        }
+
+        public string GetUrlFromATag(HtmlNode url)
+        {
+            HtmlNode aTag = url.SelectSingleNode(".//a");
+            if (aTag != null)
+            {
+                return aTag.GetAttributeValue("href", string.Empty);
             }
             return null;
         }
@@ -506,11 +695,10 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<Dictionary<string, object>>> GetAllMolenData2()
         {
-            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
-            List<MolenData> currentData = await newDB.Table<MolenData>();
-            //List<MolenTBN> Data = await ReadAllMolenTBN();
-            List<MolenTBN> Data = await newDB.Table<MolenTBN>();
+            List<MolenData> currentData = await _db.Table<MolenData>();
+            List<MolenTBN> Data = await ReadAllMolenTBN();
+            //List<MolenTBN> Data = await _db.Table<MolenTBN>();
             int count = 0;
             foreach (MolenTBN tbn in Data)
             {
@@ -520,10 +708,10 @@ namespace MolenApplicatie.Server.Services
                 (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 Console.WriteLine("nr-" + tbn.Id);
                 keyValuePairs.Add(molen.Item2);
-                if (count == 10000)
-                {
-                    break;
-                }
+                //if (count == 2000)
+                //{
+                //    break;
+                //}
             }
 
             File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
@@ -546,7 +734,6 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<MolenTBN>> ReadAllMolenTBN()
         {
-            DbConnection newDB = new DbConnection("Database/AlleMolens.db");
             List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
 
             int amountDivsAtNull = 0;
@@ -592,7 +779,7 @@ namespace MolenApplicatie.Server.Services
             }
             foreach (MolenTBN tbn in alleMolenTBNR)
             {
-                await newDB.InsertAsync(tbn);
+                await _db.InsertAsync(tbn);
             }
             return alleMolenTBNR;
         }
@@ -686,7 +873,6 @@ namespace MolenApplicatie.Server.Services
             await AddDateTimeFromSearches();
             return (allAddedMolens, cooldownTime);
         }
-
 
         public async Task<bool> AddDateTimeFromSearches()
         {

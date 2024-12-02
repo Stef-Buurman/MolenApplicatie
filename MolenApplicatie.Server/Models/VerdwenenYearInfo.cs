@@ -2,7 +2,7 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class MolenYearInfo
+    public class VerdwenenYearInfo
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

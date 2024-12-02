@@ -31,7 +31,7 @@ namespace MolenApplicatie.Server.Services
             List<MolenData> MolenData = await _db.Table<MolenData>();
             List<MolenType> MolenTypes = await _db.Table<MolenType>();
             List<MolenTypeAssociation> MolenTypeAssociations = await _db.Table<MolenTypeAssociation>();
-            List<MolenYearInfo> MolenYearInfos = await _db.Table<MolenYearInfo>();
+            List<VerdwenenYearInfo> MolenYearInfos = await _db.Table<VerdwenenYearInfo>();
 
             return GetFullDataOfAllMolens(MolenData, MolenTypes, MolenTypeAssociations, MolenYearInfos);
         }
@@ -73,7 +73,7 @@ namespace MolenApplicatie.Server.Services
             return GefilterdeMolenData;
         }
 
-        public List<MolenData> GetFullDataOfAllMolens(List<MolenData> MolenData, List<MolenType> MolenTypes, List<MolenTypeAssociation> MolenTypeAssociations, List<MolenYearInfo> MolenYearInfos)
+        public List<MolenData> GetFullDataOfAllMolens(List<MolenData> MolenData, List<MolenType> MolenTypes, List<MolenTypeAssociation> MolenTypeAssociations, List<VerdwenenYearInfo> VerdwenenYearInfo)
         {
             for (int i = 0; i < MolenData.Count; i++)
             {
@@ -111,7 +111,7 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                MolenData[i].AddedDisappearedYears = MolenYearInfos.FindAll(info => info.MolenDataId == MolenData[i].Id);
+                MolenData[i].DisappearedYears = VerdwenenYearInfo.FindAll(info => info.MolenDataId == MolenData[i].Id);
 
             }
             return MolenData;
@@ -155,7 +155,9 @@ namespace MolenApplicatie.Server.Services
                 }
             }
 
-            molen.AddedDisappearedYears = await _db.QueryAsync<MolenYearInfo>("SELECT * FROM MolenYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
+            molen.DisappearedYears = await _db.QueryAsync<VerdwenenYearInfo>("SELECT * FROM VerdwenenYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
+
+            molen.MolenMakers = await _db.QueryAsync<Molenmaker>("SELECT * FROM Molenmaker WHERE MolenDataId = ?", new object[] { molen.Id });
 
             return molen;
         }

@@ -1,9 +1,15 @@
-﻿using MolenApplicatie.Server.Models;
+﻿using Microsoft.OpenApi.Any;
+using MolenApplicatie.Server.Models;
 using SQLite;
-using MolenApplicatie.Server.Utils;
+using System.Data.Common;
 
 namespace MolenApplicatie.Server.Services
 {
+    public class TableInfo
+    {
+        public string name { get; set; }
+        public string type { get; set; }
+    }
     public class DbConnection
     {
         private readonly HttpClient _client;
@@ -26,6 +32,8 @@ namespace MolenApplicatie.Server.Services
                 await _db.CreateTableAsync<MolenTypeAssociation>();
                 await _db.CreateTableAsync<LastSearchedForNewData>();
                 await _db.CreateTableAsync<Place>();
+                await _db.CreateTableAsync<VerdwenenYearInfo>();
+                await _db.CreateTableAsync<Molenmaker>();
             }
             catch (Exception ex)
             {
