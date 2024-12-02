@@ -1,0 +1,65 @@
+.container {
+  /*display: flex;*/
+  width: 50vw;
+  height: 100vh;
+  background-image: url('../../../../public/Assets/Background/UploadImageBackground.jpg');
+  background-origin: border-box;
+  background-size: cover;
+  border-radius: 25% 10% / 3% 20% !important;
+  color: #ffffff;
+}
+
+.image-details {
+  /*padding: 10% 5% 5% 10%;*/
+  margin: 0 auto auto 0;
+  margin: auto;
+}
+
+.image-details, .image-preview {
+  width: 50%;
+  padding: 2% 1% 1% 2%;
+}
+
+.image-preview {
+  text-align: center;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+
+  img {
+    max-height: 56vh;
+    width: auto !important;
+    border-radius: 20px;
+  }
+}
+
+.file-input-container {
+  display: inline-block;
+  position: relative;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.file-label:hover {
+  background-color: #45a049;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.file-label:active {
+  background-color: #388E3C;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

@@ -1,1 +1,38 @@
-<p>upload-image-dialog works!</p>
+<div class="container">
+  <div class="image-details">
+    <h2>Foto uploaden</h2><br />
+
+    <div *ngIf="!file" class="file-input-container">
+      <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload />
+      <label for="fileInput" class="file-label">Choose File</label>
+    </div>
+
+
+    <div *ngIf="file">
+      <section class="file-info">
+        <button (click)="removeImg()" class="close-btn">&times;</button>
+        <br />
+        <strong>File details:</strong>
+        <ul>
+          <li>Naam: {{file.name}}</li>
+          <li>Type: {{file.type}}</li>
+          <li>Size: {{file.size}} bytes</li>
+        </ul>
+      </section>
+      <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off" /></span>
+      <button (click)="onSubmit()">Upload the file</button>
+    </div>
+    <div *ngIf="file">
+      <section [ngSwitch]="status">
+        <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>
+        <p *ngSwitchCase="'success'">✅ Done!</p>
+        <p *ngSwitchCase="'fail'">❌ Error!</p>
+        <p *ngSwitchDefault>😶 Waiting to upload...</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="image-preview" *ngIf="file && file.type.startsWith('image/')">
+      <img [src]="imagePreview" alt="Selected Image" width="300" />
+  </div>
+</div>
