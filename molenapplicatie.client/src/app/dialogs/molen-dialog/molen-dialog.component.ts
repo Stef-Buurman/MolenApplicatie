@@ -1,11 +1,12 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
 import { MolenDataClass } from '../../../Class/MolenDataClass';
 import { MolenImage } from '../../../Class/MolenImage';
 import { MolenData } from '../../../Interfaces/MolenData';
 import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
+import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -35,6 +36,7 @@ export class MolenDialogComponent implements OnDestroy{
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
+    private dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string , molen:MolenData}
   ) { }
 
@@ -96,6 +98,16 @@ export class MolenDialogComponent implements OnDestroy{
       };
       reader.readAsDataURL(this.file);
     }
+  }
+
+  uploadImage() {
+    this.molen
+    const dialogRef = this.dialog.open(UploadImageDialogComponent, {
+      data: {
+        molen: this.molen
+      },
+      panelClass: 'upload-image'
+    });
   }
 
   onSubmit(): void {
