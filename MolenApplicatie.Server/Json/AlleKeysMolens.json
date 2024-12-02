@@ -3,10 +3,16 @@
     "naam": "02748"
   },
   {
+    "modeltype": "02748"
+  },
+  {
     "functie": "02748"
   },
   {
     "bouwjaar": "02748"
+  },
+  {
+    "bedrijfsvaardigheid": "02748"
   },
   {
     "bestemming": "02748"
@@ -54,6 +60,12 @@
     "molenaar": "02748"
   },
   {
+    "e-mail": "02748"
+  },
+  {
+    "website": "02748"
+  },
+  {
     "open voor publiek": "02748"
   },
   {
@@ -75,7 +87,22 @@
     "gericht op scholen": "02748"
   },
   {
+    "fietsroute": "02748"
+  },
+  {
     "krachtbron": "02748"
+  },
+  {
+    "romp": "02748"
+  },
+  {
+    "kap": "02748"
+  },
+  {
+    "inrichting": "02748"
+  },
+  {
+    "versieringen": "02748"
   },
   {
     "plaats bediening": "02748"
@@ -85,6 +112,9 @@
   },
   {
     "plaats kruiwerk": "02748"
+  },
+  {
+    "kruiwerk": "02748"
   },
   {
     "vlucht": "02748"
@@ -99,7 +129,16 @@
     "hoogte": "02748"
   },
   {
+    "wiekvorm": "02748"
+  },
+  {
+    "wiekenkruis": "02748"
+  },
+  {
     "wiekverbeteringen": "02748"
+  },
+  {
+    "bovenas": "02748"
   },
   {
     "allemolens.nl": "02748"
@@ -138,10 +177,10 @@
     "literatuur": "02748"
   },
   {
-    "teksten": "02748"
+    "foto\u0027s": "02748"
   },
   {
-    "foto\u0027s": "02748"
+    "teksten": "02748"
   },
   {
     "verdwenen": "06463-v"
@@ -192,6 +231,9 @@
     "beek": "07717"
   },
   {
+    "over de as": "04416"
+  },
+  {
     "herbouwd": "02726"
   },
   {
@@ -201,10 +243,10 @@
     "winkelinformatie": "02726"
   },
   {
-    "unieke eigenschap": "02730"
+    "motor(en)": "02729"
   },
   {
-    "over de as": "02744-b"
+    "unieke eigenschap": "02730"
   },
   {
     "wederopbouw": "04419"
@@ -241,6 +283,9 @@
   },
   {
     "recente werkzaamheden": "03499-c"
+  },
+  {
+    "voormalig type": "18006"
   },
   {
     "molenerf": "00709"
