@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
@@ -12,6 +12,7 @@ import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { FilterMapComponent } from '../filter-map/filter-map.component';
 
 
 @Component({
@@ -36,22 +37,28 @@ export class RootComponent implements OnInit {
     return this.molenService.getMolenWithImageAmount();
   }
 
+  get firstPartOfUrl(): string {
+    return this.router.url.split('/')[1];
+  }
+
   constructor(private route: ActivatedRoute,
     private toasts: Toasts,
     private http: HttpClient,
     private dialog: MatDialog,
     private errors: ErrorService,
     private molenService: MolenService,
+    private router: Router,
     private mapService: MapService) { }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.selectedTenBruggeNumber = params.get('TenBruggeNumber') || '';
-      console.log(this.selectedTenBruggeNumber);
-      if (this.selectedTenBruggeNumber) {
-        this.molenService.selectedMolenTenBruggeNumber = this.selectedTenBruggeNumber;
-      }
-    });
+    console.log(this.router.url)
+    //this.route.paramMap.subscribe(params => {
+    //  this.selectedTenBruggeNumber = params.get('TenBruggeNumber') || '';
+    //  console.log(this.selectedTenBruggeNumber);
+    //  if (this.selectedTenBruggeNumber) {
+    //    this.molenService.selectedMolenTenBruggeNumber = this.selectedTenBruggeNumber;
+    //  }
+    //});
   }
 
   onPlaceChange(selectedPlace: Place) {
@@ -64,6 +71,16 @@ export class RootComponent implements OnInit {
 
   openInfoMenu() {
     this.visible = !this.visible;
+  }
+
+  filterMap() {
+    const dialogRef = this.dialog.open(FilterMapComponent, {
+      data: {
+        title: 'Molens updaten',
+        message: 'Weet je zeker dat je de oudste molens wilt updaten?',
+        api_key_usage: true
+      } as ConfirmationDialogData
+    });
   }
 
   updateMolens() {
@@ -167,7 +184,7 @@ export class RootComponent implements OnInit {
               }
               else if (result.length == 1) {
                 this.toasts.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
-                this.mapService.setView([result[0].north, result[0].east], 13);
+                this.mapService.setView([result[0].lat, result[0].long], 13);
               }
               else {
                 this.toasts.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");

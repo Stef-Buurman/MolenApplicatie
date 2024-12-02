@@ -10,6 +10,7 @@
     </div>
     <div *ngIf="visible" class="topButton" (click)="updateMolens()">Update molens</div>
     <div *ngIf="visible" class="topButton" (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+    <div *ngIf="visible" class="topButton" (click)="filterMap()">Filter map</div>
     <img class="buurmanEnBuurmanImg" src="Assets/Background/Buurman-Buurman-events.png" alt="Alternate Text" />
     <div class="icon" (click)="openInfoMenu()">
       <i class="fa fa-bars"></i>
@@ -24,6 +25,8 @@
     </div>
     <div class="topButton" (click)="updateMolens()">Update molens</div>
     <div class="topButton" (click)="searchForNewMolens()">Zoek voor nieuwe molens</div>
+    <!--<div class="topButton" (click)="filterMap()">Filter map</div>-->
+    <app-filter-map></app-filter-map>
     <div class="MolenImageCount"> {{getMolenWithImageAmount}} molens met een foto</div>
   </div>
   <div class="mapContainer">
