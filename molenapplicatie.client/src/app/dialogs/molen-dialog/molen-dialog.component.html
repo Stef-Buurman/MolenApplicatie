@@ -1,6 +1,6 @@
 <section class="header" *ngIf="molen">
   <span *ngIf="molen">{{ molen.name }}</span>
-  <button (click)="uploadImage()">masdads</button>
+  <!--<button class="upload-image-button" (click)="uploadImage()">Voeg foto toe</button>
   <div (click)="onClose()" class="container-close-btn">
 
     <div class="circle">
@@ -8,6 +8,15 @@
       <div class="line two"></div>
     </div>
 
+  </div>-->
+  <div class="actions">
+    <button class="upload-image-button" (click)="uploadImage()">Voeg foto toe</button>
+    <div (click)="onClose()" class="container-close-btn">
+      <div class="circle">
+        <div class="line one"></div>
+        <div class="line two"></div>
+      </div>
+    </div>
   </div>
 </section>
 <div class="container" *ngIf="molen">
