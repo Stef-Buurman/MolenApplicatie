@@ -1,3 +1,5 @@
+@import '../../../Utils/Variables.scss';
+
 .container {
   /*display: flex;*/
   width: 50vw;
@@ -5,22 +7,36 @@
   background-image: url('../../../../public/Assets/Background/UploadImageBackground.jpg');
   background-origin: border-box;
   background-size: cover;
-  border-radius: 25% 10% / 3% 20% !important;
   color: #ffffff;
 }
 
+.header {
+  border-bottom: 1px solid black;
+  font-size: 40px;
+  padding: 8px 6% 8px 6%;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status p {
+  margin: 0;
+  font-size: 20px;
+}
+
 .image-details {
-  /*padding: 10% 5% 5% 10%;*/
   margin: 0 auto auto 0;
   margin: auto;
+  width: 50%;
 }
 
 .image-details, .image-preview {
-  width: 50%;
   padding: 2% 1% 1% 2%;
 }
 
 .image-preview {
+  width: 100%;
   text-align: center;
   margin: auto;
   display: flex;
@@ -62,4 +78,46 @@
 .file-label:active {
   background-color: #388E3C;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+.close-btn {
+  border: none;
+  color: white;
+  padding: 0px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 40px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+  background-color: white;
+  color: red;
+  border: 2px solid #f44336;
+  border-radius: 100%;
+  float: right;
+}
+
+.close-btn:hover {
+  background-color: #f44336;
+  color: white;
+}
+
+
+@media only screen and (max-width: $Media_width) {
+  .image-details {
+    width: auto;
+  }
+
+  .image-preview {
+    max-width: 100%;
+  }
+
+  .container {
+    width: 95vw;
+    display: block;
+    height: auto;
+    /*min-height:100vh;*/
+    padding-bottom: 50px;
+  }
 }

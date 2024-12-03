@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Inject } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenDataClass } from '../../../Class/MolenDataClass';
 import { MolenImage } from '../../../Class/MolenImage';
@@ -11,14 +11,13 @@ import { Toasts } from '../../../Utils/Toasts';
   templateUrl: './upload-image-dialog.component.html',
   styleUrl: './upload-image-dialog.component.scss'
 })
-export class UploadImageDialogComponent {
+export class UploadImageDialogComponent implements AfterViewInit{
   public molen?: MolenData;
   public status: "initial" | "uploading" | "success" | "fail" = "initial";
   public file: File | null = null;
   public imagePreview: string | null = null;
   public APIKey: string = "";
-  public molenImages: MolenImage[] = [];
-  public selectedImage?: MolenImage;
+  @ViewChild('fileUpload') fileUpload!: ElementRef;
 
   public imagesAdded: boolean = false;
   get HasImagesLeft(): boolean {
@@ -35,8 +34,9 @@ export class UploadImageDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: { molen: MolenData }
   ) { }
 
-  ngOnInit(): void {
+  ngAfterViewInit(): void {
     this.molen = this.data.molen;
+    this.fileUpload.nativeElement.click();
   }
 
   ngOnDestroy(): void {
