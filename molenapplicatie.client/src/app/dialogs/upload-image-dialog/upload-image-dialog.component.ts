@@ -77,10 +77,13 @@ export class UploadImageDialogComponent implements AfterViewInit{
       formData.append('image', this.file, this.file.name);
 
       var previousMolenImages: MolenImage[] = this.molen.addedImages ?? [];
-
       this.molenService.uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey).subscribe({
         next: (molen: MolenData) => {
           this.molen = molen;
+          this.removeImg();
+          this.APIKey = "";
+          this.toasts.showSuccess("Image is saved successfully!");
+          this.onClose();
         },
         error: (error) => {
           this.status = "fail";
@@ -89,14 +92,8 @@ export class UploadImageDialogComponent implements AfterViewInit{
           } else {
             this.toasts.showError(error.error.message);
           }
-        },
-        complete: () => {
-          this.removeImg();
-          this.toasts.showSuccess("Image is saved successfully!");
-
         }
       });
-      this.APIKey = "";
     }
   }
 }

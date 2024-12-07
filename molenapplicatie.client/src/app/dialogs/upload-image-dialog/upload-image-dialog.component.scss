@@ -1,7 +1,6 @@
 @import '../../../Utils/Variables.scss';
 
 .container {
-  /*display: flex;*/
   width: 50vw;
   height: 100vh;
   background-image: url('../../../../public/Assets/Background/UploadImageBackground.jpg');
@@ -32,7 +31,7 @@
 }
 
 .image-details, .image-preview {
-  padding: 2% 1% 1% 2%;
+  padding: 2% 1% 1% 0;
 }
 
 .image-preview {
@@ -43,10 +42,25 @@
   justify-content: center;
 
   img {
-    max-height: 56vh;
+    max-width: 94vw;
+    max-height: 65vh;
     width: auto !important;
     border-radius: 20px;
   }
+}
+
+.api-key input[type=text] {
+  width: 80%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.api-key {
+  font-weight: 700;
 }
 
 .file-input-container {
@@ -109,6 +123,10 @@
     width: auto;
   }
 
+  .api-key {
+    padding: 10px;
+  }
+
   .image-preview {
     max-width: 100%;
   }
@@ -117,7 +135,6 @@
     width: 95vw;
     display: block;
     height: auto;
-    /*min-height:100vh;*/
     padding-bottom: 50px;
   }
 }
