@@ -108,6 +108,21 @@ export class MolenDialogComponent implements OnDestroy{
       },
       panelClass: 'upload-image'
     });
+
+    dialogRef.afterClosed().subscribe((result: MolenData) => {
+      if (result) {
+        var previousImages = this.molenImages;
+        this.cdr.detectChanges();
+        this.molen = result;
+        this.molenImages = this.getAllMolenImages();
+        for (var i = 0; i < this.molenImages.length; i++) {
+          var foundImage = previousImages.find(x => x.name == this.molenImages[i].name);
+          if (foundImage == undefined) {
+            this.selectedImage = this.molenImages[i];
+          }
+        }
+      }
+    });
   }
 
   onSubmit(): void {

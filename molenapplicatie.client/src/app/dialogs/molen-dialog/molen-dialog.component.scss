@@ -1,43 +1,10 @@
 @import '../../../Utils/Variables.scss';
 
-.header {
-  border-bottom: 1px solid black;
-  font-size: 40px;
-  padding: 8px 6% 8px 6%;
-  font-weight: 500;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .container {
   width: 70vw;
   display: flex;
   height: 90vh;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.upload-image-button {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 5px;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.upload-image-button:hover {
-  background-color: #218838;
-  transform: scale(1.05);
 }
 
 .data-left {
