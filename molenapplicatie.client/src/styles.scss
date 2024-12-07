@@ -15,6 +15,22 @@ body {
 
 /*Global dialog styling*/
 
+.dialog-header {
+  border-bottom: 1px solid black;
+  font-size: 40px;
+  padding: 8px 6% 8px 6%;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
 .cdk-overlay-pane.mat-mdc-dialog-panel {
   z-index: 1002;
   max-width: 100vw !important;
@@ -220,13 +236,27 @@ body {
 .upload-image .mdc-dialog__surface {
   overflow: hidden;
 }
-/*.upload-image .mdc-dialog__container {
-  background-image: url('../public/Assets/Background/UploadImageBackground.jpg');
-  background-origin: border-box;
-  background-size: cover;
-  border-radius: 25% 10% / 3% 20% !important;
-  color: #ffffff;
-}*/
+
+
+.upload-image-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.upload-image-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+
 @media only screen and (max-width: $Media_width) {
   .molen-details .mdc-dialog__surface,
   .upload-image .mdc-dialog__surface {
@@ -235,5 +265,18 @@ body {
 
   .upload-image .mdc-dialog__surface {
     border-radius: 30px 30px / 30px 30px !important;
+  }
+
+  .dialog-header {
+    padding: 8px 6% 8px 6%;
+    display: block;
+
+    .actions {
+      display: flex;
+    }
+
+    .actions > :last-child {
+      margin-left: auto;
+    }
   }
 }
