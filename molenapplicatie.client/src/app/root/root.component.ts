@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
@@ -12,7 +12,7 @@ import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
-import { FilterMapComponent } from '../filter-map/filter-map.component';
+import { FilterMapComponent } from '../dialogs/filter-map/filter-map.component';
 
 
 @Component({
@@ -20,7 +20,7 @@ import { FilterMapComponent } from '../filter-map/filter-map.component';
   templateUrl: './root.component.html',
   styleUrl: './root.component.scss'
 })
-export class RootComponent implements OnInit {
+export class RootComponent {
   visible: boolean = false;
   selectedTenBruggeNumber: string | undefined;
   selectedPlace!: Place;
@@ -37,10 +37,6 @@ export class RootComponent implements OnInit {
     return this.molenService.getMolenWithImageAmount();
   }
 
-  get firstPartOfUrl(): string {
-    return this.router.url.split('/')[1];
-  }
-
   constructor(private route: ActivatedRoute,
     private toasts: Toasts,
     private http: HttpClient,
@@ -49,17 +45,6 @@ export class RootComponent implements OnInit {
     private molenService: MolenService,
     private router: Router,
     private mapService: MapService) { }
-
-  ngOnInit(): void {
-    console.log(this.router.url)
-    //this.route.paramMap.subscribe(params => {
-    //  this.selectedTenBruggeNumber = params.get('TenBruggeNumber') || '';
-    //  console.log(this.selectedTenBruggeNumber);
-    //  if (this.selectedTenBruggeNumber) {
-    //    this.molenService.selectedMolenTenBruggeNumber = this.selectedTenBruggeNumber;
-    //  }
-    //});
-  }
 
   onPlaceChange(selectedPlace: Place) {
     if (!selectedPlace && this.selectedPlace) return;

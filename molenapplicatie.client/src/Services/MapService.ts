@@ -30,9 +30,12 @@ export class MapService {
   updateMarker(tbn: string, molen: MolenData, mapId: string | undefined = undefined) {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
-    if (indexOfMap == -1) {
+    console.log(indexOfMap)
+    if (indexOfMap != -1) {
       var marker = this.maps[indexOfMap].Markers.find(marker => marker.tenBruggeNumber == tbn);
+      console.log(marker)
       if (marker) {
+        console.log("aaaaa")
         marker.marker.remove();
         this.maps[indexOfMap].Markers = this.maps[indexOfMap].Markers.filter(mark => mark.tenBruggeNumber != tbn);
         this.addMarker(molen);

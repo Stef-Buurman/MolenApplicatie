@@ -24,7 +24,6 @@ export class MapActiveMolensComponent implements AfterViewInit{
   getMolens(): void {
     this.molenService.getAllActiveMolens().subscribe({
       next: (result) => {
-        console.log(result)
         this.molens = result;
         this.mapService.SelectedMapId = this.mapId;
         //if (!this.mapService.doesMapIdExist(this.mapId)) {
@@ -43,7 +42,6 @@ export class MapActiveMolensComponent implements AfterViewInit{
   }
 
   ngAfterViewInit(): void {
-    console.log("x")
     this.sharedData.IsLoadingTrue();
     this.getMolens();
   }

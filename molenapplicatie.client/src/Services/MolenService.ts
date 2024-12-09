@@ -128,8 +128,59 @@ export class MolenService {
   }
 
   public getMolenWithImageAmount(): number {
-    if (this.allMolens == undefined) return 0;
-    return this.allMolens.Molens.filter(x => x.hasImage).length
+    var molensCounted: string[] = [];
+    if (this.allMolens != undefined) {
+      var molensWithImage = this.getMolenTBNWithImages(this.allMolens.Molens);
+      for (let i = 0; i < molensWithImage.length; i++) {
+        if (!molensCounted.includes(molensWithImage[i])) {
+          molensCounted.push(molensWithImage[i]);
+        }
+      }
+    }
+    if (this.activeMolens != undefined) {
+      var molensWithImage = this.getMolenTBNWithImages(this.activeMolens.Molens);
+      for (let i = 0; i < molensWithImage.length; i++) {
+        if (!molensCounted.includes(molensWithImage[i])) {
+          molensCounted.push(molensWithImage[i]);
+        }
+      }
+    }
+    if (this.existingMolens != undefined) {
+      var molensWithImage = this.getMolenTBNWithImages(this.existingMolens.Molens);
+      for (let i = 0; i < molensWithImage.length; i++) {
+        if (!molensCounted.includes(molensWithImage[i])) {
+          molensCounted.push(molensWithImage[i]);
+        }
+      }
+    }
+    if (this.desappearedMolens != undefined) {
+      var molensWithImage = this.getMolenTBNWithImages(this.desappearedMolens.Molens);
+      for (let i = 0; i < molensWithImage.length; i++) {
+        if (!molensCounted.includes(molensWithImage[i])) {
+          molensCounted.push(molensWithImage[i]);
+        }
+      }
+    }
+    if (this.remainderMolens != undefined) {
+      var molensWithImage = this.getMolenTBNWithImages(this.remainderMolens.Molens);
+      for (let i = 0; i < molensWithImage.length; i++) {
+        if (!molensCounted.includes(molensWithImage[i])) {
+          molensCounted.push(molensWithImage[i]);
+        }
+      }
+    }
+    return molensCounted.length;
+  }
+
+  private getMolenTBNWithImages(molens:MolenData[]):string[] {
+    var molensCounted: string[] = [];
+    molens.forEach(molen => {
+      if (molen.hasImage && !molensCounted.includes(molen.ten_Brugge_Nr)) {
+        molensCounted.push(molen.ten_Brugge_Nr);
+      }
+    }
+    );
+    return molensCounted;
   }
 
   public deleteImage(tbNr: string, imageName: string, APIKey: string): Observable<any> {
@@ -139,14 +190,7 @@ export class MolenService {
 
     return this.http.delete<MolenData>("/api/molen/molen_image/" + tbNr + "/" + imageName, { headers }).pipe(
       tap((updatedMolen: MolenData) => {
-        if (this.allMolens) {
-          var indexOfMolen: number = this.allMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == tbNr) ?? -1;
-          if (indexOfMolen != -1 && indexOfMolen != 0) {
-            var prevMolen = this.allMolens.Molens[indexOfMolen];
-            this.allMolens.Molens[indexOfMolen] = updatedMolen;
-            this.markerUpdate(tbNr, prevMolen.hasImage, updatedMolen.hasImage);
-          }
-        }
+        this.updateMolen(updatedMolen);
       }),
       catchError((error) => {
         return throwError(error);
@@ -160,25 +204,60 @@ export class MolenService {
     });
     return this.http.post<MolenData>(`/api/molen/molen_image/${tbNr}`, image, { headers }).pipe(
       tap((updatedMolen: MolenData) => {
-        if (this.allMolens) {
-          var indexOfMolen: number = this.allMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == tbNr) ?? -1;
-          if (indexOfMolen != -1) {
-            var prevMolen = this.allMolens.Molens[indexOfMolen];
-            this.allMolens.Molens[indexOfMolen] = updatedMolen;
-            this.markerUpdate(tbNr, prevMolen.hasImage, updatedMolen.hasImage);
-          }
-        }
+        this.updateMolen(updatedMolen);
       }),
       catchError((error) => {
         return throwError(error);
       }));
   }
 
-  private markerUpdate(tbn: string, prev: boolean, curr: boolean) {
+  private updateMolen(updatedMolen: MolenData) {
+    if (this.allMolens) {
+      var indexOfMolen: number = this.allMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+      if (indexOfMolen != -1) {
+        var prevMolen = this.allMolens.Molens[indexOfMolen];
+        this.allMolens.Molens[indexOfMolen] = updatedMolen;
+        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+      }
+    }
+    if (this.activeMolens) {
+      var indexOfMolen: number = this.activeMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+      if (indexOfMolen != -1) {
+        var prevMolen = this.activeMolens.Molens[indexOfMolen];
+        this.activeMolens.Molens[indexOfMolen] = updatedMolen;
+        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+      }
+    }
+    if (this.existingMolens) {
+      var indexOfMolen: number = this.existingMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+      if (indexOfMolen != -1) {
+        var prevMolen = this.existingMolens.Molens[indexOfMolen];
+        this.existingMolens.Molens[indexOfMolen] = updatedMolen;
+        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+      }
+    }
+    if (this.desappearedMolens) {
+      var indexOfMolen: number = this.desappearedMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+      if (indexOfMolen != -1) {
+        var prevMolen = this.desappearedMolens.Molens[indexOfMolen];
+        this.desappearedMolens.Molens[indexOfMolen] = updatedMolen;
+        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+      }
+    }
+    if (this.remainderMolens) {
+      var indexOfMolen: number = this.remainderMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+      if (indexOfMolen != -1) {
+        var prevMolen = this.remainderMolens.Molens[indexOfMolen];
+        this.remainderMolens.Molens[indexOfMolen] = updatedMolen;
+        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+      }
+    }
+  }
+
+  private markerUpdate(molen: MolenData, prev: boolean, curr: boolean) {
     if (prev != curr) {
-      var molen = this.allMolens?.Molens.find(molen => molen.ten_Brugge_Nr == tbn);
       if (molen) {
-        this.mapService.updateMarker(tbn, molen);
+        this.mapService.updateMarker(molen.ten_Brugge_Nr, molen);
       }
     }
   }

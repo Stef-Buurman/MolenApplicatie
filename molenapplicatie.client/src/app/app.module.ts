@@ -25,7 +25,7 @@ import { MapExistingMolensComponent } from './map-existing-molens/map-existing-m
 import { MapRemainingMolensComponent } from './map-remaining-molens/map-remaining-molens.component';
 import { MapDisappearedMolensComponent } from './map-disappeared-molens/map-disappeared-molens.component';
 import { MolensRootActiveComponent } from './molens-root-active/molens-root-active.component';
-import { FilterMapComponent } from './filter-map/filter-map.component';
+import { FilterMapComponent } from './dialogs/filter-map/filter-map.component';
 import { UploadImageDialogComponent } from './dialogs/upload-image-dialog/upload-image-dialog.component';
 
 @NgModule({
