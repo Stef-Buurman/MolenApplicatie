@@ -9,13 +9,12 @@
     </div>
   </div>
 </section>
-<div>
+<div class="filter-container">
   <label>
     <input type="radio"
            name="options"
            [value]="'active'"
-           [(ngModel)]="selectedOption"
-           (change)="onOptionChange($event)" />
+           [(ngModel)]="selectedOption" />
     Actieve molens
   </label>
   <br />
@@ -23,8 +22,7 @@
     <input type="radio"
            name="options"
            [value]="'remaining'"
-           [(ngModel)]="selectedOption"
-           (change)="onOptionChange($event)" />
+           [(ngModel)]="selectedOption" />
     Remaining
   </label>
   <br />
@@ -32,8 +30,7 @@
     <input type="radio"
            name="options"
            [value]="'existing'"
-           [(ngModel)]="selectedOption"
-           (change)="onOptionChange($event)" />
+           [(ngModel)]="selectedOption" />
     Existing
   </label>
   <br />
@@ -41,10 +38,15 @@
     <input type="radio"
            name="options"
            [value]="'disappeared'"
-           [(ngModel)]="selectedOption"
-           (change)="onOptionChange($event)" />
+           [(ngModel)]="selectedOption" />
     Disappeared
   </label>
+  <div *ngIf="selectedOption == 'disappeared'">
+    <select [(ngModel)]="provincie">
+      <option value="">Kies een provincie</option>
+      <option *ngFor="let prov of provincies" [value]="prov">{{ prov }}</option>
+    </select>
+  </div>
+  <br />
+  <button class="default-button" (click)="filterMap()">Filter</button>
 </div>
-
-<p>Selected Option: {{ selectedOption }}</p>
