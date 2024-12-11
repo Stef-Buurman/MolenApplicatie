@@ -238,7 +238,7 @@ body {
 }
 
 
-.upload-image-button {
+.default-button {
   background-color: #28a745;
   color: white;
   border: none;
@@ -251,9 +251,18 @@ body {
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.upload-image-button:hover {
+.default-button:hover {
   background-color: #218838;
   transform: scale(1.05);
+}
+
+
+/*filter map*/
+
+.filter-map .mat-mdc-dialog-surface {
+  background-image: url('../public/Assets/Background/GreyWoodBackground.jpeg');
+  background-origin: border-box;
+  background-size: cover;
 }
 
 
