@@ -48,7 +48,7 @@
       <p *ngIf="molen.bedrijfsvaardigheid"><strong>Bedrijfsvaardigheid:</strong> {{ molen.bedrijfsvaardigheid }}</p>
 
       <p *ngIf="molen.toelichtingNaam"><strong>Toelichting Naam:</strong> {{ molen.toelichtingNaam }}</p>
-      <!-- Opening Information -->
+
       <p *ngIf="molen.openingstijden"><strong>Openingstijden:</strong> {{ molen.openingstijden }}</p>
       <p><strong>Open voor Publiek:</strong> {{ molen.openVoorPubliek ? 'Ja' : 'Nee' }}</p>
       <p><strong>Open op Zaterdag:</strong> {{ molen.openOpZaterdag ? 'Ja' : 'Nee' }}</p>
@@ -70,42 +70,5 @@
     <button class="toggle-btn" (click)="expandDetails()">
       {{ isExpanded ? 'Minder zien' : 'Meer zien' }}
     </button>
-  </div>
-  <div class="data data-right">
-    <!--<h2>Upload de foto hier.</h2><br />
-
-    <div *ngIf="!file" class="file-input-container">
-      <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload />
-      <label for="fileInput" class="file-label">Choose File</label>
-    </div>
-
-
-    <div *ngIf="file">
-      <section class="file-info">
-        <button (click)="removeImg()" class="close-btn">&times;</button>
-        <br />
-        <strong>File details:</strong>
-        <ul>
-          <li>Name: {{file.name}}</li>
-          <li>Type: {{file.type}}</li>
-          <li>Size: {{file.size}} bytes</li>
-        </ul>
-      </section>
-
-      <div class="image-preview" *ngIf="file.type.startsWith('image/')">
-        <span>Image Preview:</span>
-        <img [src]="imagePreview" alt="Selected Image" width="300" />
-      </div>
-      <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off" /></span>
-      <button (click)="onSubmit()">Upload the file</button>
-    </div>
-    <div *ngIf="file">
-      <section [ngSwitch]="status">
-        <p *ngSwitchCase="'uploading'">⏳ Uploading...</p>
-        <p *ngSwitchCase="'success'">✅ Done!</p>
-        <p *ngSwitchCase="'fail'">❌ Error!</p>
-        <p *ngSwitchDefault>😶 Waiting to upload...</p>
-      </section>
-    </div>-->
   </div>
 </div>
