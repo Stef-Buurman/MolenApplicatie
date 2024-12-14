@@ -1,11 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap, of, catchError, throwError } from 'rxjs';
+import { catchError, Observable, of, tap, throwError } from 'rxjs';
 import { MolenDataClass } from '../Class/MolenDataClass';
+import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/MolenData';
 import { Toasts } from '../Utils/Toasts';
 import { MapService } from './MapService';
-import { SavedMolens } from '../Class/SavedMolens';
 
 @Injectable({
   providedIn: 'root'
@@ -16,10 +16,11 @@ export class MolenService {
   public allMolens?: SavedMolens;
   public activeMolens?: SavedMolens;
   public existingMolens?: SavedMolens;
-  public desappearedMolens?: SavedMolens;
+  public disappearedMolens: { [key: string]: SavedMolens } = {};
   public remainderMolens?: SavedMolens;
   private lastUpdatedTimestamp?: number;
   private readonly refreshInterval = 30 * 60 * 1000;
+  private allMolenProvincies: string[] = []; 
 
   constructor(private http: HttpClient,
     private toasts: Toasts,
@@ -37,6 +38,21 @@ export class MolenService {
     return of(molen);
   }
 
+  public getAllMolenProvincies(): Observable<string[]> {
+    const currentTime = Date.now();
+    const needsRefresh = this.allMolenProvincies.length == 0;
+
+    if (needsRefresh) {
+      return this.http.get<string[]>('/api/molen/provincies').pipe(
+        tap((activeMolens:string[]) => {
+          this.allMolenProvincies = activeMolens;
+        })
+      );
+    } else {
+      return of(this.allMolenProvincies);
+    }
+  }
+
   public getAllActiveMolens(): Observable<MolenDataClass[]> {
     const currentTime = Date.now();
     const needsRefresh = !this.activeMolens?.LastUpdatedTimestamp ||
@@ -45,7 +61,7 @@ export class MolenService {
     if (needsRefresh) {
       return this.http.get<MolenDataClass[]>('/api/molen/active').pipe(
         tap((activeMolens) => {
-          this.activeMolens = new SavedMolens(currentTime,activeMolens);
+          this.activeMolens = new SavedMolens(currentTime, activeMolens);
           this.lastUpdatedTimestamp = currentTime;
         })
       );
@@ -71,20 +87,21 @@ export class MolenService {
     }
   }
 
-  public getAllDisappearedMolens(): Observable<MolenDataClass[]> {
+  public getDisappearedMolensByProvincie(provincie: string): Observable<MolenDataClass[]> {
     const currentTime = Date.now();
-    const needsRefresh = !this.desappearedMolens?.LastUpdatedTimestamp ||
-      (currentTime - this.desappearedMolens.LastUpdatedTimestamp) > this.refreshInterval;
+    const provincieMolens = this.disappearedMolens[provincie];
+    const needsRefresh = (!provincieMolens?.LastUpdatedTimestamp ||
+      (currentTime - provincieMolens.LastUpdatedTimestamp) > this.refreshInterval) || provincieMolens == undefined;
 
     if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/disappeared').pipe(
+      return this.http.get<MolenDataClass[]>('/api/molen/disappeared/' + provincie).pipe(
         tap((desappearedMolens) => {
-          this.desappearedMolens = new SavedMolens(currentTime, desappearedMolens);
+          this.disappearedMolens[provincie] = new SavedMolens(currentTime, desappearedMolens);
           this.lastUpdatedTimestamp = currentTime;
         })
       );
     } else {
-      return of(this.desappearedMolens?.Molens!);
+      return of(this.disappearedMolens[provincie]?.Molens!);
     }
   }
 
@@ -153,11 +170,13 @@ export class MolenService {
         }
       }
     }
-    if (this.desappearedMolens != undefined) {
-      var molensWithImage = this.getMolenTBNWithImages(this.desappearedMolens.Molens);
-      for (let i = 0; i < molensWithImage.length; i++) {
-        if (!molensCounted.includes(molensWithImage[i])) {
-          molensCounted.push(molensWithImage[i]);
+    if (this.disappearedMolens != undefined) {
+      for (const provincie in this.disappearedMolens) {
+        var molensWithImage = this.getMolenTBNWithImages(this.disappearedMolens[provincie].Molens);
+        for (let i = 0; i < molensWithImage.length; i++) {
+          if (!molensCounted.includes(molensWithImage[i])) {
+            molensCounted.push(molensWithImage[i]);
+          }
         }
       }
     }
@@ -172,7 +191,7 @@ export class MolenService {
     return molensCounted.length;
   }
 
-  private getMolenTBNWithImages(molens:MolenData[]):string[] {
+  private getMolenTBNWithImages(molens: MolenData[]): string[] {
     var molensCounted: string[] = [];
     molens.forEach(molen => {
       if (molen.hasImage && !molensCounted.includes(molen.ten_Brugge_Nr)) {
@@ -236,12 +255,14 @@ export class MolenService {
         this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
       }
     }
-    if (this.desappearedMolens) {
-      var indexOfMolen: number = this.desappearedMolens.Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
-      if (indexOfMolen != -1) {
-        var prevMolen = this.desappearedMolens.Molens[indexOfMolen];
-        this.desappearedMolens.Molens[indexOfMolen] = updatedMolen;
-        this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+    if (this.disappearedMolens) {
+      for (const provincie in this.disappearedMolens) {
+        var indexOfMolen: number = this.disappearedMolens[provincie].Molens.findIndex(molen => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr) ?? -1;
+        if (indexOfMolen != -1) {
+          var prevMolen = this.disappearedMolens[provincie].Molens[indexOfMolen];
+          this.disappearedMolens[provincie].Molens[indexOfMolen] = updatedMolen;
+          this.markerUpdate(updatedMolen, prevMolen.hasImage, updatedMolen.hasImage);
+        }
       }
     }
     if (this.remainderMolens) {

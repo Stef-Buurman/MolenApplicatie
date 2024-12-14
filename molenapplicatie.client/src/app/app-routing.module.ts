@@ -20,7 +20,7 @@ const routes: Routes = [
             ]
           },
           {
-            path: 'disappeared', component: MapDisappearedMolensComponent, children: [
+            path: 'disappeared/:provincie', component: MapDisappearedMolensComponent, children: [
               { path: ':TenBruggeNumber', component: OpenMolenDetailsComponent }
             ]
           },
