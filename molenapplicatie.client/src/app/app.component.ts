@@ -10,15 +10,12 @@ import { ErrorService } from '../Services/ErrorService';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
+  public minimumWaitTime:number = 1000
   get error(): boolean {
     return this.errors.HasError;
   }
-  private _isLoadingVisible = true;
   get isLoadingVisible() {
-    return this._isLoadingVisible || this.sharedData.IsLoading;
-  }
-  set isLoadingVisible(value: boolean) {
-    this._isLoadingVisible = value;
+    return this.sharedData.IsLoading;
   }
   constructor(private toasts: Toasts,
     private vcr: ViewContainerRef,
@@ -27,8 +24,5 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.toasts.setViewContainerRef(this.vcr);
-    setTimeout(() => {
-      this.isLoadingVisible = false;
-    }, 1250);
   }
 }
