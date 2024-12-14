@@ -10,43 +10,47 @@
   </div>
 </section>
 <div class="filter-container">
-  <label>
-    <input type="radio"
-           name="options"
-           [value]="'active'"
-           [(ngModel)]="selectedOption" />
+  <input type="radio"
+         name="options"
+         id="active"
+         [value]="'active'"
+         [(ngModel)]="selectedOption" />
+  <label for="active">
     Actieve molens
   </label>
   <br />
-  <label>
-    <input type="radio"
-           name="options"
-           [value]="'remaining'"
-           [(ngModel)]="selectedOption" />
+  <input type="radio"
+         name="options"
+         id="remaining"
+         [value]="'remaining'"
+         [(ngModel)]="selectedOption" />
+  <label for="remaining">
     Remaining
   </label>
   <br />
-  <label>
-    <input type="radio"
-           name="options"
-           [value]="'existing'"
-           [(ngModel)]="selectedOption" />
+  <input type="radio"
+         name="options"
+         id="existing"
+         [value]="'existing'"
+         [(ngModel)]="selectedOption" />
+  <label for="existing">
     Existing
   </label>
   <br />
-  <label>
-    <input type="radio"
-           name="options"
-           [value]="'disappeared'"
-           [(ngModel)]="selectedOption" />
+  <input type="radio"
+         name="options"
+         id="disappeared"
+         [value]="'disappeared'"
+         [(ngModel)]="selectedOption" />
+  <label for="disappeared">
     Disappeared
   </label>
   <div *ngIf="selectedOption == 'disappeared'">
-    <select [(ngModel)]="provincie">
+    <select class="provincie-dropdown" [(ngModel)]="provincie">
       <option value="">Kies een provincie</option>
-      <option *ngFor="let prov of provincies" [value]="prov">{{ prov }}</option>
+      <option *ngFor="let prov of provincies" [value]="prov.toLowerCase()">{{ prov }}</option>
     </select>
   </div>
   <br />
-  <button class="default-button" (click)="filterMap()">Filter</button>
+  <button class="default-button filter-button {{selectedOption == 'disappeared' ? '' : 'add-margin-to-btn'}}" (click)="filterMap()">Filter</button>
 </div>
