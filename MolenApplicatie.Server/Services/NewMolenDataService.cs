@@ -14,8 +14,9 @@ namespace MolenApplicatie.Server.Services
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
         private readonly MolenService _molenService;
-
         private readonly DbConnection _db;
+        private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
+        private List<string> allverdwenenMolens = new List<string>();
 
         public NewMolenDataService()
         {
@@ -24,31 +25,6 @@ namespace MolenApplicatie.Server.Services
             _molenService = new MolenService();
         }
 
-        public async Task<List<MolenData>> GetAllMolenData()
-        {
-            await AddMolenTBNToDB();
-            List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
-            List<MolenData> Data = new List<MolenData>();
-            List<MolenTBN> MolenNumbers = await _db.Table<MolenTBN>();
-            foreach (MolenTBN Ten_Brugge_Nr in MolenNumbers)
-            {
-                Thread.Sleep(2000);
-                var x = await GetMolenDataByTBNumber(Ten_Brugge_Nr.Ten_Brugge_Nr);
-                if (x.Item1 == null) continue;
-                Data.Add(x.Item1);
-                keyValuePairs.Add(x.Item2);
-            }
-
-            File.WriteAllText(PathAlleInformatieMolens, JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
-
-            return Data;
-        }
-
-        private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
-        private List<string> allverdwenenMolens = new List<string>();
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
         {
             List<MolenType> MolenTypes = await _db.Table<MolenType>();
@@ -200,9 +176,9 @@ namespace MolenApplicatie.Server.Services
                                     var gemeente = dd.Split(",");
                                     string provincie = null;
                                     string completeGemeente = null;
-                                    if (gemeente.Length >= 2 && gemeente[1] != null)
+                                    if (gemeente.Length >= 2 && gemeente[gemeente.Length - 1] != null)
                                     {
-                                        provincie = gemeente[1];
+                                        provincie = gemeente[gemeente.Length - 1];
                                     }
                                     if (gemeente.Length >= 1 && gemeente[0] != null)
                                     {
@@ -451,7 +427,7 @@ namespace MolenApplicatie.Server.Services
                                 foreach (string type in dd.Split(','))
                                 {
                                     string trimmedType = type.Trim();
-                                    var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1)};
+                                    var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
                                     if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
                                     {
                                         await _db.InsertAsync(molenType);
@@ -693,7 +669,7 @@ namespace MolenApplicatie.Server.Services
             return (oldestUpdateTimesMolens, true, TimeSpan.FromMinutes(30));
         }
 
-        public async Task<List<Dictionary<string, object>>> GetAllMolenData2()
+        public async Task<List<Dictionary<string, object>>> GetAllMolenData()
         {
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> currentData = await _db.Table<MolenData>();
