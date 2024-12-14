@@ -63,6 +63,13 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(locations);
         }
 
+        [HttpGet("provincies")]
+        public async Task<IActionResult> GetAllMolenProvincies()
+        {
+            var provincies = await _MolenService.GetAllMolenProvincies();
+            return Ok(provincies);
+        }
+
         [HttpGet("{tbNumber}")]
         public async Task<IActionResult> GetMolenDataByTBNumber(string tbNumber)
         {
@@ -107,12 +114,12 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _NewMolenDataService.AddMolenTBNToDB());
         }
 
-        [FileUploadFilter]
-        [HttpGet("get_all_molen_data")]
-        public async Task<IActionResult> GetAllMolenData()
-        {
-            return Ok(await _NewMolenDataService.GetAllMolenData());
-        }
+        //[FileUploadFilter]
+        //[HttpGet("get_all_molen_data")]
+        //public async Task<IActionResult> GetAllMolenData()
+        //{
+        //    return Ok(await _NewMolenDataService.GetAllMolenData());
+        //}
 
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
@@ -175,7 +182,7 @@ namespace MolenApplicatie.Server.Controllers
         [Route("read_all_molen")]
         public async Task<IActionResult> GetAllMolen()
         {
-            var results = await _NewMolenDataService.GetAllMolenData2();
+            var results = await _NewMolenDataService.GetAllMolenData();
             return Ok(results);
         }
 
