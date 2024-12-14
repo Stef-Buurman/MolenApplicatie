@@ -1,28 +1,35 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { SharedDataService } from '../../Services/SharedDataService';
 
 @Component({
   selector: 'app-loader',
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss'
 })
-export class LoaderComponent implements OnChanges, OnInit {
-  @Input() isLoadingVisible: boolean = true;
-  @Input() isLoading: boolean = true;
+export class LoaderComponent implements OnChanges {
+  isLoadingVisible: boolean = true;
+  isLoading: boolean = true;
   @Input() TimeToWait!: number;
+  constructor(public sharedData: SharedDataService,
+    private cdr: ChangeDetectorRef) { }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (!this.isLoadingVisible) {
-      setTimeout(() => {
-        this.isLoading = !this.isLoading;
-      }, 500);
-    }
+    this.sharedData.IsLoading$.subscribe({
+      next: (value) => {
+        this.isLoading = value;
+        setTimeout(() => {
+          this.isLoadingVisible = value;
+        }, 500);
+      }
+    });
   }
 
   ngOnInit() {
     if (this.TimeToWait) {
       setTimeout(() => {
-        this.isLoading = !this.isLoading;
+        this.isLoadingVisible = false;
       }, this.TimeToWait + 500);
     }
+    this.cdr.detectChanges();
   }
 }

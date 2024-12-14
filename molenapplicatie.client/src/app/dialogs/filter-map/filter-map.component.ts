@@ -1,8 +1,8 @@
-import { Component, Inject, Input, input, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component, OnInit } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Toasts } from '../../../Utils/Toasts';
 import { MolenService } from '../../../Services/MolenService';
+import { Toasts } from '../../../Utils/Toasts';
 
 @Component({
   selector: 'app-filter-map',
@@ -13,8 +13,7 @@ export class FilterMapComponent implements OnInit {
   selectedOption: string = "";
   provincies: string[] = [];
   provincie: string = "";
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { selectedOption: string, provincie: string },
-    private dialogRef: MatDialogRef<FilterMapComponent>,
+  constructor(private dialogRef: MatDialogRef<FilterMapComponent>,
     private toasts: Toasts,
     private router: Router,
     private molenService:MolenService,

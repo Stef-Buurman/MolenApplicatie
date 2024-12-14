@@ -60,11 +60,6 @@ export class RootComponent {
 
   filterMap() {
     const dialogRef = this.dialog.open(FilterMapComponent, {
-      data: {
-        title: 'Molens updaten',
-        message: 'Weet je zeker dat je de oudste molens wilt updaten?',
-        api_key_usage: true
-      } as ConfirmationDialogData,
       panelClass: 'filter-map'
     });
   }
