@@ -6,7 +6,7 @@ import { MapActiveMolensComponent } from './map-active-molens/map-active-molens.
 import { MolensRootActiveComponent } from './molens-root-active/molens-root-active.component';
 import { MapExistingMolensComponent } from './map-existing-molens/map-existing-molens.component';
 import { MapDisappearedMolensComponent } from './map-disappeared-molens/map-disappeared-molens.component';
-import { MapRemainingMolensComponent } from './map-remaining-molens/map-remaining-molens.component';
+import { MapRemainderMolensComponent } from './map-remainder-molens/map-remainder-molens.component';
 
 const routes: Routes = [
   {
@@ -30,7 +30,7 @@ const routes: Routes = [
             ]
           },
           {
-            path: 'remaining', component: MapRemainingMolensComponent, children: [
+            path: 'remainder', component: MapRemainderMolensComponent, children: [
               { path: ':TenBruggeNumber', component: OpenMolenDetailsComponent }
             ]
           }

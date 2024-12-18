@@ -8,13 +8,13 @@ import { Toasts } from '../../Utils/Toasts';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-map-remaining-molens',
-  templateUrl: './map-remaining-molens.component.html',
-  styleUrl: './map-remaining-molens.component.scss'
+  selector: 'app-map-remainder-molens',
+  templateUrl: './map-remainder-molens.component.html',
+  styleUrl: './map-remainder-molens.component.scss'
 })
-export class MapRemainingMolensComponent implements AfterViewInit {
+export class MapRemainderMolensComponent implements AfterViewInit {
   molens: MolenDataClass[] = [];
-  mapId: string = "remainingMolensMap"
+  mapId: string = "remainderMolensMap"
 
   constructor(private toasts: Toasts,
     private errors: ErrorService,

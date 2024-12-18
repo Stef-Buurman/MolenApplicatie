@@ -22,11 +22,11 @@ import { ErrorService } from '../Services/ErrorService';
 import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-details.component';
 import { MapActiveMolensComponent } from './map-active-molens/map-active-molens.component';
 import { MapExistingMolensComponent } from './map-existing-molens/map-existing-molens.component';
-import { MapRemainingMolensComponent } from './map-remaining-molens/map-remaining-molens.component';
 import { MapDisappearedMolensComponent } from './map-disappeared-molens/map-disappeared-molens.component';
 import { MolensRootActiveComponent } from './molens-root-active/molens-root-active.component';
 import { FilterMapComponent } from './dialogs/filter-map/filter-map.component';
 import { UploadImageDialogComponent } from './dialogs/upload-image-dialog/upload-image-dialog.component';
+import { MapRemainderMolensComponent } from './map-remainder-molens/map-remainder-molens.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +44,7 @@ import { UploadImageDialogComponent } from './dialogs/upload-image-dialog/upload
     OpenMolenDetailsComponent,
     MapActiveMolensComponent,
     MapExistingMolensComponent,
-    MapRemainingMolensComponent,
+    MapRemainderMolensComponent,
     MapDisappearedMolensComponent,
     MolensRootActiveComponent,
     FilterMapComponent,
