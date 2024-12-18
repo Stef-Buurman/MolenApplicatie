@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { MolenImage } from '../../Class/MolenImage';
@@ -12,7 +12,7 @@ import { ImageDialogComponent } from '../dialogs/image-dialog/image-dialog.compo
   templateUrl: './image-selector.component.html',
   styleUrl: './image-selector.component.scss'
 })
-export class ImageSelectorComponent {
+export class ImageSelectorComponent implements OnInit{
   @Input() images: MolenImage[] = [];
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() selectedImage?: MolenImage;

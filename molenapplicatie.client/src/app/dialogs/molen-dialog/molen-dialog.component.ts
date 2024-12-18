@@ -106,7 +106,7 @@ export class MolenDialogComponent implements OnDestroy{
       data: {
         molen: this.molen
       },
-      panelClass: 'upload-image'
+      panelClass: 'upload-images'
     });
 
     dialogRef.afterClosed().subscribe((result: MolenData) => {
@@ -130,7 +130,7 @@ export class MolenDialogComponent implements OnDestroy{
       this.status = "uploading";
 
       const formData = new FormData();
-      formData.append('image', this.file, this.file.name);
+      formData.append('images', this.file, this.file.name);
 
       var previousMolenImages: MolenImage[] = this.getAllMolenImages();
 
@@ -162,8 +162,8 @@ export class MolenDialogComponent implements OnDestroy{
   getAllMolenImages(): MolenImage[] {
     var AllImages: MolenImage[] = [];
     if (this.molen) {
-      if (this.molen.image) {
-        AllImages.push(this.molen.image);
+      if (this.molen.images) {
+        AllImages = AllImages.concat(this.molen.images);
       }
       if (this.molen.addedImages && this.molen.addedImages.length > 0) {
         AllImages = AllImages.concat(this.molen.addedImages);

@@ -1,6 +1,5 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { SafeUrl } from '@angular/platform-browser';
 import { MolenImage } from '../../../Class/MolenImage';
 import { DialogReturnStatus } from '../../../Enums/DialogReturnStatus';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
