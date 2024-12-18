@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MolenApplicatie.Models;
 using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
