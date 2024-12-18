@@ -68,7 +68,7 @@ export class MolenDataClass implements MolenData {
   lat: number;
   long: number;
   lastUpdated?: Date;
-  image?: MolenImage;
+  images?: MolenImage[];
   addedImages?: MolenImage[];
   modelType: MolenType[];
   hasImage: boolean;
@@ -142,7 +142,7 @@ export class MolenDataClass implements MolenData {
     radDiameter?: string,
     wateras?: string,
     addedImages?: MolenImage[],
-    image?: MolenImage,
+    images?: MolenImage[],
     lastUpdated?: Date
   ) {
     this.id = id;
@@ -210,7 +210,7 @@ export class MolenDataClass implements MolenData {
     this.lat = lat;
     this.long = long;
     this.lastUpdated = lastUpdated;
-    this.image = image;
+    this.images = images;
     this.addedImages = addedImages || [];
     this.modelType = modelType;
     this.hasImage = hasImage;
