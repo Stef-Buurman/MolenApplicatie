@@ -1,7 +1,5 @@
-﻿using Microsoft.OpenApi.Any;
-using MolenApplicatie.Server.Models;
+﻿using MolenApplicatie.Server.Models;
 using SQLite;
-using System.Data.Common;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -34,6 +32,8 @@ namespace MolenApplicatie.Server.Services
                 await _db.CreateTableAsync<Place>();
                 await _db.CreateTableAsync<VerdwenenYearInfo>();
                 await _db.CreateTableAsync<Molenmaker>();
+                await _db.CreateTableAsync<MolenImage>();
+                await _db.CreateTableAsync<AddedImage>();
             }
             catch (Exception ex)
             {
