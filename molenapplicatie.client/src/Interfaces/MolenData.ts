@@ -67,7 +67,7 @@ export interface MolenData {
   lat: number;
   long: number;
   lastUpdated?: Date;
-  image?: MolenImage;
+  images?: MolenImage[];
   addedImages?: MolenImage[];
   modelType: MolenType[];
   hasImage: boolean;
