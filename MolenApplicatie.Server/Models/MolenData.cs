@@ -1,5 +1,4 @@
 ﻿using SQLite;
-using MolenApplicatie.Models;
 
 namespace MolenApplicatie.Server.Models
 {
@@ -65,12 +64,12 @@ namespace MolenApplicatie.Server.Models
         public bool CanAddImages { get; set; }
 
         [Ignore]
-        public MolenImage Image { get; set; }
+        public List<MolenImage> Images { get; set; }
         [Ignore]
         public List<MolenType> ModelType { get; set; } = new List<MolenType>();
 
         [Ignore]
-        public List<MolenImage> AddedImages { get; set; } = new List<MolenImage>();
+        public List<AddedImage> AddedImages { get; set; } = new List<AddedImage>();
 
         [Ignore]
         public List<VerdwenenYearInfo> DisappearedYears { get; set; } = new List<VerdwenenYearInfo>();
@@ -85,9 +84,6 @@ namespace MolenApplicatie.Server.Models
         public string Rad { get; set; }
         public string RadDiameter { get; set; }
         public string Wateras { get; set; }
-        //public double North { get; set; }
-        //public double East { get; set; }
-
         public double Lat { get; set; }
         public double Long { get; set; }
         public DateTime LastUpdated { get; set; }
