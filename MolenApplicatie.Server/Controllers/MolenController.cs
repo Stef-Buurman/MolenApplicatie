@@ -39,7 +39,7 @@ namespace MolenApplicatie.Server.Controllers
             var molenData = await _MolenService.GetAllExistingMolens();
             return Ok(molenData);
         }
-        
+
 
         [HttpGet("disappeared/{provincie}")]
         public async Task<IActionResult> GetAllDisappearedMolens(string provincie)
@@ -208,27 +208,22 @@ namespace MolenApplicatie.Server.Controllers
         {
             using (HttpClient client = new HttpClient())
             {
-                // Add a valid User-Agent header
                 client.DefaultRequestHeaders.Add("User-Agent", "MyApp/1.0 (email@example.com)");
 
-                // Construct the request URL
                 string url = $"{apiUrl}?lat={latitude}&lon={longitude}&format=json";
 
                 HttpResponseMessage response = await client.GetAsync(url);
 
-                // Ensure the response is successful (status code 2xx)
                 response.EnsureSuccessStatusCode();
 
-                // Parse the response body
                 string responseBody = await response.Content.ReadAsStringAsync();
                 JsonDocument jsonResponse = JsonDocument.Parse(responseBody);
 
-                // Look for the province in the JSON response
                 if (jsonResponse.RootElement.TryGetProperty("address", out JsonElement address))
                 {
                     if (address.TryGetProperty("state", out JsonElement state))
                     {
-                        return state.GetString(); // Return the province
+                        return state.GetString();
                     }
                 }
 
