@@ -86,7 +86,10 @@ export class MapService {
       var iconLocation = 'Assets/Icons/Molens/';
       var icon = 'windmolen_verdwenen';
 
-      if (molen.modelType.some(m => m.name.toLowerCase() === "weidemolen")) {
+      if (molen.toestand?.toLowerCase() == "restant") {
+        icon = 'remainder';
+      }
+      else if (molen.modelType.some(m => m.name.toLowerCase() === "weidemolen")) {
         icon = 'weidemolen';
       }
       else if (molen.modelType.some(m => m.name.toLowerCase() === "paltrokmolen")) {
