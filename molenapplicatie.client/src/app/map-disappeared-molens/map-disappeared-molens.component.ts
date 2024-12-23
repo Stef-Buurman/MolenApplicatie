@@ -30,7 +30,6 @@ export class MapDisappearedMolensComponent implements AfterViewInit {
       next: (result) => {
         this.molens = result;
         this.mapService.SelectedMapId = this.mapId;
-        console.log(result)
         this.mapService.initMap(result);
       },
       error: (error) => {

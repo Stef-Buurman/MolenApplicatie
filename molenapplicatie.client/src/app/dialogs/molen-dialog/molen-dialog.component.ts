@@ -61,7 +61,6 @@ export class MolenDialogComponent implements OnDestroy{
       this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
         next: (molen: MolenDataClass) => {
           this.molen = molen;
-          console.log(molen)
           this.molenImages = this.getAllMolenImages();
           this.selectedImage = this.molenImages[0];
         },

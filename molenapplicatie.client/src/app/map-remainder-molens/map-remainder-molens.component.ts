@@ -23,17 +23,6 @@ export class MapRemainderMolensComponent implements AfterViewInit {
     private mapService: MapService,
     private route: ActivatedRoute) { }
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      //this.selectedTenBruggeNumber = params.get('TenBruggeNumber') || '';
-      //if (this.selectedTenBruggeNumber) {
-      //  this.molenService.selectedMolenTenBruggeNumber = this.selectedTenBruggeNumber;
-      //  this.OpenMolenDialog(this.selectedTenBruggeNumber);
-      //}
-      //console.log(params.get('TenBruggeNumber'))
-    });
-  }
-
   getMolens(): void {
     this.molenService.getAllRemainderMolens().subscribe({
       next: (result) => {
