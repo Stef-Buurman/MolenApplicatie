@@ -198,7 +198,10 @@ namespace MolenApplicatie.Server.Services
                                             {
                                                 place = await _placesService.GetPlaceByName(newMolenData.Plaats);
                                             }
-                                            provincie = place.Province;
+                                            if(place != null)
+                                            {
+                                                provincie = place.Province;
+                                            }
                                         }
                                         else
                                         {
