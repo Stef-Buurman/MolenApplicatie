@@ -114,7 +114,6 @@ namespace MolenApplicatie.Server.Services
                 MolenData[i].Images = AllMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
                 MolenData[i].AddedImages = AllAddedMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
                 var imagePath = $"{Globals.MolenImagesFolder}/{MolenData[i].Ten_Brugge_Nr}";
-
                 if (Directory.Exists(imagePath))
                 {
                     var foundFiles = Directory.GetFiles(imagePath);
@@ -129,7 +128,7 @@ namespace MolenApplicatie.Server.Services
                             if (File.Exists(foundFiles[j]))
                             {
                                 var fileName = Path.GetFileNameWithoutExtension(Path.GetFileName(foundFiles[j]));
-                                var filePath = foundFiles[j].Replace("wwwroot", "").Replace("\\", "/");
+                                var filePath = CreateCleanPath.CreatePathWithoutWWWROOT(foundFiles[j]);
 
                                 if (MolenData[i].Images.Find(x => x.Name == fileName && x.FilePath == filePath) == null)
                                 {
@@ -164,7 +163,7 @@ namespace MolenApplicatie.Server.Services
 
                 foreach(AddedImage addedImg in MolenData[i].AddedImages)
                 {
-                    if(!File.Exists(Globals.WWWROOTPath + addedImg.FilePath))
+                    if(!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
                     {
                         await _db.DeleteAsync(addedImg);
                     }
@@ -182,7 +181,7 @@ namespace MolenApplicatie.Server.Services
                     foreach (string imageFile in imageFiles)
                     {
                         var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
-                        string imageFilePath = imageFile.Replace("wwwroot", "").Replace("\\", "/");
+                        string imageFilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imageFile);
                         string imageFileName = Path.GetFileNameWithoutExtension(imageFile);
                         if (MolenData[i].AddedImages.Find(img=> img.FilePath == imageFilePath && img.Name == imageFileName) == null)
                         {
@@ -240,7 +239,7 @@ namespace MolenApplicatie.Server.Services
                         if (File.Exists(foundFiles[j]))
                         {
                             var fileName = Path.GetFileNameWithoutExtension(Path.GetFileName(foundFiles[j]));
-                            var filePath = foundFiles[j].Replace("wwwroot", "").Replace("\\", "/");
+                            var filePath = CreateCleanPath.CreatePathWithoutWWWROOT(foundFiles[j]);
 
                             if (molen.Images.Find(x => x.Name == fileName && x.FilePath == filePath) == null)
                             {
@@ -285,7 +284,7 @@ namespace MolenApplicatie.Server.Services
                 foreach (string imageFile in imageFiles)
                 {
                     var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
-                    string imageFilePath = imageFile.Replace("wwwroot", "").Replace("\\", "/");
+                    string imageFilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imageFile);
                     string imageFileName = Path.GetFileNameWithoutExtension(imageFile);
                     if (molen.AddedImages.Find(img => img.FilePath == imageFilePath && img.Name == imageFileName) == null)
                     {
@@ -394,15 +393,15 @@ namespace MolenApplicatie.Server.Services
                 {
                     Directory.CreateDirectory(folderName);
                 }
-                var FileDirectory = $"{folderName}/{Guid.NewGuid()}{fileExtension}";
+                var FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
                 while (File.Exists(FileDirectory))
                 {
-                    FileDirectory = $"{folderName}/{Guid.NewGuid()}{fileExtension}";
+                    FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
                 }
                 File.WriteAllBytes(FileDirectory, imageBytes);
                 await _db.InsertAsync(new AddedImage
                 {
-                    FilePath = FileDirectory.Replace("wwwroot", "").Replace("\\", "/"),
+                    FilePath = CreateCleanPath.CreatePathToWWWROOT(FileDirectory),
                     Name = Path.GetFileNameWithoutExtension(FileDirectory),
                     DateTaken = GetDateTakenOfImage.GetDateTaken(FileDirectory),
                     CanBeDeleted = true,
@@ -418,9 +417,9 @@ namespace MolenApplicatie.Server.Services
             var molenImageToDelete = molen.Images.Find(x => x.Name == imgName);
             if (molen == null) return (false, "Molen not found");
             if (molenImageToDelete == null) return (false, "Images not found");
-            if (File.Exists($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}"))
+            if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath)))
             {
-                File.Delete($"{Globals.MolenAddedImagesFolder}/{molen.Ten_Brugge_Nr}/{imgName}");
+                File.Delete(molenImageToDelete.FilePath);
                 await _db.DeleteAsync(molenImageToDelete);
             }
             return (true, "Images deleted");

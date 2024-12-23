@@ -12,6 +12,6 @@ namespace MolenApplicatie.Server.Models
         public DateTime? DateTaken { get; set; }
         public string Description { get; set; }
         public int MolenDataId { get; set; }
-        public bool IsAddedImage = true;
+        public bool IsAddedImage { get; set; } = true;
     }
 }

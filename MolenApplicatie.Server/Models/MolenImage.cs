@@ -10,7 +10,8 @@ namespace MolenApplicatie.Server.Models
         public string Name { get; set; }
         public bool CanBeDeleted { get; set; }
         public string Description { get; set; }
+        public string ExternalUrl { get; set; }
         public int MolenDataId { get; set; }
-        public bool IsAddedImage = false;
+        public bool IsAddedImage { get; set; } = false;
     }
 }

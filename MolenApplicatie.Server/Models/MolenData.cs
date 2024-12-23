@@ -10,9 +10,9 @@ namespace MolenApplicatie.Server.Models
         public string Name { get; set; }
         public string ToelichtingNaam { get; set; }
         public int? Bouwjaar { get; set; }
-        public string? Herbouwd_jaar { get; set; }
-        public int? Bouwjaar_start { get; set; }
-        public int? Bouwjaar_einde { get; set; }
+        public string? HerbouwdJaar { get; set; }
+        public int? BouwjaarStart { get; set; }
+        public int? BouwjaarEinde { get; set; }
         public string Functie { get; set; }
         public string Doel { get; set; }
         public string Toestand { get; set; }

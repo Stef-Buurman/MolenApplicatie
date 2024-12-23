@@ -6,6 +6,8 @@ using System.Globalization;
 using HtmlAgilityPack;
 using System.Security.Cryptography;
 using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
+using System.Drawing;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -31,10 +33,11 @@ namespace MolenApplicatie.Server.Services
             List<MolenType> MolenTypes = await _db.Table<MolenType>();
             List<MolenType> NewAddedTypes = new List<MolenType>();
             List<VerdwenenYearInfo> MolenRemovedYears = new List<VerdwenenYearInfo>();
-            MolenData FoundMolenInDb = await _db.FindWithQueryAsync<MolenData>($"SELECT * FROM MolenData WHERE Ten_Brugge_Nr = '{Ten_Brugge_Nr}'");
             List<Molenmaker> molenmakers = await _db.Table<Molenmaker>();
             List<MolenTypeAssociation> MolenTypeAssociations = await _db.Table<MolenTypeAssociation>();
             List<VerdwenenYearInfo> AllMolenRemovedYears = await _db.Table<VerdwenenYearInfo>();
+            MolenData oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
+            MolenRemovedYears = oldMolenData?.DisappearedYears ?? new List<VerdwenenYearInfo>();
             try
             {
                 HttpResponseMessage response;
@@ -55,11 +58,13 @@ namespace MolenApplicatie.Server.Services
                 var divs = doc.DocumentNode.SelectNodes("//div[contains(@class, 'attrib')]");
                 var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
                 var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
+                var ArticleAbout = doc.DocumentNode.SelectNodes("//article[@class='mill-about']");
+                var ArticleFotos = doc.DocumentNode.SelectNodes("//article[@class='mill-photos']");
                 bool isNogWaarneembaarPrevious = false;
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
-                    MolenData newMolenData = new MolenData() { Id = -1, DisappearedYears = FoundMolenInDb != null ? MolenRemovedYears : new List<VerdwenenYearInfo>(), Images = new List<MolenImage>() };
+                    MolenData newMolenData = new MolenData() { Id = -1, DisappearedYears = MolenRemovedYears, Images = new List<MolenImage>() };
                     foreach (var div in divs)
                     {
                         var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
@@ -115,8 +120,8 @@ namespace MolenApplicatie.Server.Services
 
                                             if (startYear <= endYear)
                                             {
-                                                newMolenData.Bouwjaar_start = startYear;
-                                                newMolenData.Bouwjaar_einde = endYear;
+                                                newMolenData.BouwjaarStart = startYear;
+                                                newMolenData.BouwjaarEinde = endYear;
                                             }
                                         }
                                         else if (matchSingleYear.Success)
@@ -126,10 +131,10 @@ namespace MolenApplicatie.Server.Services
                                     }
                                     break;
                                 case "herbouwd":
-                                    newMolenData.Herbouwd_jaar = dd;
+                                    newMolenData.HerbouwdJaar = dd;
                                     break;
                                 case "bedrijfsvaardigheid":
-                                    if(string.IsNullOrEmpty(dd))
+                                    if (string.IsNullOrEmpty(dd))
                                     {
                                         newMolenData.Bedrijfsvaardigheid = char.ToUpper(dd[0]) + dd.Substring(1);
                                     }
@@ -278,7 +283,10 @@ namespace MolenApplicatie.Server.Services
                                     newMolenData.Bouwbestek = dd;
                                     break;
                                 case "bijzonderheden":
-                                    newMolenData.Bijzonderheden = dd;
+                                    if (!string.IsNullOrEmpty(dd))
+                                    {
+                                        newMolenData.Bijzonderheden = char.ToUpper(dd[0]) + dd.Substring(1);
+                                    }
                                     break;
                                 case "museuminformatie":
                                     newMolenData.Museuminformatie = dd;
@@ -336,6 +344,15 @@ namespace MolenApplicatie.Server.Services
                                     break;
                                 case "geschiedenis":
                                     newMolenData.Geschiedenis = dd;
+                                    var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
+                                    if (imageInGeschiedenis.Image != null)
+                                    {
+                                        newMolenData.Images.Add(imageInGeschiedenis.Image);
+                                    }
+                                    if (imageInGeschiedenis.isAlreadyInDB)
+                                    {
+                                        await _db.UpdateAsync(imageInGeschiedenis.Image);
+                                    }
                                     break;
                                 case "eigendomshistorie":
                                     newMolenData.Eigendomshistorie = dd;
@@ -369,10 +386,10 @@ namespace MolenApplicatie.Server.Services
                                     break;
                                 case "nog waarneembaar":
                                     isNogWaarneembaarPrevious = true;
-                                    var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Image?.First(), "Nog waarneembaar");
-                                    if (nogWaarneembareImage != null)
+                                    var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
+                                    if (nogWaarneembareImage.Image != null)
                                     {
-                                        newMolenData.Images.Add(nogWaarneembareImage);
+                                        newMolenData.Images.Add(nogWaarneembareImage.Image);
                                     }
                                     break;
                                 case "verdwenen":
@@ -467,16 +484,19 @@ namespace MolenApplicatie.Server.Services
                         }
                         else if (isNogWaarneembaarPrevious)
                         {
-                            var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Image?.First(), "Nog waarneembaar");
-                            if (nogWaarneembareImage != null)
+                            var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
+                            if (nogWaarneembareImage.Image != null)
                             {
-                                newMolenData.Images.Add(nogWaarneembareImage);
+                                newMolenData.Images.Add(nogWaarneembareImage.Image);
                             }
+                            if (nogWaarneembareImage.isAlreadyInDB)
+                            {
+                                await _db.UpdateAsync(nogWaarneembareImage.Image);
+                            }
+                            isNogWaarneembaarPrevious = false;
                         }
                     }
 
-                    MolenData oldMolenData = await _molenService.GetMolenByTBN(newMolenData.Ten_Brugge_Nr);
-                    Console.WriteLine(oldMolenData.Images.Count);
                     if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
 
                     if (ModelTypeDiv != null)
@@ -518,21 +538,6 @@ namespace MolenApplicatie.Server.Services
 
                     if (Image != null)
                     {
-
-                        string BaseImageDescription = "";
-                        if (newMolenData.Toestand == "verdwenen")
-                        {
-                            BaseImageDescription = "Verdwenen";
-                        }
-                        else if (newMolenData.Toestand == "restant")
-                        {
-                            BaseImageDescription = "Nog waarneembaar";
-                        }
-                        else
-                        {
-                            BaseImageDescription = "Base image";
-                        }
-
                         var src = Image.First().GetAttributeValue("src", string.Empty);
                         if (!string.IsNullOrEmpty(src))
                         {
@@ -540,14 +545,7 @@ namespace MolenApplicatie.Server.Services
                             byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
                             try
                             {
-                                if (!Directory.Exists(Globals.MolenImagesFolder))
-                                {
-                                    Directory.CreateDirectory(Globals.MolenImagesFolder);
-                                }
-                                if (!Directory.Exists(Globals.MolenImagesFolder + "/" + newMolenData.Ten_Brugge_Nr))
-                                {
-                                    Directory.CreateDirectory(Globals.MolenImagesFolder + "/" + newMolenData.Ten_Brugge_Nr);
-                                }
+                                CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
                                 if (!File.Exists($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg"))
                                 {
                                     File.WriteAllBytes($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg", image);
@@ -561,15 +559,110 @@ namespace MolenApplicatie.Server.Services
                                 {
                                     newMolenData.Images.Add(new MolenImage()
                                     {
-                                        FilePath = $"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg".Replace("wwwroot", ""),
+                                        FilePath = CreateCleanPath.CreatePathWithoutWWWROOT($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg"),
                                         Name = "base-image",
                                         MolenDataId = newMolenData.Id,
+                                        ExternalUrl = src
                                     });
                                 }
                             }
                             catch (Exception err)
                             {
                                 Console.WriteLine("Error: " + err.Message);
+                            }
+                        }
+                    }
+
+                    if (newMolenData.Images.Count < Globals.MaxNormalImagesCount)
+                    {
+                        bool isImageAdded = false;
+                        if (ArticleAbout != null)
+                        {
+                            var firstArticle = ArticleAbout.First();
+                            var images = firstArticle.SelectNodes(".//img");
+                            if (images != null)
+                            {
+                                var imageToAdd = images.First();
+                                var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder);
+                                if (molenImage.Image != null)
+                                {
+                                    newMolenData.Images.Add(molenImage.Image);
+                                    isImageAdded = true;
+                                }
+                                if (molenImage.isAlreadyInDB)
+                                {
+                                    await _db.UpdateAsync(molenImage.Image);
+                                }
+                            }
+                        }
+                        if (((isImageAdded && newMolenData.Images.Count < Globals.MaxNormalImagesCount) || !isImageAdded) && ArticleFotos != null)
+                        {
+                            string pattern = @"\((\d{1,2}-\d{1,2}-(\d{4}))\)";
+                            var firstArticle = ArticleFotos.First();
+                            var turboFrames = firstArticle.SelectNodes(".//turbo-frame");
+                            List<(string, HtmlNode)> foundTurboFrames = new List<(string, HtmlNode)>();
+                            for (int i = 0; i < turboFrames.Count; i++)
+                            {
+                                var divsInTurboFrame = turboFrames[i].SelectNodes(".//div");
+                                foreach (var div in divsInTurboFrame)
+                                {
+                                    Match match = Regex.Match(div.InnerText.Trim(), pattern);
+                                    if (match.Success)
+                                    {
+                                        foundTurboFrames.Add((match.Groups[2].Value, turboFrames[i]));
+                                    }
+                                }
+                                if (i == 2)
+                                {
+                                    break;
+                                }
+                            }
+
+                            foundTurboFrames = foundTurboFrames
+                                .OrderByDescending(frame => int.Parse(frame.Item1))
+                                .ToList();
+
+                            List<HtmlNode> imagesPortraits = new List<HtmlNode>();
+                            foreach (var turboFrame in foundTurboFrames)
+                            {
+                                var imageContainer = turboFrame.Item2;
+                                var images = imageContainer.SelectNodes(".//img[@class='figure-img img-fluid large portrait']");
+                                if (images != null && images.Count > 0)
+                                {
+                                    imagesPortraits.Add(imageContainer);
+                                }
+                            }
+                            if (imagesPortraits.Count > 0)
+                            {
+                                var imageToAdd = imagesPortraits.First();
+                                var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                if (molenImage.Image != null)
+                                {
+                                    newMolenData.Images.Add(molenImage.Image);
+                                }
+                                if (molenImage.isAlreadyInDB)
+                                {
+                                    await _db.UpdateAsync(molenImage.Image);
+                                }
+
+                            }
+                            else if (foundTurboFrames.Count > 0)
+                            {
+                                var imageContainer = foundTurboFrames.First().Item2;
+                                var images = imageContainer.SelectNodes(".//img");
+                                if (images != null)
+                                {
+                                    var imageToAdd = images.First();
+                                    var molenImage = await GetImageFromHtmlNode(imageContainer, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                    if (molenImage.Image != null)
+                                    {
+                                        newMolenData.Images.Add(molenImage.Image);
+                                    }
+                                    if (molenImage.isAlreadyInDB)
+                                    {
+                                        await _db.UpdateAsync(molenImage.Image);
+                                    }
+                                }
                             }
                         }
                     }
@@ -625,7 +718,7 @@ namespace MolenApplicatie.Server.Services
                                 await _db.InsertAsync(molenYearInfo);
                             }
                         }
-
+                        List<(int, VerdwenenYearInfo)> updatedYears = new List<(int, VerdwenenYearInfo)>();
                         foreach (var molenYearInfo in oldMolenData.DisappearedYears)
                         {
                             int index = newMolenData.DisappearedYears.FindIndex(year => year.Status_before == molenYearInfo.Status_before && year.Year == molenYearInfo.Year && year.Status_after == molenYearInfo.Status_after);
@@ -635,13 +728,19 @@ namespace MolenApplicatie.Server.Services
                             }
                             else
                             {
-                                newMolenData.DisappearedYears[index] = molenYearInfo;
+
+                                updatedYears.Add((index, molenYearInfo));
                             }
                         }
 
-                            foreach (var molenmaker in newMolenData.MolenMakers)
+                        foreach (var (index, molenYearInfo) in updatedYears)
                         {
-                            Molenmaker foundMolenMaker = molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && molenmaker.MolenDataId == newMolenData.Id);
+                            oldMolenData.DisappearedYears[index] = molenYearInfo;
+                        }
+
+                        foreach (var molenmaker in newMolenData.MolenMakers)
+                        {
+                            Molenmaker foundMolenMaker = molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && x.MolenDataId == newMolenData.Id);
                             if (foundMolenMaker == null)
                             {
                                 molenmaker.Id = -1;
@@ -683,7 +782,6 @@ namespace MolenApplicatie.Server.Services
                             }
                         }
                     }
-
                     for (int i = 0; i < newMolenData.Images.Count; i++)
                     {
                         var imageInOldMolen = oldMolenData?.Images.Find(x => x.Name == newMolenData.Images[i].Name && x.FilePath == newMolenData.Images[i].FilePath);
@@ -691,6 +789,11 @@ namespace MolenApplicatie.Server.Services
                         newMolenData.Images[i].MolenDataId = newMolenData.Id;
                         if (!isImageInOldMolen)
                         {
+                            CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
+                            if (!File.Exists(Globals.WWWROOTPath + newMolenData.Images[i].FilePath))
+                            {
+                                File.WriteAllBytes(Globals.WWWROOTPath + newMolenData.Images[i].FilePath, await _client.GetByteArrayAsync(newMolenData.Images[i].ExternalUrl));
+                            }
                             await _db.InsertAsync(newMolenData.Images[i]);
                         }
                         else if (imageInOldMolen != null)
@@ -706,7 +809,7 @@ namespace MolenApplicatie.Server.Services
                         }
                     }
 
-                    if(newMolenData != null && oldMolenData != null && oldMolenData.AddedImages != null)
+                    if (newMolenData != null && oldMolenData != null && oldMolenData.AddedImages != null)
                     {
                         newMolenData.AddedImages = oldMolenData.AddedImages;
                     }
@@ -717,11 +820,12 @@ namespace MolenApplicatie.Server.Services
                         foreach (var image in allImages)
                         {
                             string imageName = Path.GetFileNameWithoutExtension(image);
-                            if (newMolenData.AddedImages.Find(x => x.Name == imageName && x.FilePath == image.Replace("wwwroot", "")) == null)
+                            string imagePath = CreateCleanPath.CreatePathWithoutWWWROOT(image);
+                            if (newMolenData?.AddedImages.Find(x => x.Name == imageName && x.FilePath == imagePath) == null)
                             {
                                 var newAddedMolenImage = new AddedImage
                                 {
-                                    FilePath = image.Replace("wwwroot", ""),
+                                    FilePath = imagePath,
                                     Name = imageName,
                                     CanBeDeleted = true,
                                     Description = "",
@@ -733,26 +837,28 @@ namespace MolenApplicatie.Server.Services
                         }
                     }
 
-
-                    bool somethingChanged = false;
-                    PropertyInfo[] properties = typeof(MolenData).GetProperties();
-
-                    foreach (var property in properties)
+                    if (oldMolenData != null)
                     {
-                        string name = property.Name;
+                        bool somethingChanged = false;
+                        PropertyInfo[] properties = typeof(MolenData).GetProperties();
 
-                        object newValue = property.GetValue(newMolenData);
-                        object oldValue = property.GetValue(oldMolenData);
-                        if(newValue == null && oldValue != null)
+                        foreach (var property in properties)
                         {
-                            property.SetValue(newMolenData, oldValue);
-                            somethingChanged = true;
-                        }
-                    }
+                            string name = property.Name;
 
-                    if (somethingChanged)
-                    {
-                        await _db.UpdateAsync(newMolenData);
+                            object newValue = property.GetValue(newMolenData);
+                            object oldValue = property.GetValue(oldMolenData);
+                            if (newValue == null && oldValue != null)
+                            {
+                                property.SetValue(newMolenData, oldValue);
+                                somethingChanged = true;
+                            }
+                        }
+
+                        if (somethingChanged)
+                        {
+                            await _db.UpdateAsync(newMolenData);
+                        }
                     }
 
                     return (newMolenData, data);
@@ -766,7 +872,7 @@ namespace MolenApplicatie.Server.Services
             return (null, null);
         }
 
-        public async Task<MolenImage> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, HtmlNode firstImage, string description)
+        public async Task<(bool isAlreadyInDB, MolenImage Image)> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, string filePath, string? description = null, bool canBeDeleted = false)
         {
             var nogWaarneembareImages = dd2.SelectNodes(".//img");
             if (nogWaarneembareImages != null && nogWaarneembareImages.Count > 0)
@@ -777,74 +883,72 @@ namespace MolenApplicatie.Server.Services
                 {
                     var imageResponse = await _client.GetAsync(nogWaarneembareImageSrc);
                     byte[] nogWaarneembaarImage = await imageResponse.Content.ReadAsByteArrayAsync();
-                    Guid ImageName = Guid.NewGuid();
-                    try
+                    string ImageName = GetFileNameForImage.GetFileName();
+                    if (!Directory.Exists(filePath))
                     {
-                        if (!Directory.Exists(Globals.MolenImagesFolder))
-                        {
-                            Directory.CreateDirectory(Globals.MolenImagesFolder);
-                        }
-                        if (!Directory.Exists(Globals.MolenImagesFolder + "/" + Ten_Brugge_Nr))
-                        {
-                            Directory.CreateDirectory(Globals.MolenImagesFolder + "/" + Ten_Brugge_Nr);
-                        }
-
-                        string imagePath = $"{Globals.MolenImagesFolder}/{Ten_Brugge_Nr}/{ImageName}.jpg";
-
-                        using (var md5 = MD5.Create())
-                        {
-                            byte[] newImageHash = md5.ComputeHash(nogWaarneembaarImage);
-
-                            bool isDuplicate = false;
-                            foreach (var existingImagePath in Directory.GetFiles($"{Globals.MolenImagesFolder}/{Ten_Brugge_Nr}", "*.jpg"))
-                            {
-                                byte[] existingImage = File.ReadAllBytes(existingImagePath);
-                                byte[] existingImageHash = md5.ComputeHash(existingImage);
-
-                                if (newImageHash.SequenceEqual(existingImageHash))
-                                {
-                                    isDuplicate = true;
-                                    break;
-                                }
-                            }
-
-                            byte[] firstImageBytes = [];
-
-                            if (firstImage != null)
-                            {
-                                var srcFirstImage = firstImage.GetAttributeValue("src", string.Empty);
-                                if (!string.IsNullOrEmpty(srcFirstImage))
-                                {
-                                    var imageResponseFirstImage = await _client.GetAsync(srcFirstImage);
-                                    firstImageBytes = await imageResponseFirstImage.Content.ReadAsByteArrayAsync();
-                                }
-                            }
-
-                            if (newImageHash.SequenceEqual(md5.ComputeHash(firstImageBytes)))
-                            {
-                                isDuplicate = true;
-                            }
-
-                            if (!isDuplicate)
-                            {
-                                File.WriteAllBytes(imagePath, nogWaarneembaarImage);
-                                return new MolenImage
-                                {
-                                    FilePath = imagePath.Replace("wwwroot", ""),
-                                    Name = ImageName.ToString(),
-                                    Description = description,
-                                    CanBeDeleted = false
-                                };
-                            }
-                        }
+                        Directory.CreateDirectory(filePath);
                     }
-                    catch (Exception err)
+                    if (!Directory.Exists(filePath + "/" + Ten_Brugge_Nr))
                     {
-                        Console.WriteLine("Error: " + err.Message);
+                        Directory.CreateDirectory(filePath + "/" + Ten_Brugge_Nr);
+                    }
+
+                    string imagePath = CreateCleanPath.CreatePathToWWWROOT($"{filePath}/{Ten_Brugge_Nr}/{ImageName}.jpg");
+                    var foundImagesInDB = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE ExternalUrl = ?", new object[] { nogWaarneembareImageSrc });
+                    bool isImagePathAlreadyInDB = foundImagesInDB?.Count > 0;
+
+                    using (var md5 = MD5.Create())
+                    {
+                        byte[] newImageHash = md5.ComputeHash(nogWaarneembaarImage);
+
+                        string? existingPath = null;
+                        foreach (var existingImagePath in Directory.GetFiles($"{Globals.MolenImagesFolder}/{Ten_Brugge_Nr}", "*.jpg"))
+                        {
+                            byte[] existingImage = File.ReadAllBytes(existingImagePath);
+                            byte[] existingImageHash = md5.ComputeHash(existingImage);
+
+                            if (newImageHash.SequenceEqual(existingImageHash))
+                            {
+                                existingPath = existingImagePath;
+                                break;
+                            }
+                        }
+
+                        if (existingPath == null)
+                        {
+                            File.WriteAllBytes(imagePath, nogWaarneembaarImage);
+                            return (false, new MolenImage
+                            {
+                                FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imagePath),
+                                Name = ImageName.ToString(),
+                                Description = description,
+                                CanBeDeleted = canBeDeleted,
+                                ExternalUrl = nogWaarneembareImageSrc
+                            });
+                        }
+                        else if(existingPath != null)
+                        {
+                            string pathWithoutRoot = CreateCleanPath.CreatePathWithoutWWWROOT(existingPath);
+                            foundImagesInDB = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE FilePath = ?", new object[] { pathWithoutRoot });
+                            if (foundImagesInDB.Count > 0)
+                            {
+                                MolenImage firstImage = foundImagesInDB.First();
+                                return (true, new MolenImage
+                                {
+                                    Id = firstImage.Id,
+                                    FilePath = pathWithoutRoot,
+                                    Name = firstImage.Name,
+                                    Description = description,
+                                    CanBeDeleted = canBeDeleted,
+                                    ExternalUrl = nogWaarneembareImageSrc,
+                                    MolenDataId = firstImage.MolenDataId
+                                });
+                            }
+                        }
                     }
                 }
             }
-            return null;
+            return (false, null);
         }
 
 
@@ -931,18 +1035,18 @@ namespace MolenApplicatie.Server.Services
         {
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> currentData = await _db.Table<MolenData>();
-            List<MolenTBN> Data = await ReadAllMolenTBN();
-            //List<MolenTBN> Data = await _db.Table<MolenTBN>();
+            //List<MolenTBN> Data = await ReadAllMolenTBN();
+            List<MolenTBN> Data = await _db.Table<MolenTBN>();
             int count = 0;
             foreach (MolenTBN tbn in Data)
             {
                 //if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
                 count++;
-                Thread.Sleep(1000);
+                Thread.Sleep(1500);
                 (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 Console.WriteLine("nr-" + tbn.Id);
                 keyValuePairs.Add(molen.Item2);
-                //if (count == 2000)
+                //if (count == 9600)
                 //{
                 //    break;
                 //}
