@@ -21,6 +21,7 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllDataForDB()
         {
+            await _PlacesService.ReadAllNetherlandsPlaces();
             await _NewMolenDataService.ReadAllMolenTBN();
             await _NewMolenDataService.GetAllMolenData();
             return Ok();
