@@ -59,7 +59,10 @@ namespace MolenApplicatie.Server.Services
             List<AddedImage> AllAddedMolenImages = await _db.QueryAsync<AddedImage>(
                     $"SELECT * FROM AddedImage WHERE MolenDataId IN ({string.Join(',', molenIds)})");
 
-            return await GetFullDataOfAllMolens(MolenData, MolenTypes, MolenTypeAssociations, MolenYearInfos, AllMolenImages, AllAddedMolenImages);
+            List<MolenMaker> AllMolenMakers = await _db.QueryAsync<MolenMaker>(
+                    $"SELECT * FROM MolenMaker WHERE MolenDataId IN ({string.Join(',', molenIds)})");
+
+            return await GetFullDataOfAllMolens(MolenData, MolenTypes, MolenTypeAssociations, MolenYearInfos, AllMolenImages, AllAddedMolenImages, AllMolenMakers);
         }
 
         public async Task<List<MolenData>> GetAllActiveMolenData()
@@ -105,7 +108,7 @@ namespace MolenApplicatie.Server.Services
             return GefilterdeMolenData;
         }
 
-        public async Task<List<MolenData>> GetFullDataOfAllMolens(List<MolenData> MolenData, List<MolenType> MolenTypes, List<MolenTypeAssociation> MolenTypeAssociations, List<VerdwenenYearInfo> VerdwenenYearInfo, List<MolenImage> AllMolenImages, List<AddedImage> AllAddedMolenImages)
+        public async Task<List<MolenData>> GetFullDataOfAllMolens(List<MolenData> MolenData, List<MolenType> MolenTypes, List<MolenTypeAssociation> MolenTypeAssociations, List<VerdwenenYearInfo> VerdwenenYearInfo, List<MolenImage> AllMolenImages, List<AddedImage> AllAddedMolenImages, List<MolenMaker> AllMolenMakers)
         {
             for (int i = 0; i < MolenData.Count; i++)
             {
@@ -113,6 +116,7 @@ namespace MolenApplicatie.Server.Services
                 MolenData[i].ModelType = MolenTypes.FindAll(type => associations.Find(assoc => assoc.MolenTypeId == type.Id) != null);
                 MolenData[i].Images = AllMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
                 MolenData[i].AddedImages = AllAddedMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
+                MolenData[i].MolenMakers = AllMolenMakers.FindAll(maker => maker.MolenDataId == MolenData[i].Id);
                 var imagePath = $"{Globals.MolenImagesFolder}/{MolenData[i].Ten_Brugge_Nr}";
                 if (Directory.Exists(imagePath))
                 {
@@ -223,6 +227,7 @@ namespace MolenApplicatie.Server.Services
 
             molen.Images = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE MolenDataId = ?", new object[] { molen.Id });
             molen.AddedImages = await _db.QueryAsync<AddedImage>("SELECT * FROM AddedImage WHERE MolenDataId = ?", new object[] { molen.Id });
+            molen.MolenMakers = await _db.QueryAsync<MolenMaker>("SELECT * FROM MolenMaker WHERE MolenDataId = ?", new object[] { molen.Id });
 
             var imagePath = $"{Globals.MolenImagesFolder}/{molen.Ten_Brugge_Nr}";
             if (Directory.Exists(imagePath))
@@ -312,7 +317,7 @@ namespace MolenApplicatie.Server.Services
 
             molen.DisappearedYears = await _db.QueryAsync<VerdwenenYearInfo>("SELECT * FROM VerdwenenYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
 
-            molen.MolenMakers = await _db.QueryAsync<Molenmaker>("SELECT * FROM Molenmaker WHERE MolenDataId = ?", new object[] { molen.Id });
+            molen.MolenMakers = await _db.QueryAsync<MolenMaker>("SELECT * FROM MolenMaker WHERE MolenDataId = ?", new object[] { molen.Id });
 
             return molen;
         }

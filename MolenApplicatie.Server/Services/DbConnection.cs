@@ -31,7 +31,7 @@ namespace MolenApplicatie.Server.Services
                 await _db.CreateTableAsync<LastSearchedForNewData>();
                 await _db.CreateTableAsync<Place>();
                 await _db.CreateTableAsync<VerdwenenYearInfo>();
-                await _db.CreateTableAsync<Molenmaker>();
+                await _db.CreateTableAsync<MolenMaker>();
                 await _db.CreateTableAsync<MolenImage>();
                 await _db.CreateTableAsync<AddedImage>();
             }

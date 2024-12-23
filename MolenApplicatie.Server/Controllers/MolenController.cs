@@ -20,9 +20,17 @@ namespace MolenApplicatie.Server.Controllers
         }
 
         [HttpGet("all/{provincie}")]
-        public async Task<IActionResult> GetAllMolens(string provincie)
+        public async Task<IActionResult> GetAllMolensByProvincie(string provincie)
         {
             var molenData = await _MolenService.GetAllMolenDataByProvincie(provincie);
+            return Ok(molenData);
+        }
+
+        [FileUploadFilter]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllMolens()
+        {
+            var molenData = await _MolenService.GetAllMolenData();
             return Ok(molenData);
         }
 

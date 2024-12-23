@@ -75,7 +75,7 @@ namespace MolenApplicatie.Server.Models
         public List<VerdwenenYearInfo> DisappearedYears { get; set; } = new List<VerdwenenYearInfo>();
 
         [Ignore]
-        public List<Molenmaker> MolenMakers { get; set; } = new List<Molenmaker>();
+        public List<MolenMaker> MolenMakers { get; set; } = new List<MolenMaker>();
 
         [Ignore]
         public bool HasImage { get; set; }
