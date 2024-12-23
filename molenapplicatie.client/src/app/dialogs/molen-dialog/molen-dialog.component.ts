@@ -7,6 +7,9 @@ import { MolenData } from '../../../Interfaces/MolenData';
 import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
+import { DomSanitizer } from '@angular/platform-browser';
+import { SecurityContext } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -28,6 +31,8 @@ export class MolenDialogComponent implements OnDestroy{
     return this.molen.addedImages.length > 0;
   }
 
+  goToMolenTBN!: string;
+
   isExpanded = false;
 
   deleteImageFunction = this.deleteImage.bind(this);
@@ -37,6 +42,9 @@ export class MolenDialogComponent implements OnDestroy{
     private molenService: MolenService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     private dialog: MatDialog,
+    private sanitizer: DomSanitizer,
+    private router: Router,
+    private route: ActivatedRoute,
     @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string , molen:MolenData}
   ) { }
 
@@ -51,8 +59,9 @@ export class MolenDialogComponent implements OnDestroy{
     }
     if (this.data.tenBruggeNr) {
       this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
-        next: (molen: MolenData) => {
+        next: (molen: MolenDataClass) => {
           this.molen = molen;
+          console.log(molen)
           this.molenImages = this.getAllMolenImages();
           this.selectedImage = this.molenImages[0];
         },
@@ -63,12 +72,39 @@ export class MolenDialogComponent implements OnDestroy{
     }
   }
 
+  GoToMolen(TBN: string) {
+    this.goToMolenTBN = TBN;
+    this.onClose();
+  }
+
+  sanitizeHtml(html: string): string {
+    const sanitizedHtml = this.sanitizer.sanitize(SecurityContext.NONE, html) || '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+    return doc.body.textContent || '';
+  }
+
+  getBouwjaar(): string {
+    if (!this.molen) return "";
+    if (this.molen.bouwjaar !== undefined && this.molen.bouwjaar !== null) {
+      return this.molen.bouwjaar.toString();
+    } else if (this.molen.bouwjaarStart !== undefined && this.molen.bouwjaarStart !== null && this.molen.bouwjaarEinde !== undefined && this.molen.bouwjaarEinde !== null) {
+      return `${this.molen.bouwjaarStart} - ${this.molen.bouwjaarEinde}`;
+    } else if (this.molen.bouwjaarStart !== undefined && this.molen.bouwjaarStart !== null) {
+      return this.molen.bouwjaarStart.toString();
+    } else if (this.molen.bouwjaarEinde !== undefined && this.molen.bouwjaarEinde !== null) {
+      return this.molen.bouwjaarEinde.toString();
+    } else {
+      return "Onbekend";
+    }
+  }
+
   ngOnDestroy(): void {
     this.onClose();
   }
 
   onClose(): void {
-    this.dialogRef.close(this.molenImages);
+    this.dialogRef.close(this.goToMolenTBN);
   }
 
   expandDetails() {

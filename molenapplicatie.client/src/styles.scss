@@ -267,6 +267,20 @@ body {
 }
 
 
+/*urlButton*/
+
+.urlButton {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: arial, sans-serif;
+  color: #0000EE;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size:20px;
+}
+
+
 @media only screen and (max-width: $Media_width) {
   .molen-details .mdc-dialog__surface,
   .upload-image .mdc-dialog__surface {
@@ -290,3 +304,4 @@ body {
     }
   }
 }
+

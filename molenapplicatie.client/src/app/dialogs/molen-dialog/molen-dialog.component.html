@@ -19,21 +19,22 @@
   <div class="data molen-data" [ngClass]="{ 'expanded': isExpanded }">
     <div class="molen-data-div">
       <h2>Details</h2>
-      <p><strong>Name:</strong> {{ molen.name }}</p>
       <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
-      <p><strong>Functie:</strong> {{ molen.functie }}</p>
+      <p *ngIf="molen.functie"><strong>Functie:</strong> {{ molen.functie }}</p>
       <p><strong>Toestand:</strong> {{ molen.toestand || 'Onbekend' }}</p>
-      <p><strong>Bouwjaar:</strong> {{ molen.bouwjaar }}</p>
+      <p><strong>Bouwjaar:</strong> {{ getBouwjaar() }}</p>
+      <p *ngIf="!molen.bouwjaar && molen.bouwjaarStart"><strong>Bouwjaar tussen:</strong> {{ molen.bouwjaarStart }} <strong>en:</strong> {{ molen.bouwjaarEinde || 'onbekend'}}</p>
       <p *ngIf="molen.herbouwdJaar"><strong>Herbouwd Jaar:</strong> {{ molen.herbouwdJaar }}</p>
 
       <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
       <p><strong>Adres:</strong> {{ molen.adres }}</p>
-      <p *ngIf="molen.provincie"><strong>Provincie:</strong> {{ molen.provincie }}</p>
-      <p *ngIf="molen.gemeente"><strong>Gemeente:</strong> {{ molen.gemeente }}</p>
+      <p *ngIf="molen.provincie"><strong>Provincie:</strong> {{ molen.provincie }} <span *ngIf="molen.gemeente"><strong>Gemeente:</strong> {{ molen.gemeente }}</span></p>
       <p *ngIf="molen.streek"><strong>Streek:</strong> {{ molen.streek }}</p>
       <p><strong>Coordinates:</strong> Lat: {{ molen.lat }}, Long: {{ molen.long }}</p>
+      <p *ngIf="molen.plaatsaanduiding"><strong>Plaatsaanduiding:</strong> {{ sanitizeHtml(molen.plaatsaanduiding) }}</p>
 
-      <p *ngIf="molen.monument"><strong>Monument:</strong> {{ molen.monument || 'Onbekend' }}</p>
+      <p *ngIf="molen.monument"><strong>Monument: </strong> <a href="{{molen.monument}}" target="_blank">Register</a></p>
+      <p *ngIf="molen.doel"><strong>Doel:</strong> {{ molen.doel }}</p>
 
       <p><strong>Model Types:</strong></p>
       <ul>
@@ -42,26 +43,55 @@
         </li>
       </ul>
 
-      <p *ngIf="molen.bedrijfsvaardigheid"><strong>Bedrijfsvaardigheid:</strong> {{ molen.bedrijfsvaardigheid }}</p>
-
-      <p *ngIf="molen.toelichtingNaam"><strong>Toelichting Naam:</strong> {{ molen.toelichtingNaam }}</p>
-
-      <p *ngIf="molen.openingstijden"><strong>Openingstijden:</strong> {{ molen.openingstijden }}</p>
+      <p *ngIf="molen.openingstijden"><strong>Openingstijden:</strong> {{ sanitizeHtml(molen.openingstijden) }}</p>
       <p><strong>Open voor Publiek:</strong> {{ molen.openVoorPubliek ? 'Ja' : 'Nee' }}</p>
       <p><strong>Open op Zaterdag:</strong> {{ molen.openOpZaterdag ? 'Ja' : 'Nee' }}</p>
       <p><strong>Open op Zondag:</strong> {{ molen.openOpZondag ? 'Ja' : 'Nee' }}</p>
       <p><strong>Open op Afspraak:</strong> {{ molen.openOpAfspraak ? 'Ja' : 'Nee' }}</p>
+      <p *ngIf="molen.toegangsprijzen"><strong>Toegangsprijzen:</strong> {{ sanitizeHtml(molen.toegangsprijzen) }}</p>
+
+      <p *ngIf="molen.website"><strong> Eigen website: </strong> <a href="{{molen.website}}" target="_blank">{{molen.website}}</a></p>
+      <p *ngIf="molen.winkelInformatie"><strong>Winkel informatie:</strong> {{ sanitizeHtml(molen.winkelInformatie) }}</p>
 
       <p *ngIf="molen.eigenaar"><strong>Eigenaar:</strong> {{ molen.eigenaar }}</p>
-      <p *ngIf="molen.eigendomshistorie"><strong>Eigendomshistorie:</strong> {{ molen.eigendomshistorie }}</p>
 
-      <p *ngIf="molen.geschiedenis"><strong>Geschiedenis:</strong> {{ molen.geschiedenis }}</p>
-      <p *ngIf="molen.trivia"><strong>Trivia:</strong> {{ molen.trivia }}</p>
-      <p *ngIf="molen.wetenswaardigheden"><strong>Wetenswaardigheden:</strong> {{ molen.wetenswaardigheden }}</p>
+      <p *ngIf="molen.opvolger"><strong>Opvolger: </strong> <button class="urlButton" (click)="GoToMolen(molen.opvolger)">{{molen.opvolger}}</button></p>
+      <p *ngIf="molen.voorganger"><strong>Voorganger: </strong> <button class="urlButton" (click)="GoToMolen(molen.voorganger)">{{molen.voorganger}}</button></p>
+      <p *ngIf="molen.verplaatstNaar"><strong>Verplaatst naar: </strong> <button class="urlButton" (click)="GoToMolen(molen.verplaatstNaar)">{{molen.verplaatstNaar}}</button></p>
+      <p *ngIf="molen.afkomstigVan"><strong>Afkomstig van: </strong> <button class="urlButton" (click)="GoToMolen(molen.afkomstigVan)">{{molen.afkomstigVan}}</button></p>
 
-      <p *ngIf="molen.rad"><strong>Rad:</strong> {{ molen.rad }}</p>
+      <p *ngIf="molen.wiekvorm"><strong>Wiekvorm:</strong> {{ sanitizeHtml(molen.wiekvorm) }}</p>
+      <p *ngIf="molen.wieken"><strong>Wieken:</strong> {{ sanitizeHtml(molen.wieken) }}</p>
+      <p *ngIf="molen.wiekVerbeteringen"><strong>Wiek verbeteringen:</strong> {{ sanitizeHtml(molen.wiekVerbeteringen) }}</p>
+      <p *ngIf="molen.plaatsBediening"><strong>Plaats bediening:</strong> {{ sanitizeHtml(molen.plaatsBediening) }}</p>
+      <p *ngIf="molen.bedieningKruiwerk"><strong>Bediening kruiwerk:</strong> {{ sanitizeHtml(molen.bedieningKruiwerk) }}</p>
+      <p *ngIf="molen.plaatsKruiwerk"><strong>Plaats kruiwerk:</strong> {{ sanitizeHtml(molen.plaatsKruiwerk) }}</p>
+      <p *ngIf="molen.kruiwerk"><strong>Kruiwerk:</strong> {{ sanitizeHtml(molen.kruiwerk) }}</p>
+      <p *ngIf="molen.vlucht"><strong>Vlucht:</strong> {{ sanitizeHtml(molen.vlucht) }}</p>
+      <p *ngIf="molen.krachtbron"><strong>Krachtbron:</strong> {{ sanitizeHtml(molen.krachtbron) }}</p>
+      <p *ngIf="molen.bedieningKruiwerk"><strong>Bediening kruiwerk:</strong> {{ sanitizeHtml(molen.bedieningKruiwerk) }}</p>
+      <p *ngIf="molen.kadastraleAanduiding"><strong>Kkadastrale aanduiding:</strong> {{ sanitizeHtml(molen.kadastraleAanduiding) }}</p>
+      <p *ngIf="molen.uniekeEigenschap"><strong>Unieke eigenschap:</strong> {{ sanitizeHtml(molen.uniekeEigenschap) }}</p>
+      <p *ngIf="molen.landschappelijkeWaarde"><strong>Landschappelijke waarde:</strong> {{ sanitizeHtml(molen.landschappelijkeWaarde) }}</p>
+
+      <p *ngIf="molen.recenteWerkzaamheden"><strong>Recente Werkzaamheden:</strong> {{ sanitizeHtml(molen.recenteWerkzaamheden) }}</p>
+      <p *ngIf="molen.wederopbouw"><strong>Wederopbouw:</strong> {{ sanitizeHtml(molen.wederopbouw) }}</p>
+
+      <p *ngIf="molen.bijzonderheden"><strong>Bijzonderheden:</strong> {{ sanitizeHtml(molen.bijzonderheden) }}</p>
+      <p *ngIf="molen.geschiedenis"><strong>Geschiedenis:</strong> {{ sanitizeHtml(molen.geschiedenis) }}</p>
+      <p *ngIf="molen.eigendomshistorie"><strong>Eigendomshistorie:</strong> {{ sanitizeHtml(molen.eigendomshistorie) }}</p>
+      <p *ngIf="molen.museuminformatie"><strong>Museuminformatie:</strong> {{ sanitizeHtml(molen.museuminformatie) }}</p>
+      <p *ngIf="molen.toelichtingNaam"><strong>Toelichting Naam:</strong> {{ sanitizeHtml(molen.toelichtingNaam) }}</p>
+      <p *ngIf="molen.trivia"><strong>Trivia:</strong> {{ sanitizeHtml(molen.trivia) }}</p>
+      <p *ngIf="molen.bedrijfsvaardigheid"><strong>Bedrijfsvaardigheid:</strong> {{ molen.bedrijfsvaardigheid }}</p>
+      <p *ngIf="molen.wetenswaardigheden"><strong>Wetenswaardigheden:</strong> {{ sanitizeHtml(molen.wetenswaardigheden) }}</p>
+      <p *ngIf="molen.literatuur"><strong>Literatuur:</strong> {{ sanitizeHtml(molen.literatuur) }}</p>
+      <p *ngIf="molen.plaatsenVoorheen"><strong>Plaatsen Voorheen:</strong> {{ sanitizeHtml(molen.plaatsenVoorheen) }}</p>
+
+      <p *ngIf="molen.as"><strong>As:</strong> {{ sanitizeHtml(molen.as) }}</p>
+      <p *ngIf="molen.rad"><strong>Rad:</strong> {{ sanitizeHtml(molen.rad) }}</p>
       <p *ngIf="molen.radDiameter"><strong>Rad Diameter:</strong> {{ molen.radDiameter }}</p>
-      <p *ngIf="molen.wateras"><strong>Wateras:</strong> {{ molen.wateras }}</p>
+      <p *ngIf="molen.wateras"><strong>Wateras:</strong> {{ sanitizeHtml(molen.wateras) }}</p>
     </div>
 
     <button class="toggle-btn" (click)="expandDetails()">

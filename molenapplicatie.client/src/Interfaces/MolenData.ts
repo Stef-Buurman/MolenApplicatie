@@ -71,6 +71,4 @@ export interface MolenData {
   addedImages?: MolenImage[];
   modelType: MolenType[];
   hasImage: boolean;
-
-  getBouwjaar(): string;
 }

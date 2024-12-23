@@ -36,11 +36,22 @@ export class OpenMolenDetailsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe({
-      next: (MolenImages: MolenImage[]) => {
+      next: (goToMolen: string | undefined) => {
+        console.log(goToMolen)
         this.molenService.removeSelectedMolen();
-        this.goBack();
+        if (goToMolen) {
+          this.goToMolen(goToMolen);
+        } else {
+          this.goBack();
+        }
       }
     });
+  }
+
+  goToMolen(TBN: string) {
+    const currentUrl = this.router.url.split('/').slice(0, -1).join('/');
+    const targetUrl = `${currentUrl}/${TBN}`;
+    this.router.navigateByUrl(targetUrl);
   }
 
   goBack() {
