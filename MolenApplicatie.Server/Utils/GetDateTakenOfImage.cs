@@ -1,38 +1,32 @@
-﻿using System.Drawing.Imaging;
-using System.Text.RegularExpressions;
-using System.Text;
-using System.Drawing;
-
+﻿using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using System;
+using System.IO;
 
 namespace MolenApplicatie.Server.Utils
 {
     public static class GetDateTakenOfImage
     {
-        private static readonly Regex dateRegex = new Regex(":");
-
         public static DateTime? GetDateTaken(string path)
         {
             try
             {
                 if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
-                using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-                using (Image myImage = Image.FromStream(fs, false, false))
+                var directories = ImageMetadataReader.ReadMetadata(path);
+                var subIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
+
+                if (subIfdDirectory != null)
                 {
-                    PropertyItem propItem = null;
-                    try
+                    var dateTaken = subIfdDirectory.GetDateTime(ExifDirectoryBase.TagDateTimeOriginal);
+                    if (dateTaken != null)
                     {
-                        propItem = myImage.GetPropertyItem(36867);
+                        return dateTaken;
                     }
-                    catch { }
-                    if (propItem != null)
-                    {
-                        string dateTaken = dateRegex.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
-                        return DateTime.Parse(dateTaken);
-                    }
-                    else
-                        return new FileInfo(path).LastWriteTime;
                 }
+
+                // If no EXIF data found, fallback to file's last write time
+                return new FileInfo(path).LastWriteTime;
             }
             catch (Exception ex)
             {
