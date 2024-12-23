@@ -1,0 +1,74 @@
+.filter-container {
+  width: 300px;
+  padding: 30px;
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+.filter-container input[type="radio"] {
+  display: none;
+}
+
+.filter-container label {
+  display: inline-block;
+  padding: 10px;
+  width: 200px;
+  line-height: 20px;
+  margin-bottom: 5px;
+  text-align: center;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(5px);
+  border: 2px solid #ddd;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-container input[type="radio"]:checked + label {
+  background: rgba(0, 123, 255, 0.8);
+  border-color: #007bff;
+}
+
+.filter-container label:hover {
+  border-color: #007bff;
+}
+
+.filter-button {
+  margin: auto;
+  width: 200px;
+}
+
+
+.provincie-dropdown {
+  appearance: none;
+  background-color: #ffffff;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 200px;
+  text-align: center;
+}
+
+.provincie-dropdown:hover {
+  border-color: #0056b3;
+  background-color: #f0f8ff;
+}
+
+.provincie-dropdown:focus {
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.provincie-dropdown option {
+  background-color: #ffffff;
+  color: #333;
+}
+
+.add-margin-to-btn {
+  margin-top: 60px;
+}

@@ -1,0 +1,56 @@
+<section class="dialog-header">
+  <span>Filter map</span>
+  <div class="actions">
+    <div (click)="onClose()" class="container-close-btn">
+      <div class="circle">
+        <div class="line one"></div>
+        <div class="line two"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="filter-container">
+  <input type="radio"
+         name="options"
+         id="active"
+         [value]="'active'"
+         [(ngModel)]="selectedOption" />
+  <label for="active">
+    Actieve molens
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="remainder"
+         [value]="'remainder'"
+         [(ngModel)]="selectedOption" />
+  <label for="remainder">
+    Remainder
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="existing"
+         [value]="'existing'"
+         [(ngModel)]="selectedOption" />
+  <label for="existing">
+    Existing
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="disappeared"
+         [value]="'disappeared'"
+         [(ngModel)]="selectedOption" />
+  <label for="disappeared">
+    Disappeared
+  </label>
+  <div *ngIf="selectedOption == 'disappeared'">
+    <select class="provincie-dropdown" [(ngModel)]="provincie">
+      <option value="">Kies een provincie</option>
+      <option *ngFor="let prov of provincies" [value]="prov.toLowerCase()">{{ prov }}</option>
+    </select>
+  </div>
+  <br />
+  <button class="default-button filter-button {{selectedOption == 'disappeared' ? '' : 'add-margin-to-btn'}}" (click)="filterMap()">Filter</button>
+</div>

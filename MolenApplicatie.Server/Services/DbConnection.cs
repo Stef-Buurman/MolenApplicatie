@@ -1,18 +1,22 @@
 ﻿using MolenApplicatie.Server.Models;
 using SQLite;
-using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
 {
+    public class TableInfo
+    {
+        public string name { get; set; }
+        public string type { get; set; }
+    }
     public class DbConnection
     {
         private readonly HttpClient _client;
-        private readonly SQLiteAsyncConnection _db;
+        public readonly SQLiteAsyncConnection _db;
 
-        public DbConnection()
+        public DbConnection(string dbRoute)
         {
             _client = new HttpClient();
-            _db = new SQLiteAsyncConnection(Globals.DBBestaandeMolens);
+            _db = new SQLiteAsyncConnection(dbRoute);
             InitializeDB().Wait();
         }
 
@@ -26,6 +30,10 @@ namespace MolenApplicatie.Server.Services
                 await _db.CreateTableAsync<MolenTypeAssociation>();
                 await _db.CreateTableAsync<LastSearchedForNewData>();
                 await _db.CreateTableAsync<Place>();
+                await _db.CreateTableAsync<VerdwenenYearInfo>();
+                await _db.CreateTableAsync<MolenMaker>();
+                await _db.CreateTableAsync<MolenImage>();
+                await _db.CreateTableAsync<AddedImage>();
             }
             catch (Exception ex)
             {
@@ -116,8 +124,8 @@ namespace MolenApplicatie.Server.Services
         {
             try
             {
-                var result = await _db.ExecuteScalarAsync<object>(query, args);
-                return (T)result;
+                var result = await _db.ExecuteScalarAsync<T>(query, args);
+                return result;
             }
             catch (Exception ex)
             {

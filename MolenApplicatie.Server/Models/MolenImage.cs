@@ -1,34 +1,17 @@
-﻿namespace MolenApplicatie.Models
+﻿using SQLite;
+
+namespace MolenApplicatie.Server.Models
 {
     public class MolenImage
     {
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
         public string FilePath { get; set; }
         public string Name { get; set; }
         public bool CanBeDeleted { get; set; }
-
-        public MolenImage(string filePath, string name, bool canBeDeleted = false)
-        {
-            FilePath = filePath;
-            Name = name;
-            CanBeDeleted = canBeDeleted;
-        }
+        public string Description { get; set; }
+        public string ExternalUrl { get; set; }
+        public int MolenDataId { get; set; }
+        public bool IsAddedImage { get; set; } = false;
     }
-
-    public class MolenImage2
-    {
-        public string FilePath { get; set; }
-        public string Url { get; set; }
-        public string Name { get; set; }
-        public bool CanBeDeleted { get; set; }
-
-        public MolenImage2(string filePath, string name, string url, bool canBeDeleted = false)
-        {
-            FilePath = filePath;
-            Url = url;
-            Name = name;
-            CanBeDeleted = canBeDeleted;
-        }
-    }
-
-
 }

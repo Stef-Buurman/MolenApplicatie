@@ -15,8 +15,24 @@ body {
 
 /*Global dialog styling*/
 
+.dialog-header {
+  border-bottom: 1px solid black;
+  font-size: 40px;
+  padding: 8px 6% 8px 6%;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
 .cdk-overlay-pane.mat-mdc-dialog-panel {
-  z-index:1002;
+  z-index: 1002;
   max-width: 100vw !important;
   max-height: 95vh !important;
   position: absolute;
@@ -126,57 +142,57 @@ body {
   position: relative;
   width: fit-content;
   display: flex;
-}
 
-.circle {
-  width: 50px;
-  height: 50px;
-  background-color: white;
-  border-radius: 25px;
-  margin: auto;
-  box-shadow: 1px 1px 1px #565656;
-  position: relative;
-  transition: all .2s;
-
-  &:hover {
-    background-color: darken(black, 10%);
-    cursor: pointer;
-  }
-
-  &:hover > .one {
-    height: 45px;
-    top: 3px;
-    transition: all .5s;
+  .circle {
+    width: 50px;
+    height: 50px;
     background-color: white;
+    border-radius: 25px;
+    margin: auto;
+    box-shadow: 1px 1px 1px #565656;
+    position: relative;
+    transition: all .2s;
+
+    &:hover {
+      background-color: darken(black, 10%);
+      cursor: pointer;
+    }
+
+    &:hover > .one {
+      height: 45px;
+      top: 3px;
+      transition: all .5s;
+      background-color: white;
+    }
+
+    &:hover > .two {
+      height: 45px;
+      top: 3px;
+      transition: all .5s;
+      background-color: white;
+    }
   }
 
-  &:hover > .two {
-    height: 45px;
-    top: 3px;
+  .line {
+    height: 20px;
+    width: 3px;
+    border-radius: 2px;
+    background-color: darken(black, 20%);
+    position: absolute;
     transition: all .5s;
-    background-color: white;
   }
-}
 
-.line {
-  height: 20px;
-  width: 3px;
-  border-radius: 2px;
-  background-color: darken(black, 20%);
-  position: absolute;
-  transition: all .5s;
-}
+  .one {
+    top: 15px;
+    left: 23px;
+    transform: rotate(45deg)
+  }
 
-.one {
-  top: 15px;
-  left: 23px;
-  transform: rotate(45deg)
-}
-
-.two {
-  top: 15px;
-  left: 23px;
-  transform: rotate(-45deg)
+  .two {
+    top: 15px;
+    left: 23px;
+    transform: rotate(-45deg)
+  }
 }
 
 
@@ -200,7 +216,7 @@ body {
 /*molen-details*/
 
 .molen-details .mdc-dialog__container {
-  background-image: url('../public/Assets/Background/pexels-fwstudio-33348-139312.jpg');
+  background-image: url('../public/Assets/Background/Molen-details-background.jpg');
   background-origin: border-box;
   background-size: cover;
   border-radius: 25% 10% / 3% 20% !important;
@@ -216,8 +232,76 @@ body {
   overflow: hidden;
 }
 
+
+.upload-image .mdc-dialog__surface {
+  overflow: hidden;
+}
+
+
+.default-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.default-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+
+/*filter map*/
+
+.filter-map .mat-mdc-dialog-surface {
+  background-image: url('../public/Assets/Background/GreyWoodBackground.jpeg');
+  background-origin: border-box;
+  background-size: cover;
+  background-position: right center;
+}
+
+
+/*urlButton*/
+
+.urlButton {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: arial, sans-serif;
+  color: #0000EE;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size:20px;
+}
+
+
 @media only screen and (max-width: $Media_width) {
-  .molen-details .mdc-dialog__surface {
+  .molen-details .mdc-dialog__surface,
+  .upload-image .mdc-dialog__surface {
     overflow-y: scroll;
   }
+
+  .upload-image .mdc-dialog__surface {
+    border-radius: 30px 30px / 30px 30px !important;
+  }
+
+  .dialog-header {
+    padding: 8px 6% 8px 6%;
+    display: block;
+
+    .actions {
+      display: flex;
+    }
+
+    .actions > :last-child {
+      margin-left: auto;
+    }
+  }
 }
+

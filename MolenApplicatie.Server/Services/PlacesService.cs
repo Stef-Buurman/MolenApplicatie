@@ -1,6 +1,7 @@
 ﻿using MolenApplicatie.Server.Models;
 using System.Text.Json;
 using System.Globalization;
+using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -15,7 +16,7 @@ namespace MolenApplicatie.Server.Services
         public PlacesService()
         {
             _client = new HttpClient();
-            _db = new DbConnection();
+            _db = new DbConnection(Globals.DBAlleMolens);
         }
 
         List<string> provinces = new List<string>
@@ -49,11 +50,10 @@ namespace MolenApplicatie.Server.Services
             {
                 try
                 {
-                    var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}");
+                    var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&lang=local");
                     response.EnsureSuccessStatusCode();
 
                     var jsonResponse = await response.Content.ReadAsStringAsync();
-                    //Console.WriteLine(jsonResponse);
 
                     var placesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(jsonResponse);
                     if (placesResponse != null && placesResponse.Geonames != null)
@@ -66,6 +66,7 @@ namespace MolenApplicatie.Server.Services
                                 var place = new Place
                                 {
                                     Name = geoName.Name,
+                                    Province = geoName.Province,
                                     Lat = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
                                     Lon = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
                                     Population = geoName.Population
@@ -93,7 +94,7 @@ namespace MolenApplicatie.Server.Services
                 {
                     try
                     {
-                        var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&q={province}");
+                        var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&q={province}&lang=local");
                         response.EnsureSuccessStatusCode();
 
                         var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -109,6 +110,7 @@ namespace MolenApplicatie.Server.Services
                                     var place = new Place
                                     {
                                         Name = geoName.Name,
+                                        Province = geoName.Province,
                                         Lat = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
                                         Lon = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
                                         Population = geoName.Population

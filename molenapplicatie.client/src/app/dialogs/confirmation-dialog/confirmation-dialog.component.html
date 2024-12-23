@@ -1,0 +1,12 @@
+<div class="confirmation-dialog">
+  <header>{{ data.title }}</header>
+  <div class="content-container">
+    <span>{{ data.message }}</span><br /><br />
+    <span *ngIf="data.api_key_usage">Api token</span>
+    <input *ngIf="data.api_key_usage" class="api_input" type="text" name="username" [(ngModel)]="APIKey" autocomplete="off"/>
+    <div class="dialog-actions">
+      <button class="confirm_btn" (click)="confirm()">Yes</button>
+      <button class="deny_btn" (click)="onClose()">No</button>
+    </div>
+  </div>
+</div>

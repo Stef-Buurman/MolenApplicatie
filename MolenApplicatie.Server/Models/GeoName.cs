@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace MolenApplicatie.Server.Models
 {
@@ -19,6 +18,9 @@ namespace MolenApplicatie.Server.Models
 
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
+        [JsonPropertyName("adminName1")]
+        public string Province { get; set; }
 
         [JsonPropertyName("lat")]
         public string Latitude { get; set; }

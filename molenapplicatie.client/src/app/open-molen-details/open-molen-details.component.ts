@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { MolenImage } from "../../Class/MolenImage";
 import { MolenData } from "../../Interfaces/MolenData";
 import { MolenService } from "../../Services/MolenService";
-import { MolenDialogComponent } from "../molen-dialog/molen-dialog.component";
+import { MolenDialogComponent } from "../dialogs/molen-dialog/molen-dialog.component";
 
 
 @Component({
@@ -14,8 +14,6 @@ import { MolenDialogComponent } from "../molen-dialog/molen-dialog.component";
 })
 export class OpenMolenDetailsComponent implements OnInit {
   selectedTenBruggeNumber: string | undefined;
-  allMolens?: MolenData[];
-  oldmolen!: MolenData;
   constructor(private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
@@ -38,14 +36,26 @@ export class OpenMolenDetailsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe({
-      next: (MolenImages: MolenImage[]) => {
+      next: (goToMolen: string | undefined) => {
+        console.log(goToMolen)
         this.molenService.removeSelectedMolen();
-        this.goBack();
+        if (goToMolen) {
+          this.goToMolen(goToMolen);
+        } else {
+          this.goBack();
+        }
       }
     });
   }
 
+  goToMolen(TBN: string) {
+    const currentUrl = this.router.url.split('/').slice(0, -1).join('/');
+    const targetUrl = `${currentUrl}/${TBN}`;
+    this.router.navigateByUrl(targetUrl);
+  }
+
   goBack() {
-    this.router.navigate(['/']);
+    this.router.navigate(['../'], { relativeTo: this.route });
+    //this.router.navigate(['/']);
   }
 }
