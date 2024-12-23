@@ -1,5 +1,6 @@
 import { MolenData } from "../Interfaces/MolenData";
 import { MolenImage } from "./MolenImage";
+import { MolenMaker } from "./MolenMaker";
 import { MolenType } from "./MolenType";
 
 export class MolenDataClass implements MolenData {
@@ -48,6 +49,7 @@ export class MolenDataClass implements MolenData {
   museuminformatie?: string;
   molenaar?: string;
   eigendomshistorie?: string;
+  molenMakers?: MolenMaker[];
   molenerf?: string;
   trivia?: string;
   geschiedenis?: string;
@@ -125,6 +127,7 @@ export class MolenDataClass implements MolenData {
     museuminformatie?: string,
     molenaar?: string,
     eigendomshistorie?: string,
+    molenMakers?:MolenMaker[],
     molenerf?: string,
     trivia?: string,
     geschiedenis?: string,
@@ -190,6 +193,7 @@ export class MolenDataClass implements MolenData {
     this.museuminformatie = museuminformatie;
     this.molenaar = molenaar;
     this.eigendomshistorie = eigendomshistorie;
+    this.molenMakers = molenMakers;
     this.molenerf = molenerf;
     this.trivia = trivia;
     this.geschiedenis = geschiedenis;

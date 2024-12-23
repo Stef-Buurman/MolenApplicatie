@@ -55,6 +55,13 @@
 
       <p *ngIf="molen.eigenaar"><strong>Eigenaar:</strong> {{ molen.eigenaar }}</p>
 
+      <p><strong>Molen makers:</strong></p>
+      <ul>
+        <li *ngFor="let maker of molen.molenMakers">
+          {{ maker.name }} - {{maker.year}}
+        </li>
+      </ul>
+
       <p *ngIf="molen.opvolger"><strong>Opvolger: </strong> <button class="urlButton" (click)="GoToMolen(molen.opvolger)">{{molen.opvolger}}</button></p>
       <p *ngIf="molen.voorganger"><strong>Voorganger: </strong> <button class="urlButton" (click)="GoToMolen(molen.voorganger)">{{molen.voorganger}}</button></p>
       <p *ngIf="molen.verplaatstNaar"><strong>Verplaatst naar: </strong> <button class="urlButton" (click)="GoToMolen(molen.verplaatstNaar)">{{molen.verplaatstNaar}}</button></p>
