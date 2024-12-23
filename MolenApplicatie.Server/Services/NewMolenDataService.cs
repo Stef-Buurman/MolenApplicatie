@@ -930,7 +930,6 @@ namespace MolenApplicatie.Server.Services
         public async Task<(bool isAlreadyInDB, MolenImage Image)> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, string filePath, string? description = null, bool canBeDeleted = false)
         {
             var nogWaarneembareImages = dd2.SelectNodes(".//img");
-            Console.WriteLine("Nog waarneembare images: " + nogWaarneembareImages?.Count);
             if (nogWaarneembareImages != null && nogWaarneembareImages.Count > 0)
             {
                 var nogWaarneembareImage = nogWaarneembareImages.First();
