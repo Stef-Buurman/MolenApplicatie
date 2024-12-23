@@ -61,6 +61,7 @@ namespace MolenApplicatie.Server.Services
                 var ArticleAbout = doc.DocumentNode.SelectNodes("//article[@class='mill-about']");
                 var ArticleFotos = doc.DocumentNode.SelectNodes("//article[@class='mill-photos']");
                 bool isNogWaarneembaarPrevious = false;
+                bool isGeschiedenisPrevious = false;
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
@@ -358,6 +359,7 @@ namespace MolenApplicatie.Server.Services
                                     newMolenData.Trivia = dd;
                                     break;
                                 case "geschiedenis":
+                                    isGeschiedenisPrevious = true;
                                     newMolenData.Geschiedenis = dd;
                                     var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
                                     if (imageInGeschiedenis.Image != null)
@@ -509,6 +511,26 @@ namespace MolenApplicatie.Server.Services
                                 await _db.UpdateAsync(nogWaarneembareImage.Image);
                             }
                             isNogWaarneembaarPrevious = false;
+                        }else if (isGeschiedenisPrevious && string.IsNullOrEmpty(dt))
+                        {
+                            var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
+                            if (imageInGeschiedenis.Image != null)
+                            {
+                                newMolenData.Images.Add(imageInGeschiedenis.Image);
+                            }
+                            if (imageInGeschiedenis.isAlreadyInDB)
+                            {
+                                await _db.UpdateAsync(imageInGeschiedenis.Image);
+                            }
+                        }
+
+                        if(dt?.ToLower() != "geschiedenis" && isGeschiedenisPrevious)
+                        {
+                            isGeschiedenisPrevious = !isGeschiedenisPrevious;
+                        }
+                        if (dt?.ToLower() != "nog waarneembaar" && isNogWaarneembaarPrevious)
+                        {
+                            isNogWaarneembaarPrevious = !isNogWaarneembaarPrevious;
                         }
                     }
 
@@ -908,6 +930,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<(bool isAlreadyInDB, MolenImage Image)> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, string filePath, string? description = null, bool canBeDeleted = false)
         {
             var nogWaarneembareImages = dd2.SelectNodes(".//img");
+            Console.WriteLine("Nog waarneembare images: " + nogWaarneembareImages?.Count);
             if (nogWaarneembareImages != null && nogWaarneembareImages.Count > 0)
             {
                 var nogWaarneembareImage = nogWaarneembareImages.First();
