@@ -419,13 +419,18 @@ namespace MolenApplicatie.Server.Services
         public async Task<(bool status, string message)> DeleteImageFromMolen(string tbNummer, string imgName)
         {
             MolenData molen = await GetMolenByTBN(tbNummer);
-            var molenImageToDelete = molen.Images.Find(x => x.Name == imgName);
             if (molen == null) return (false, "Molen not found");
-            if (molenImageToDelete == null) return (false, "Images not found");
-            if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath)))
+            var molenImageToDelete = molen.Images.Find(x => x.Name == imgName);
+            var molenAddedImageToDelete = molen.AddedImages.Find(x => x.Name == imgName);
+            if (molenImageToDelete == null && molenAddedImageToDelete == null) return (false, "Images not found");
+            if (molenImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath)))
             {
-                File.Delete(molenImageToDelete.FilePath);
+                File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath));
                 await _db.DeleteAsync(molenImageToDelete);
+            }else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
+            {
+                File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath));
+                await _db.DeleteAsync(molenAddedImageToDelete);
             }
             return (true, "Images deleted");
         }

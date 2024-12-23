@@ -21,6 +21,7 @@ export class SharedDataService {
   }
 
   public IsLoadingFalse() {
+    console.log("x")
     this._IsLoading.next(false);
   }
 }

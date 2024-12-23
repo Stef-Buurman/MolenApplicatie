@@ -121,13 +121,6 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _NewMolenDataService.AddMolenTBNToDB());
         }
 
-        //[FileUploadFilter]
-        //[HttpGet("get_all_molen_data")]
-        //public async Task<IActionResult> GetAllMolenData()
-        //{
-        //    return Ok(await _NewMolenDataService.GetAllMolenData());
-        //}
-
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
         public async Task<IActionResult> DeleteMolenImage(string tbNumber, string imageName)
