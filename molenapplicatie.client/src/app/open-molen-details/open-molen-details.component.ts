@@ -37,7 +37,6 @@ export class OpenMolenDetailsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe({
       next: (goToMolen: string | undefined) => {
-        console.log(goToMolen)
         this.molenService.removeSelectedMolen();
         if (goToMolen) {
           this.goToMolen(goToMolen);
