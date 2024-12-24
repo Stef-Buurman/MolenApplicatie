@@ -216,8 +216,6 @@ namespace MolenApplicatie.Server.Services
                 {
                     foreach (AddedImage addedImg in MolenData[i].AddedImages)
                     {
-                        Console.WriteLine(addedImg.FilePath);
-                        Console.WriteLine(addedImg.DateTaken);
                         if (addedImg.DateTaken == null)
                         {
                             addedImg.DateTaken = GetDateTakenOfImage.GetDateTaken(addedImg.FilePath);

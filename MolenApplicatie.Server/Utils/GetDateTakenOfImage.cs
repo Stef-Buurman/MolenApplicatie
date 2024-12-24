@@ -1,6 +1,5 @@
 ﻿using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
-using SixLabors.ImageSharp;
 
 namespace MolenApplicatie.Server.Utils
 {
@@ -31,7 +30,6 @@ namespace MolenApplicatie.Server.Utils
                     }
                 }
 
-                // If no EXIF data found, fallback to file's last write time
                 return new FileInfo(path).CreationTime;
             }
             catch (Exception ex)
@@ -40,31 +38,6 @@ namespace MolenApplicatie.Server.Utils
             }
 
             return null;
-        }
-
-        public async static Task<IFormFile> SaveMolenImage(string FileDirectory, IFormFile file)
-        {
-            string? dateTaken = null;
-            using (var inputStream = file.OpenReadStream())
-            {
-                var directories = ImageMetadataReader.ReadMetadata(inputStream);
-                var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
-                if (exifSubIfdDirectory != null)
-                {
-                    dateTaken = exifSubIfdDirectory.GetDescription(ExifDirectoryBase.TagDateTimeOriginal);
-                }
-            }
-
-            using var image = await Image.LoadAsync(file.OpenReadStream());
-            if (dateTaken != null)
-            {
-                image.Metadata.ExifProfile = new SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifProfile();
-                image.Metadata.ExifProfile.SetValue(SixLabors.ImageSharp.Metadata.Profiles.Exif.ExifTag.DateTimeOriginal, dateTaken);
-            }
-
-            await image.SaveAsync(FileDirectory);
-
-            return file;
         }
     }
 }
