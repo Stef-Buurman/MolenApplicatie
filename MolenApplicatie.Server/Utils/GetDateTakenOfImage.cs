@@ -1,12 +1,6 @@
 ﻿using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
-using MolenApplicatie.Server.Models;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Metadata;
-using SixLabors.ImageSharp.PixelFormats;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MolenApplicatie.Server.Utils
 {
@@ -16,7 +10,14 @@ namespace MolenApplicatie.Server.Utils
         {
             try
             {
-                if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
+                if (!File.Exists(path) && !File.Exists(CreateCleanPath.CreatePathToWWWROOT(path)))
+                {
+                    throw new FileNotFoundException("File not found.", path);
+                }
+                else if(File.Exists(CreateCleanPath.CreatePathToWWWROOT(path)))
+                {
+                    path = CreateCleanPath.CreatePathToWWWROOT(path);
+                }
 
                 var directories = ImageMetadataReader.ReadMetadata(path);
                 var subIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
