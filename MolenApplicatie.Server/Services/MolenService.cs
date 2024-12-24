@@ -212,6 +212,18 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
+                if(MolenData[i].AddedImages.Count > 0)
+                {
+                    foreach (AddedImage addedImg in MolenData[i].AddedImages)
+                    {
+                        if(addedImg.DateTaken == null)
+                        {
+                            addedImg.DateTaken = GetDateTakenOfImage.GetDateTaken(addedImg.FilePath);
+                            await _db.UpdateAsync(addedImg);
+                        }
+                    }
+                }
+
                 MolenData[i].DisappearedYears = VerdwenenYearInfo.FindAll(info => info.MolenDataId == MolenData[i].Id);
 
             }
