@@ -1084,8 +1084,8 @@ namespace MolenApplicatie.Server.Services
         {
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             List<MolenData> currentData = await _db.Table<MolenData>();
-            List<MolenTBN> Data = await ReadAllMolenTBN();
-            //List<MolenTBN> Data = await _db.Table<MolenTBN>();
+            //List<MolenTBN> Data = await ReadAllMolenTBN();
+            List<MolenTBN> Data = await _db.Table<MolenTBN>();
             int count = 0;
             foreach (MolenTBN tbn in Data)
             {
