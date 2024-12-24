@@ -1,9 +1,5 @@
 ﻿using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Utils;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Metadata;
-using SixLabors.ImageSharp.PixelFormats;
-using System.Text.Json;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -169,9 +165,9 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                foreach (AddedImage addedImg in MolenData[i].AddedImages)
+                foreach(AddedImage addedImg in MolenData[i].AddedImages)
                 {
-                    if (!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
+                    if(!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
                     {
                         await _db.DeleteAsync(addedImg);
                     }
@@ -191,7 +187,7 @@ namespace MolenApplicatie.Server.Services
                         var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
                         string imageFilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imageFile);
                         string imageFileName = Path.GetFileNameWithoutExtension(imageFile);
-                        if (MolenData[i].AddedImages.Find(img => img.FilePath == imageFilePath && img.Name == imageFileName) == null)
+                        if (MolenData[i].AddedImages.Find(img=> img.FilePath == imageFilePath && img.Name == imageFileName) == null)
                         {
                             AddedImage AddedMolenImage = new AddedImage
                             {
@@ -375,45 +371,48 @@ namespace MolenApplicatie.Server.Services
         public async Task<(IFormFile file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)
         {
             var maxSavedFilesAmount = 5;
-            string folderName = folderNameMolenImages;
-
-            if (!Directory.Exists(folderName))
+            using (var memoryStream = new MemoryStream())
             {
-                Directory.CreateDirectory(folderName);
+                string folderName = folderNameMolenImages;
+
+                if (!Directory.Exists(folderName))
+                {
+                    Directory.CreateDirectory(folderName);
+                }
+                folderName += "/" + TBN;
+
+                if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
+                {
+                    return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
+                }
+
+                var fileExtension = Path.GetExtension(file.FileName);
+                if (fileExtension == null ||
+                    (fileExtension.ToLower() != ".jpg"
+                    && fileExtension.ToLower() != ".jpeg"
+                    && fileExtension.ToLower() != ".png")) return (null, "Dit soort bestand wordt niet ondersteund!");
+                await file.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+
+                if (!Directory.Exists(folderName))
+                {
+                    Directory.CreateDirectory(folderName);
+                }
+                var FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
+                while (File.Exists(FileDirectory))
+                {
+                    FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
+                }
+                File.WriteAllBytes(FileDirectory, imageBytes);
+                await _db.InsertAsync(new AddedImage
+                {
+                    FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(FileDirectory),
+                    Name = Path.GetFileNameWithoutExtension(FileDirectory),
+                    DateTaken = GetDateTakenOfImage.GetDateTaken(FileDirectory),
+                    CanBeDeleted = true,
+                    MolenDataId = id
+                });
             }
-            folderName += "/" + TBN;
-
-            if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
-            {
-                return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
-            }
-
-            var fileExtension = Path.GetExtension(file.FileName);
-            if (fileExtension == null ||
-                (fileExtension.ToLower() != ".jpg"
-                && fileExtension.ToLower() != ".jpeg"
-                && fileExtension.ToLower() != ".png")) return (null, "Dit soort bestand wordt niet ondersteund!");
-
-            if (!Directory.Exists(folderName))
-            {
-                Directory.CreateDirectory(folderName);
-            }
-            var FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
-            while (File.Exists(FileDirectory))
-            {
-                FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
-            }
-
-            file = await GetDateTakenOfImage.SaveMolenImage(FileDirectory, file);
-
-            await _db.InsertAsync(new AddedImage
-            {
-                FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(FileDirectory),
-                Name = Path.GetFileNameWithoutExtension(FileDirectory),
-                DateTaken = GetDateTakenOfImage.GetDateTaken(FileDirectory),
-                CanBeDeleted = true,
-                MolenDataId = id
-            });
             return (file, "");
         }
 
@@ -428,8 +427,7 @@ namespace MolenApplicatie.Server.Services
             {
                 File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath));
                 await _db.DeleteAsync(molenImageToDelete);
-            }
-            else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
+            }else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
             {
                 File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath));
                 await _db.DeleteAsync(molenAddedImageToDelete);
