@@ -42,7 +42,7 @@ jobs:
               }
             },
             "FileUploadFilter": {
-              "Authorization": $API_KEY
+              "Authorization": '$API_KEY'
             }
           }
           EOF"
