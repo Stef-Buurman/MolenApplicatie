@@ -27,22 +27,22 @@ jobs:
         run: |
           ssh "$SSH_USER@$SSH_IP" "cat > $APP_SETTINGS_PATH << EOF
           {
-            "Logging": {
-              "LogLevel": {
-                "Default": "Information",
-                "Microsoft.AspNetCore": "Warning"
+            \"Logging\": {
+              \"LogLevel\": {
+                \"Default\": \"Information\",
+                \"Microsoft.AspNetCore\": \"Warning\"
               }
             },
-            "AllowedHosts": "*",
-            "Kestrel": {
-              "Endpoints": {
-                "Http": {
-                  "Url": "http://*:5000"
+            \"AllowedHosts\": \"*\",
+            \"Kestrel\": {
+              \"Endpoints\": {
+                \"Http\": {
+                  \"Url\": \"http://*:5000\"
                 }
               }
             },
-            "FileUploadFilter": {
-              "Authorization": '$API_KEY'
+            \"FileUploadFilter\": {
+              \"Authorization\": \"$API_KEY\"
             }
           }
           EOF"
