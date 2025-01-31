@@ -15,14 +15,14 @@ namespace MolenApplicatie.Server.Filters
                 return;
             }
 
-            var helloOptions =
+            var fileUploadOptions =
               context.RequestServices.GetService<IOptions<FileUploadOptions>>() switch
               {
                   { Value: var __ } => __,
                   _ => new FileUploadOptions() { Authorization = Guid.NewGuid().ToString() }
               };
 
-            if (context.Request.Headers["Authorization"] != helloOptions.Authorization)
+            if (context.Request.Headers["Authorization"] != fileUploadOptions.Authorization)
             {
                 context.Response.StatusCode = 401;
                 return;
