@@ -3,19 +3,12 @@ using SQLite;
 
 namespace MolenApplicatie.Server.Services
 {
-    public class TableInfo
-    {
-        public string name { get; set; }
-        public string type { get; set; }
-    }
     public class DbConnection
     {
-        private readonly HttpClient _client;
         public readonly SQLiteAsyncConnection _db;
 
         public DbConnection(string dbRoute)
         {
-            _client = new HttpClient();
             _db = new SQLiteAsyncConnection(dbRoute);
             InitializeDB().Wait();
         }
