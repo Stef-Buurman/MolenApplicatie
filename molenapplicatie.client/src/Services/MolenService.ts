@@ -1,11 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, Observable, of, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
 import { MolenDataClass } from '../Class/MolenDataClass';
 import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/MolenData';
 import { Toasts } from '../Utils/Toasts';
 import { MapService } from './MapService';
+import { MolensResponseType } from '../Interfaces/MolensResponseType';
 
 @Injectable({
   providedIn: 'root'
@@ -53,17 +54,18 @@ export class MolenService {
     }
   }
 
-  public getAllActiveMolens(): Observable<MolenDataClass[]> {
+  public getAllActiveMolens(): Observable<MolenData[]> {
     const currentTime = Date.now();
     const needsRefresh = !this.activeMolens?.LastUpdatedTimestamp ||
       (currentTime - this.activeMolens.LastUpdatedTimestamp) > this.refreshInterval;
 
     if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/active').pipe(
-        tap((activeMolens) => {
-          this.activeMolens = new SavedMolens(currentTime, activeMolens);
+      return this.http.get<MolensResponseType>('/api/molen/active').pipe(
+        tap((molensResponseType) => {
+          this.activeMolens = new SavedMolens(currentTime, molensResponseType.molens);
           this.lastUpdatedTimestamp = currentTime;
-        })
+        }),
+        map(molensResponseType => molensResponseType.molens)
       );
     } else {
       return of(this.activeMolens?.Molens!);
@@ -76,11 +78,12 @@ export class MolenService {
       (currentTime - this.existingMolens.LastUpdatedTimestamp) > this.refreshInterval;
 
     if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/existing').pipe(
-        tap((existingMolens) => {
-          this.existingMolens = new SavedMolens(currentTime, existingMolens);
+      return this.http.get<MolensResponseType>('/api/molen/existing').pipe(
+        tap((molensResponseType) => {
+          this.existingMolens = new SavedMolens(currentTime, molensResponseType.molens);
           this.lastUpdatedTimestamp = currentTime;
-        })
+        }),
+        map(molensResponseType => molensResponseType.molens)
       );
     } else {
       return of(this.existingMolens?.Molens!);
@@ -94,11 +97,12 @@ export class MolenService {
       (currentTime - provincieMolens.LastUpdatedTimestamp) > this.refreshInterval) || provincieMolens == undefined;
 
     if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/disappeared/' + provincie).pipe(
-        tap((desappearedMolens) => {
-          this.disappearedMolens[provincie] = new SavedMolens(currentTime, desappearedMolens);
+      return this.http.get<MolensResponseType>('/api/molen/disappeared/' + provincie).pipe(
+        tap((molensResponseType) => {
+          this.disappearedMolens[provincie] = new SavedMolens(currentTime, molensResponseType.molens);
           this.lastUpdatedTimestamp = currentTime;
-        })
+        }),
+        map(molensResponseType => molensResponseType.molens)
       );
     } else {
       return of(this.disappearedMolens[provincie]?.Molens!);
@@ -111,31 +115,15 @@ export class MolenService {
       (currentTime - this.remainderMolens.LastUpdatedTimestamp) > this.refreshInterval;
 
     if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/remainder').pipe(
-        tap((remainderMolens) => {
-          this.remainderMolens = new SavedMolens(currentTime, remainderMolens);
+      return this.http.get<MolensResponseType>('/api/molen/remainder').pipe(
+        tap((molensResponseType) => {
+          this.remainderMolens = new SavedMolens(currentTime, molensResponseType.molens);
           this.lastUpdatedTimestamp = currentTime;
-        })
+        }),
+        map(molensResponseType => molensResponseType.molens)
       );
     } else {
       return of(this.remainderMolens?.Molens!);
-    }
-  }
-
-  public getAllMolens(): Observable<MolenDataClass[]> {
-    const currentTime = Date.now();
-    const needsRefresh = !this.lastUpdatedTimestamp ||
-      (currentTime - this.lastUpdatedTimestamp) > this.refreshInterval;
-
-    if (needsRefresh) {
-      return this.http.get<MolenDataClass[]>('/api/molen/all').pipe(
-        tap((molens) => {
-          this.allMolens = new SavedMolens(currentTime, molens);
-          this.lastUpdatedTimestamp = currentTime;
-        })
-      );
-    } else {
-      return of(this.allMolens?.Molens!);
     }
   }
 
