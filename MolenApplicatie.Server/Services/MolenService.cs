@@ -165,9 +165,9 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                foreach(AddedImage addedImg in MolenData[i].AddedImages)
+                foreach (AddedImage addedImg in MolenData[i].AddedImages)
                 {
-                    if(!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
+                    if (!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
                     {
                         await _db.DeleteAsync(addedImg);
                     }
@@ -187,7 +187,7 @@ namespace MolenApplicatie.Server.Services
                         var gottenDate = GetDateTakenOfImage.GetDateTaken(imageFile);
                         string imageFilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imageFile);
                         string imageFileName = Path.GetFileNameWithoutExtension(imageFile);
-                        if (MolenData[i].AddedImages.Find(img=> img.FilePath == imageFilePath && img.Name == imageFileName) == null)
+                        if (MolenData[i].AddedImages.Find(img => img.FilePath == imageFilePath && img.Name == imageFileName) == null)
                         {
                             AddedImage AddedMolenImage = new AddedImage
                             {
@@ -212,7 +212,7 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                if(MolenData[i].AddedImages.Count > 0)
+                if (MolenData[i].AddedImages.Count > 0)
                 {
                     foreach (AddedImage addedImg in MolenData[i].AddedImages)
                     {
@@ -382,7 +382,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<(IFormFile file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)
         {
-            var maxSavedFilesAmount = 5;
+            var maxSavedFilesCount = 5;
             using (var memoryStream = new MemoryStream())
             {
                 string folderName = folderNameMolenImages;
@@ -393,7 +393,7 @@ namespace MolenApplicatie.Server.Services
                 }
                 folderName += "/" + TBN;
 
-                if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesAmount)
+                if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesCount)
                 {
                     return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
                 }
@@ -439,12 +439,72 @@ namespace MolenApplicatie.Server.Services
             {
                 File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath));
                 await _db.DeleteAsync(molenImageToDelete);
-            }else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
+            }
+            else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
             {
                 File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath));
                 await _db.DeleteAsync(molenAddedImageToDelete);
             }
             return (true, "Images deleted");
+        }
+
+        private async Task<int> GetCountOfActiveMolensWithImages() => await _db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM MolenData WHERE Toestand = 'Werkend' AND Id IN " +"(SELECT MolenDataId FROM MolenImage)");
+
+        private async Task<int> GetCountOfRemainderMolensWithImage() => await _db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM MolenData WHERE Toestand = 'Restant' AND Id IN " +"(SELECT MolenDataId FROM MolenImage)");
+
+        private async Task<int> GetCountOfActiveMolens() => await _db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM MolenData WHERE Toestand = 'Werkend'");
+
+        private async Task<int> GetCountOfRemainderMolens() => await _db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM MolenData WHERE Toestand = 'Restant'");
+
+        private async Task<List<CountDisappearedMolens>> GetCountOfDisappearedMolens()
+        {
+            List<string> provincies = await GetAllMolenProvincies();
+            List<CountDisappearedMolens> disappearedMolens = new List<CountDisappearedMolens>();
+            foreach (string provincie in provincies)
+            {
+                Console.WriteLine(provincie);
+                int count = await _db.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM MolenData WHERE Toestand = 'Verdwenen' AND Provincie = ?", new object[] { provincie });
+                disappearedMolens.Add(new CountDisappearedMolens
+                {
+                    Provincie = provincie,
+                    Count = count
+                });
+            }
+            return disappearedMolens;
+        }
+
+
+        public async Task<MolensResponseType> MolensResponse(List<MolenData> molens)
+        {
+            int activeMolensWithImage = await GetCountOfActiveMolensWithImages();
+            int remainderMolensWithImage = await GetCountOfRemainderMolensWithImage();
+            int totalMolensWithImage = activeMolensWithImage + remainderMolensWithImage;
+
+            int totalActiveMolens = await GetCountOfActiveMolens();
+            int totalRemainderMolens = await GetCountOfRemainderMolens();
+            int totalExistingMolens = totalActiveMolens + totalRemainderMolens;
+
+            List<CountDisappearedMolens> totalDisappearedMolens = await GetCountOfDisappearedMolens();
+
+            int totalMolens = totalMolensWithImage + totalExistingMolens;
+            totalDisappearedMolens.ForEach(x => totalMolens += x.Count);
+            return new MolensResponseType
+            {
+                Molens = molens,
+                ActiveMolensWithImage = activeMolensWithImage,
+                RemainderMolensWithImage = remainderMolensWithImage,
+                TotalMolensWithImage = totalMolensWithImage,
+                TotalCountActiveMolens = totalActiveMolens,
+                TotalCountRemainderMolens = totalRemainderMolens,
+                TotalCountExistingMolens = totalExistingMolens,
+                TotalCountDisappearedMolens = totalDisappearedMolens,
+                TotalCountMolens = totalMolens
+            };
         }
     }
 }

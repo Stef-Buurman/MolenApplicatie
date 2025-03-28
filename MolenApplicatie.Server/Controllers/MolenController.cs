@@ -23,7 +23,7 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetAllMolensByProvincie(string provincie)
         {
             var molenData = await _MolenService.GetAllMolenDataByProvincie(provincie);
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [FileUploadFilter]
@@ -31,21 +31,21 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetAllMolens()
         {
             var molenData = await _MolenService.GetAllMolenData();
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("active")]
         public async Task<IActionResult> GetAllActiveMolens()
         {
             var molenData = await _MolenService.GetAllActiveMolenData();
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("existing")]
         public async Task<IActionResult> GetAllExistingMolens()
         {
             var molenData = await _MolenService.GetAllExistingMolens();
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
 
@@ -53,14 +53,14 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetAllDisappearedMolens(string provincie)
         {
             var molenData = await _MolenService.GetAllDisappearedMolens(provincie);
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("remainder")]
         public async Task<IActionResult> GetAllRemainderMolens()
         {
             var molenData = await _MolenService.GetAllRemainderMolens();
-            return Ok(molenData);
+            return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("all_molen_locations")]

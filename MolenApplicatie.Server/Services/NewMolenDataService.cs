@@ -1123,10 +1123,10 @@ namespace MolenApplicatie.Server.Services
         {
             List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
 
-            int amountDivsAtNull = 0;
+            int countDivsAtNull = 0;
             int i = 1;
 
-            while (amountDivsAtNull <= 1)
+            while (countDivsAtNull <= 1)
             {
                 Thread.Sleep(500);
                 HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?page=" + i);
@@ -1137,7 +1137,7 @@ namespace MolenApplicatie.Server.Services
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
                 if (divs == null || divs.Count() == 0)
                 {
-                    amountDivsAtNull++;
+                    countDivsAtNull++;
                 }
                 if (divs != null)
                 {
@@ -1175,10 +1175,10 @@ namespace MolenApplicatie.Server.Services
         {
             List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
 
-            int amountDivsAtNull = 0;
+            int countDivsAtNull = 0;
             int i = 1;
 
-            while (amountDivsAtNull <= 1)
+            while (countDivsAtNull <= 1)
             {
                 HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -1188,7 +1188,7 @@ namespace MolenApplicatie.Server.Services
                 var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
                 if (divs == null || divs.Count() == 0)
                 {
-                    amountDivsAtNull++;
+                    countDivsAtNull++;
                 }
                 if (divs != null)
                 {
