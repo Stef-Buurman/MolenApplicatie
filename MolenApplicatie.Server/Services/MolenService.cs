@@ -175,6 +175,14 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
+                foreach (MolenImage IMG in MolenData[i].Images)
+                {
+                    if (!File.Exists(CreateCleanPath.CreatePathToWWWROOT(IMG.FilePath)))
+                    {
+                        await _db.DeleteAsync(IMG);
+                    }
+                }
+
                 foreach (AddedImage addedImg in MolenData[i].AddedImages)
                 {
                     if (!File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImg.FilePath)))
