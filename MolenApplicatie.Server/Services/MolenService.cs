@@ -115,7 +115,17 @@ namespace MolenApplicatie.Server.Services
                 var associations = MolenTypeAssociations.FindAll(type => type.MolenDataId == MolenData[i].Id);
                 MolenData[i].ModelType = MolenTypes.FindAll(type => associations.Find(assoc => assoc.MolenTypeId == type.Id) != null);
                 MolenData[i].Images = AllMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
+                var duplicateImages = MolenData[i].Images.GroupBy(x => x.Name).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                foreach (var duplicateImage in duplicateImages)
+                {
+                    await _db.DeleteAsync(duplicateImage);
+                }
                 MolenData[i].AddedImages = AllAddedMolenImages.FindAll(image => image.MolenDataId == MolenData[i].Id);
+                var duplicateAddedImages = MolenData[i].AddedImages.GroupBy(x => x.Name).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                foreach (var duplicateImage in duplicateAddedImages)
+                {
+                    await _db.DeleteAsync(duplicateImage);
+                }
                 MolenData[i].MolenMakers = AllMolenMakers.FindAll(maker => maker.MolenDataId == MolenData[i].Id);
                 var imagePath = $"{Globals.MolenImagesFolder}/{MolenData[i].Ten_Brugge_Nr}";
                 if (Directory.Exists(imagePath))
