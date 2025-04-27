@@ -1,4 +1,5 @@
-﻿using MolenApplicatie.Server.Models;
+﻿using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
@@ -9,13 +10,15 @@ namespace MolenApplicatie.Server.Services
         private readonly HttpClient _client;
         private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
         private List<string> allowedTypes = new List<string>();
+        private readonly MolenDbContext _dbContext;
 
         private DbConnection _db;
 
-        public MolenService()
+        public MolenService(MolenDbContext dbContext)
         {
             _client = new HttpClient();
             _db = new DbConnection(Globals.DBAlleMolens);
+            _dbContext = dbContext;
         }
 
         public async Task<List<string>> GetAllMolenProvincies()
@@ -38,6 +41,7 @@ namespace MolenApplicatie.Server.Services
             List<MolenData> MolenData = await _db.Table<MolenData>();
 
             return await GetAllMolenData(MolenData);
+            //return _dbContext.MolenData.ToList();
         }
 
         public async Task<List<MolenData>> GetAllMolenData(List<MolenData> MolenData)
@@ -51,7 +55,7 @@ namespace MolenApplicatie.Server.Services
                     $"SELECT * FROM MolenType WHERE Id IN ({string.Join(',', molenTypeIds)})");
 
             List<VerdwenenYearInfo> MolenYearInfos = await _db.QueryAsync<VerdwenenYearInfo>(
-                    $"SELECT * FROM VerdwenenYearInfo WHERE Id IN ({string.Join(',', molenIds)})");
+                    $"SELECT * FROM DisappearedYearInfo WHERE Id IN ({string.Join(',', molenIds)})");
 
             List<MolenImage> AllMolenImages = await _db.QueryAsync<MolenImage>(
                     $"SELECT * FROM MolenImage WHERE MolenDataId IN ({string.Join(',', molenIds)})");
@@ -345,7 +349,7 @@ namespace MolenApplicatie.Server.Services
                 }
             }
 
-            molen.DisappearedYears = await _db.QueryAsync<VerdwenenYearInfo>("SELECT * FROM VerdwenenYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
+            molen.DisappearedYears = await _db.QueryAsync<VerdwenenYearInfo>("SELECT * FROM DisappearedYearInfo WHERE MolenDataId = ?", new object[] { molen.Id });
 
             molen.MolenMakers = await _db.QueryAsync<MolenMaker>("SELECT * FROM MolenMaker WHERE MolenDataId = ?", new object[] { molen.Id });
 
