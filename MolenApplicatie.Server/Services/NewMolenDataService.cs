@@ -20,12 +20,12 @@ namespace MolenApplicatie.Server.Services
         private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
         private List<string> allverdwenenMolens = new List<string>();
 
-        public NewMolenDataService()
+        public NewMolenDataService(MolenService molenService, PlacesService placesService)
         {
             _client = new HttpClient();
             _db = new DbConnection(Globals.DBAlleMolens);
-            _molenService = new MolenService();
-            _placesService = new PlacesService();
+            _molenService = molenService;
+            _placesService = placesService;
         }
 
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
