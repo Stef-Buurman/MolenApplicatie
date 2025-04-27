@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 
@@ -21,6 +23,13 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 10485760;
 });
 builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
+
+string connectionString = "server=localhost;user=root;database=molen_database;port=3306;password=";
+builder.Services.AddDbContext<MolenDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
+
+builder.Services.AddTransient<MolenDbContext>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
