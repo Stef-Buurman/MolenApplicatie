@@ -7,6 +7,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
     public class MolenMaker
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Year { get; set; }

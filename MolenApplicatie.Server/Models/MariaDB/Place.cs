@@ -10,8 +10,8 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public int Id { get; set; }
         public string Name { get; set; }
         public string Province { get; set; }
-        public double Lat { get; set; }
-        public double Lon { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
         public int Population { get; set; }
     }
 }

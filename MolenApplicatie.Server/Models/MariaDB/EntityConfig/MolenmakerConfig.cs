@@ -9,7 +9,7 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
         {
             builder.HasOne(m => m.MolenData)
                 .WithMany(md => md.MolenMakers)
-                .HasForeignKey(md => md.Id)
+                .HasForeignKey(md => md.MolenDataId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
