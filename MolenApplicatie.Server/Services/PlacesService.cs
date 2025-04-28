@@ -39,12 +39,12 @@ namespace MolenApplicatie.Server.Services
             "Zeeland"
         };
 
-        public async Task<List<Place>> ReadAllNetherlandsPlaces()
+        public async Task<List<PlaceOld>> ReadAllNetherlandsPlaces()
         {
             int maxRows = 1000;
             int startRow = 0;
             int totalResults = -1;
-            List<Place> places = await _db.Table<Place>();
+            List<PlaceOld> places = await _db.Table<PlaceOld>();
 
             while (startRow < 5000 || totalResults == -1)
             {
@@ -63,7 +63,7 @@ namespace MolenApplicatie.Server.Services
                         {
                             if (places.Find(x=> x.Name == geoName.Name) == null)
                             { 
-                                var place = new Place
+                                var place = new PlaceOld
                                 {
                                     Name = geoName.Name,
                                     Province = geoName.Province,
@@ -107,7 +107,7 @@ namespace MolenApplicatie.Server.Services
                             {
                                 if (places.Find(x => x.Name == geoName.Name) == null)
                                 {
-                                    var place = new Place
+                                    var place = new PlaceOld
                                     {
                                         Name = geoName.Name,
                                         Province = geoName.Province,
@@ -130,32 +130,32 @@ namespace MolenApplicatie.Server.Services
                 }
             }
 
-            return await _db.Table<Place>();
+            return await _db.Table<PlaceOld>();
         }
 
-        public async Task<List<Place>> GetPlacesByProvince(string province)
+        public async Task<List<PlaceOld>> GetPlacesByProvince(string province)
         {
-            return await _db.QueryAsync<Place>($"SELECT * FROM Place WHERE Name LIKE '%{province}%'");
+            return await _db.QueryAsync<PlaceOld>($"SELECT * FROM PlaceOld WHERE Name LIKE '%{province}%'");
         }
 
-        public async Task<List<Place>> GetPlacesByType(string type)
+        public async Task<List<PlaceOld>> GetPlacesByType(string type)
         {
-            return await _db.QueryAsync<Place>($"SELECT * FROM Place WHERE Name LIKE '%{type}%'");
+            return await _db.QueryAsync<PlaceOld>($"SELECT * FROM PlaceOld WHERE Name LIKE '%{type}%'");
         }
 
-        public async Task<Place> GetPlaceByName(string name)
+        public async Task<PlaceOld> GetPlaceByName(string name)
         {
-            return await _db.FindWithQueryAsync<Place>($"SELECT * FROM Place WHERE Name = '{name}'");
+            return await _db.FindWithQueryAsync<PlaceOld>($"SELECT * FROM PlaceOld WHERE Name = '{name}'");
         }
 
-        public async Task<Place> GetPlaceById(int id)
+        public async Task<PlaceOld> GetPlaceById(int id)
         {
-            return await _db.FindWithQueryAsync<Place>($"SELECT * FROM Place WHERE Id = {id}");
+            return await _db.FindWithQueryAsync<PlaceOld>($"SELECT * FROM PlaceOld WHERE Id = {id}");
         }
 
-        public async Task<List<Place>> GetAllNetherlandsPlaces()
+        public async Task<List<PlaceOld>> GetAllNetherlandsPlaces()
         {
-            return await _db.Table<Place>();
+            return await _db.Table<PlaceOld>();
         }
     }
 }

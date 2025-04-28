@@ -17,16 +17,16 @@ namespace MolenApplicatie.Server.Services
         {
             try
             {
-                await _db.CreateTableAsync<MolenTBN>();
-                await _db.CreateTableAsync<MolenData>();
-                await _db.CreateTableAsync<MolenType>();
-                await _db.CreateTableAsync<MolenTypeAssociation>();
-                await _db.CreateTableAsync<LastSearchedForNewData>();
-                await _db.CreateTableAsync<Place>();
-                await _db.CreateTableAsync<VerdwenenYearInfo>();
-                await _db.CreateTableAsync<MolenMaker>();
-                await _db.CreateTableAsync<MolenImage>();
-                await _db.CreateTableAsync<AddedImage>();
+                await _db.CreateTableAsync<MolenTBNOld>();
+                await _db.CreateTableAsync<MolenDataOld>();
+                await _db.CreateTableAsync<MolenTypeOld>();
+                await _db.CreateTableAsync<MolenTypeAssociationOld>();
+                await _db.CreateTableAsync<LastSearchedForNewDataOld>();
+                await _db.CreateTableAsync<PlaceOld>();
+                await _db.CreateTableAsync<VerdwenenYearInfoOld>();
+                await _db.CreateTableAsync<MolenMakerOld>();
+                await _db.CreateTableAsync<MolenImageOld>();
+                await _db.CreateTableAsync<AddedImageOld>();
             }
             catch (Exception ex)
             {
