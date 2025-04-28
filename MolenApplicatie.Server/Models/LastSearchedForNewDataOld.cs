@@ -2,7 +2,7 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class LastSearchedForNewData
+    public class LastSearchedForNewDataOld
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

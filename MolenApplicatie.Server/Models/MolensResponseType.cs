@@ -10,7 +10,7 @@
         public List<CountDisappearedMolens> TotalCountDisappearedMolens { get; set; }
         public int TotalCountExistingMolens { get; set; }
         public int TotalCountMolens { get; set; }
-        public List<MolenData> Molens { get; set; }
+        public List<MolenDataOld> Molens { get; set; }
     }
 
     public class CountDisappearedMolens

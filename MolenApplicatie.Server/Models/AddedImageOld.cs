@@ -2,7 +2,7 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class AddedImage
+    public class AddedImageOld
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
