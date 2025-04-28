@@ -32,15 +32,11 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<bool>("IsAddedImage")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MolenDataId")
                         .HasColumnType("int");
@@ -66,11 +62,9 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Status_after")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Status_before")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int>("Year")
@@ -104,31 +98,24 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Adres")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("AfkomstigVan")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("As")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("BedieningKruiwerk")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Bedrijfsvaardigheid")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Bijzonderheden")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Bouwbestek")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<int?>("Bouwjaar")
@@ -144,75 +131,60 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Doel")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Eigenaar")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Eigendomshistorie")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Functie")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Gemeente")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Geschiedenis")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("HerbouwdJaar")
                         .HasColumnType("longtext");
 
                     b.Property<string>("KadastraleAanduiding")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Krachtbron")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Kruiwerk")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("LandschappelijkeWaarde")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<double>("Lat")
+                    b.Property<double>("Latitude")
                         .HasColumnType("double");
 
                     b.Property<string>("Literatuur")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<double>("Long")
+                    b.Property<double>("Longitude")
                         .HasColumnType("double");
 
                     b.Property<string>("Molenaar")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Molenerf")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Monument")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Museuminformatie")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
@@ -232,51 +204,39 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Openingstijden")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Opvolger")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Plaats")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PlaatsBediening")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PlaatsKruiwerk")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Plaatsaanduiding")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PlaatsenVoorheen")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Provincie")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Rad")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("RadDiameter")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("RecenteWerkzaamheden")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Streek")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Ten_Brugge_Nr")
@@ -284,67 +244,51 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("Toegangsprijzen")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ToelichtingNaam")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Toestand")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Trivia")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("UniekeEigenschap")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("VerplaatstNaar")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Vlucht")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Voorganger")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Wateras")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Website")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Wederopbouw")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Wetenswaardigheden")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("WiekVerbeteringen")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Wieken")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Wiekvorm")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("WinkelInformatie")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -364,7 +308,6 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ExternalUrl")
@@ -374,9 +317,6 @@ namespace MolenApplicatie.Server.Migrations
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<bool>("IsAddedImage")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MolenDataId")
                         .HasColumnType("int");
@@ -395,6 +335,7 @@ namespace MolenApplicatie.Server.Migrations
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenMaker", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     b.Property<int>("MolenDataId")
@@ -409,6 +350,8 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MolenDataId");
 
                     b.ToTable("molen_maker");
                 });
@@ -481,10 +424,10 @@ namespace MolenApplicatie.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<double>("Lat")
+                    b.Property<double>("Latitude")
                         .HasColumnType("double");
 
-                    b.Property<double>("Lon")
+                    b.Property<double>("Longitude")
                         .HasColumnType("double");
 
                     b.Property<string>("Name")
@@ -542,7 +485,7 @@ namespace MolenApplicatie.Server.Migrations
                 {
                     b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
                         .WithMany("MolenMakers")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("MolenDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
