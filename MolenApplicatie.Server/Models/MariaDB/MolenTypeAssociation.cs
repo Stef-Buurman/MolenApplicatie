@@ -7,6 +7,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
     public class MolenTypeAssociation
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MolenTypeAssociationId { get; set; }
         public int MolenDataId { get; set; }
         public int MolenTypeId { get; set; }

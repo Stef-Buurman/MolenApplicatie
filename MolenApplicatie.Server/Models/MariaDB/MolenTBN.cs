@@ -7,6 +7,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
     public class MolenTBN
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Ten_Brugge_Nr { get; set; }
         public MolenData MolenData { get; set; }
