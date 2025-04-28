@@ -39,118 +39,118 @@ namespace MolenApplicatie.Server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ToelichtingNaam = table.Column<string>(type: "longtext", nullable: false)
+                    ToelichtingNaam = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Bouwjaar = table.Column<int>(type: "int", nullable: true),
                     HerbouwdJaar = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     BouwjaarStart = table.Column<int>(type: "int", nullable: true),
                     BouwjaarEinde = table.Column<int>(type: "int", nullable: true),
-                    Functie = table.Column<string>(type: "longtext", nullable: false)
+                    Functie = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Doel = table.Column<string>(type: "longtext", nullable: false)
+                    Doel = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Toestand = table.Column<string>(type: "longtext", nullable: false)
+                    Toestand = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Bedrijfsvaardigheid = table.Column<string>(type: "longtext", nullable: false)
+                    Bedrijfsvaardigheid = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Plaats = table.Column<string>(type: "longtext", nullable: false)
+                    Plaats = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Adres = table.Column<string>(type: "longtext", nullable: false)
+                    Adres = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Provincie = table.Column<string>(type: "longtext", nullable: false)
+                    Provincie = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Gemeente = table.Column<string>(type: "longtext", nullable: false)
+                    Gemeente = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Streek = table.Column<string>(type: "longtext", nullable: false)
+                    Streek = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Plaatsaanduiding = table.Column<string>(type: "longtext", nullable: false)
+                    Plaatsaanduiding = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Opvolger = table.Column<string>(type: "longtext", nullable: false)
+                    Opvolger = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Voorganger = table.Column<string>(type: "longtext", nullable: false)
+                    Voorganger = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    VerplaatstNaar = table.Column<string>(type: "longtext", nullable: false)
+                    VerplaatstNaar = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    AfkomstigVan = table.Column<string>(type: "longtext", nullable: false)
+                    AfkomstigVan = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Literatuur = table.Column<string>(type: "longtext", nullable: false)
+                    Literatuur = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlaatsenVoorheen = table.Column<string>(type: "longtext", nullable: false)
+                    PlaatsenVoorheen = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Wiekvorm = table.Column<string>(type: "longtext", nullable: false)
+                    Wiekvorm = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    WiekVerbeteringen = table.Column<string>(type: "longtext", nullable: false)
+                    WiekVerbeteringen = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Monument = table.Column<string>(type: "longtext", nullable: false)
+                    Monument = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlaatsBediening = table.Column<string>(type: "longtext", nullable: false)
+                    PlaatsBediening = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    BedieningKruiwerk = table.Column<string>(type: "longtext", nullable: false)
+                    BedieningKruiwerk = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    PlaatsKruiwerk = table.Column<string>(type: "longtext", nullable: false)
+                    PlaatsKruiwerk = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Kruiwerk = table.Column<string>(type: "longtext", nullable: false)
+                    Kruiwerk = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Vlucht = table.Column<string>(type: "longtext", nullable: false)
+                    Vlucht = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Openingstijden = table.Column<string>(type: "longtext", nullable: false)
+                    Openingstijden = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     OpenVoorPubliek = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     OpenOpZaterdag = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     OpenOpZondag = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     OpenOpAfspraak = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Krachtbron = table.Column<string>(type: "longtext", nullable: false)
+                    Krachtbron = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Website = table.Column<string>(type: "longtext", nullable: false)
+                    Website = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    WinkelInformatie = table.Column<string>(type: "longtext", nullable: false)
+                    WinkelInformatie = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Bouwbestek = table.Column<string>(type: "longtext", nullable: false)
+                    Bouwbestek = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Bijzonderheden = table.Column<string>(type: "longtext", nullable: false)
+                    Bijzonderheden = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Museuminformatie = table.Column<string>(type: "longtext", nullable: false)
+                    Museuminformatie = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Molenaar = table.Column<string>(type: "longtext", nullable: false)
+                    Molenaar = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Eigendomshistorie = table.Column<string>(type: "longtext", nullable: false)
+                    Eigendomshistorie = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Molenerf = table.Column<string>(type: "longtext", nullable: false)
+                    Molenerf = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Trivia = table.Column<string>(type: "longtext", nullable: false)
+                    Trivia = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Geschiedenis = table.Column<string>(type: "longtext", nullable: false)
+                    Geschiedenis = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Wetenswaardigheden = table.Column<string>(type: "longtext", nullable: false)
+                    Wetenswaardigheden = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Wederopbouw = table.Column<string>(type: "longtext", nullable: false)
+                    Wederopbouw = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    As = table.Column<string>(type: "longtext", nullable: false)
+                    As = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Wieken = table.Column<string>(type: "longtext", nullable: false)
+                    Wieken = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Toegangsprijzen = table.Column<string>(type: "longtext", nullable: false)
+                    Toegangsprijzen = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    UniekeEigenschap = table.Column<string>(type: "longtext", nullable: false)
+                    UniekeEigenschap = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    LandschappelijkeWaarde = table.Column<string>(type: "longtext", nullable: false)
+                    LandschappelijkeWaarde = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    KadastraleAanduiding = table.Column<string>(type: "longtext", nullable: false)
+                    KadastraleAanduiding = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CanAddImages = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Eigenaar = table.Column<string>(type: "longtext", nullable: false)
+                    Eigenaar = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    RecenteWerkzaamheden = table.Column<string>(type: "longtext", nullable: false)
+                    RecenteWerkzaamheden = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Rad = table.Column<string>(type: "longtext", nullable: false)
+                    Rad = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    RadDiameter = table.Column<string>(type: "longtext", nullable: false)
+                    RadDiameter = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Wateras = table.Column<string>(type: "longtext", nullable: false)
+                    Wateras = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Lat = table.Column<double>(type: "double", nullable: false),
-                    Long = table.Column<double>(type: "double", nullable: false),
+                    Latitude = table.Column<double>(type: "double", nullable: false),
+                    Longitude = table.Column<double>(type: "double", nullable: false),
                     LastUpdated = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
@@ -170,8 +170,8 @@ namespace MolenApplicatie.Server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Province = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Lat = table.Column<double>(type: "double", nullable: false),
-                    Lon = table.Column<double>(type: "double", nullable: false),
+                    Latitude = table.Column<double>(type: "double", nullable: false),
+                    Longitude = table.Column<double>(type: "double", nullable: false),
                     Population = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -193,10 +193,9 @@ namespace MolenApplicatie.Server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CanBeDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     DateTaken = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    Description = table.Column<string>(type: "longtext", nullable: false)
+                    Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MolenDataId = table.Column<int>(type: "int", nullable: false),
-                    IsAddedImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    MolenDataId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -216,10 +215,10 @@ namespace MolenApplicatie.Server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Status_before = table.Column<string>(type: "longtext", nullable: false)
+                    Status_before = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Year = table.Column<int>(type: "int", nullable: false),
-                    Status_after = table.Column<string>(type: "longtext", nullable: false)
+                    Status_after = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     MolenDataId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -268,12 +267,11 @@ namespace MolenApplicatie.Server.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CanBeDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Description = table.Column<string>(type: "longtext", nullable: false)
+                    Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ExternalUrl = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MolenDataId = table.Column<int>(type: "int", nullable: false),
-                    IsAddedImage = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    MolenDataId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -291,7 +289,8 @@ namespace MolenApplicatie.Server.Migrations
                 name: "molen_maker",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Year = table.Column<string>(type: "longtext", nullable: false)
@@ -302,8 +301,8 @@ namespace MolenApplicatie.Server.Migrations
                 {
                     table.PrimaryKey("PK_molen_maker", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_molen_maker_molen_data_Id",
-                        column: x => x.Id,
+                        name: "FK_molen_maker_molen_data_MolenDataId",
+                        column: x => x.MolenDataId,
                         principalTable: "molen_data",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -377,6 +376,11 @@ namespace MolenApplicatie.Server.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_molen_image_MolenDataId",
                 table: "molen_image",
+                column: "MolenDataId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_molen_maker_MolenDataId",
+                table: "molen_maker",
                 column: "MolenDataId");
 
             migrationBuilder.CreateIndex(
