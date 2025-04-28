@@ -2,7 +2,7 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class Place
+    public class PlaceOld
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

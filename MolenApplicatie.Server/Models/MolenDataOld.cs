@@ -2,7 +2,7 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class MolenData
+    public class MolenDataOld
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -64,18 +64,18 @@ namespace MolenApplicatie.Server.Models
         public bool CanAddImages { get; set; }
 
         [Ignore]
-        public List<MolenImage> Images { get; set; }
+        public List<MolenImageOld> Images { get; set; }
         [Ignore]
-        public List<MolenType> ModelType { get; set; } = new List<MolenType>();
+        public List<MolenTypeOld> ModelType { get; set; } = new List<MolenTypeOld>();
 
         [Ignore]
-        public List<AddedImage> AddedImages { get; set; } = new List<AddedImage>();
+        public List<AddedImageOld> AddedImages { get; set; } = new List<AddedImageOld>();
 
         [Ignore]
-        public List<VerdwenenYearInfo> DisappearedYears { get; set; } = new List<VerdwenenYearInfo>();
+        public List<VerdwenenYearInfoOld> DisappearedYears { get; set; } = new List<VerdwenenYearInfoOld>();
 
         [Ignore]
-        public List<MolenMaker> MolenMakers { get; set; } = new List<MolenMaker>();
+        public List<MolenMakerOld> MolenMakers { get; set; } = new List<MolenMakerOld>();
 
         [Ignore]
         public bool HasImage { get; set; }

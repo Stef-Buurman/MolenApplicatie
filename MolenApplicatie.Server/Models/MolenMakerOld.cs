@@ -2,13 +2,12 @@
 
 namespace MolenApplicatie.Server.Models
 {
-    public class VerdwenenYearInfo
+    public class MolenMakerOld
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
-        public string Status_before { get; set; }
-        public int Year { get; set; }
-        public string Status_after { get; set; }
+        public string Name { get; set; }
+        public string Year { get; set; }
         public int MolenDataId { get; set; }
     }
 }
