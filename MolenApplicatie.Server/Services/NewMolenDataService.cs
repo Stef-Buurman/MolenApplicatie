@@ -6,6 +6,9 @@ using System.Globalization;
 using HtmlAgilityPack;
 using System.Security.Cryptography;
 using System.Reflection;
+using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -19,25 +22,416 @@ namespace MolenApplicatie.Server.Services
         private readonly DbConnection _db;
         private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
         private List<string> allverdwenenMolens = new List<string>();
+        private readonly MolenDbContext _dbContext;
 
-        public NewMolenDataService(MolenService molenService, PlacesService placesService)
+        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext)
         {
             _client = new HttpClient();
             _db = new DbConnection(Globals.DBAlleMolens);
             _molenService = molenService;
             _placesService = placesService;
+            _dbContext = dbContext;
         }
 
-        public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
+        public async Task AddMolensToMariaDb(List<MolenDataOld> molens)
         {
-            List<MolenType> MolenTypes = await _db.Table<MolenType>();
-            List<MolenType> NewAddedTypes = new List<MolenType>();
-            List<VerdwenenYearInfo> MolenRemovedYears = new List<VerdwenenYearInfo>();
-            List<MolenMaker> molenmakers = await _db.Table<MolenMaker>();
-            List<MolenTypeAssociation> MolenTypeAssociations = await _db.Table<MolenTypeAssociation>();
-            List<VerdwenenYearInfo> AllMolenRemovedYears = await _db.Table<VerdwenenYearInfo>();
-            MolenData oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
-            MolenRemovedYears = oldMolenData?.DisappearedYears ?? new List<VerdwenenYearInfo>();
+            _dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+            if (molens == null || molens.Count == 0) return;
+
+            await _dbContext.Database.EnsureCreatedAsync();
+
+            foreach (var molen in molens)
+            {
+                if (molen == null) continue;
+
+                var foundMolen = await _dbContext.MolenData
+                    .FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
+
+                if (foundMolen != null) continue;
+
+                var molenData = new MolenData
+                {
+
+                    Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
+                    Name = molen.Name,
+                    ToelichtingNaam = molen.ToelichtingNaam,
+                    Bouwjaar = molen.Bouwjaar,
+                    HerbouwdJaar = molen.HerbouwdJaar,
+                    BouwjaarStart = molen.BouwjaarStart,
+                    BouwjaarEinde = molen.BouwjaarEinde,
+                    Functie = molen.Functie,
+                    Doel = molen.Doel,
+                    Toestand = molen.Toestand,
+                    Bedrijfsvaardigheid = molen.Bedrijfsvaardigheid,
+                    Plaats = molen.Plaats,
+                    Adres = molen.Adres,
+                    Provincie = molen.Provincie,
+                    Gemeente = molen.Gemeente,
+                    Streek = molen.Streek,
+                    Plaatsaanduiding = molen.Plaatsaanduiding,
+                    Opvolger = molen.Opvolger,
+                    Voorganger = molen.Voorganger,
+                    VerplaatstNaar = molen.VerplaatstNaar,
+                    AfkomstigVan = molen.AfkomstigVan,
+                    Literatuur = molen.Literatuur,
+                    PlaatsenVoorheen = molen.PlaatsenVoorheen,
+                    Wiekvorm = molen.Wiekvorm,
+                    WiekVerbeteringen = molen.WiekVerbeteringen,
+                    Monument = molen.Monument,
+                    PlaatsBediening = molen.PlaatsBediening,
+                    BedieningKruiwerk = molen.BedieningKruiwerk,
+                    PlaatsKruiwerk = molen.PlaatsKruiwerk,
+                    Kruiwerk = molen.Kruiwerk,
+                    Vlucht = molen.Vlucht,
+                    Openingstijden = molen.Openingstijden,
+                    OpenVoorPubliek = molen.OpenVoorPubliek,
+                    OpenOpZaterdag = molen.OpenOpZaterdag,
+                    OpenOpZondag = molen.OpenOpZondag,
+                    OpenOpAfspraak = molen.OpenOpAfspraak,
+                    Krachtbron = molen.Krachtbron,
+                    Website = molen.Website,
+                    WinkelInformatie = molen.WinkelInformatie,
+                    Bouwbestek = molen.Bouwbestek,
+                    Bijzonderheden = molen.Bijzonderheden,
+                    Museuminformatie = molen.Museuminformatie,
+                    Molenaar = molen.Molenaar,
+                    Eigendomshistorie = molen.Eigendomshistorie,
+                    Molenerf = molen.Molenerf,
+                    Trivia = molen.Trivia,
+                    Geschiedenis = molen.Geschiedenis,
+                    Wetenswaardigheden = molen.Wetenswaardigheden,
+                    Wederopbouw = molen.Wederopbouw,
+                    As = molen.As,
+                    Wieken = molen.Wieken,
+                    Toegangsprijzen = molen.Toegangsprijzen,
+                    UniekeEigenschap = molen.UniekeEigenschap,
+                    LandschappelijkeWaarde = molen.LandschappelijkeWaarde,
+                    KadastraleAanduiding = molen.KadastraleAanduiding,
+                    CanAddImages = molen.CanAddImages,
+                    Eigenaar = molen.Eigenaar,
+                    RecenteWerkzaamheden = molen.RecenteWerkzaamheden,
+                    Rad = molen.Rad,
+                    RadDiameter = molen.RadDiameter,
+                    Wateras = molen.Wateras,
+                    Latitude = molen.Lat,
+                    Longitude = molen.Long,
+                    LastUpdated = molen.LastUpdated
+                };
+
+                await _dbContext.MolenData.AddAsync(molenData);
+
+                if (molen.MolenMakers != null)
+                {
+                    foreach (var maker in molen.MolenMakers)
+                    {
+                        var existingMaker = await _dbContext.MolenMakers
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(m => m.Id == maker.Id);
+
+                        if (existingMaker == null)
+                        {
+                            var molenMaker = new MolenMaker
+                            {
+                                Name = maker.Name,
+                                Year = maker.Year,
+                                MolenData = molenData
+                            };
+                            await _dbContext.MolenMakers.AddAsync(molenMaker);
+                        }
+                    }
+                }
+
+                if (molen.DisappearedYears != null)
+                {
+                    foreach (var yearInfo in molen.DisappearedYears)
+                    {
+                        var verdwenen = new DisappearedYearInfo
+                        {
+                            Year = yearInfo.Year,
+                            Status_after = yearInfo.Status_after,
+                            Status_before = yearInfo.Status_before,
+                            MolenData = molenData
+                        };
+                        await _dbContext.VerdwenenYearInfos.AddAsync(verdwenen);
+                    }
+                }
+
+                if (molen.AddedImages != null)
+                {
+                    foreach (var addedImage in molen.AddedImages)
+                    {
+                        var added = new AddedImage
+                        {
+                            Name = addedImage.Name,
+                            Description = addedImage.Description,
+                            FilePath = addedImage.FilePath,
+                            DateTaken = addedImage.DateTaken,
+                            IsAddedImage = addedImage.IsAddedImage,
+                            CanBeDeleted = addedImage.CanBeDeleted,
+                            MolenData = molenData
+                        };
+                        await _dbContext.AddedImages.AddAsync(added);
+                    }
+                }
+
+                if (molen.ModelType != null)
+                {
+                    foreach (var molenTypeOld in molen.ModelType)
+                    {
+                        var trackedType = _dbContext.ChangeTracker.Entries<MolenType>()
+                            .Select(e => e.Entity)
+                            .FirstOrDefault(t => t.Name == molenTypeOld.Name);
+
+                        MolenType? existingType = trackedType;
+
+                        if (existingType == null)
+                        {
+                            existingType = await _dbContext.MolenTypes.FirstOrDefaultAsync(t => t.Name == molenTypeOld.Name);
+
+                            if (existingType == null)
+                            {
+                                existingType = new MolenType
+                                {
+                                    Name = molenTypeOld.Name
+                                };
+                                await _dbContext.MolenTypes.AddAsync(existingType);
+                            }
+                        }
+
+                        var association = new MolenTypeAssociation
+                        {
+                            MolenData = molenData,
+                            MolenType = existingType
+                        };
+
+                        await _dbContext.MolenTypeAssociations.AddAsync(association);
+                    }
+                }
+
+                if (molen.Images != null)
+                {
+                    foreach (var image in molen.Images)
+                    {
+                        var img = new MolenImage
+                        {
+                            FilePath = image.FilePath,
+                            Name = image.Name,
+                            Description = image.Description,
+                            IsAddedImage = image.IsAddedImage,
+                            CanBeDeleted = image.CanBeDeleted,
+                            ExternalUrl = image.ExternalUrl,
+                            MolenData = molenData
+                        };
+                        await _dbContext.MolenImages.AddAsync(img);
+                    }
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+            _dbContext.ChangeTracker.AutoDetectChangesEnabled = true;
+        }
+
+        public async Task AddMolenToMariaDb(MolenDataOld molen)
+        {
+            if (molen == null) return;
+
+            await _dbContext.Database.EnsureCreatedAsync();
+            MolenData? foundMolen = await _dbContext.MolenData.FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
+
+            if (foundMolen != null) return;
+
+            var molenData = new MolenData
+            {
+
+                Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
+                Name = molen.Name,
+                ToelichtingNaam = molen.ToelichtingNaam,
+                Bouwjaar = molen.Bouwjaar,
+                HerbouwdJaar = molen.HerbouwdJaar,
+                BouwjaarStart = molen.BouwjaarStart,
+                BouwjaarEinde = molen.BouwjaarEinde,
+                Functie = molen.Functie,
+                Doel = molen.Doel,
+                Toestand = molen.Toestand,
+                Bedrijfsvaardigheid = molen.Bedrijfsvaardigheid,
+                Plaats = molen.Plaats,
+                Adres = molen.Adres,
+                Provincie = molen.Provincie,
+                Gemeente = molen.Gemeente,
+                Streek = molen.Streek,
+                Plaatsaanduiding = molen.Plaatsaanduiding,
+                Opvolger = molen.Opvolger,
+                Voorganger = molen.Voorganger,
+                VerplaatstNaar = molen.VerplaatstNaar,
+                AfkomstigVan = molen.AfkomstigVan,
+                Literatuur = molen.Literatuur,
+                PlaatsenVoorheen = molen.PlaatsenVoorheen,
+                Wiekvorm = molen.Wiekvorm,
+                WiekVerbeteringen = molen.WiekVerbeteringen,
+                Monument = molen.Monument,
+                PlaatsBediening = molen.PlaatsBediening,
+                BedieningKruiwerk = molen.BedieningKruiwerk,
+                PlaatsKruiwerk = molen.PlaatsKruiwerk,
+                Kruiwerk = molen.Kruiwerk,
+                Vlucht = molen.Vlucht,
+                Openingstijden = molen.Openingstijden,
+                OpenVoorPubliek = molen.OpenVoorPubliek,
+                OpenOpZaterdag = molen.OpenOpZaterdag,
+                OpenOpZondag = molen.OpenOpZondag,
+                OpenOpAfspraak = molen.OpenOpAfspraak,
+                Krachtbron = molen.Krachtbron,
+                Website = molen.Website,
+                WinkelInformatie = molen.WinkelInformatie,
+                Bouwbestek = molen.Bouwbestek,
+                Bijzonderheden = molen.Bijzonderheden,
+                Museuminformatie = molen.Museuminformatie,
+                Molenaar = molen.Molenaar,
+                Eigendomshistorie = molen.Eigendomshistorie,
+                Molenerf = molen.Molenerf,
+                Trivia = molen.Trivia,
+                Geschiedenis = molen.Geschiedenis,
+                Wetenswaardigheden = molen.Wetenswaardigheden,
+                Wederopbouw = molen.Wederopbouw,
+                As = molen.As,
+                Wieken = molen.Wieken,
+                Toegangsprijzen = molen.Toegangsprijzen,
+                UniekeEigenschap = molen.UniekeEigenschap,
+                LandschappelijkeWaarde = molen.LandschappelijkeWaarde,
+                KadastraleAanduiding = molen.KadastraleAanduiding,
+                CanAddImages = molen.CanAddImages,
+                Eigenaar = molen.Eigenaar,
+                RecenteWerkzaamheden = molen.RecenteWerkzaamheden,
+                Rad = molen.Rad,
+                RadDiameter = molen.RadDiameter,
+                Wateras = molen.Wateras,
+                Latitude = molen.Lat,
+                Longitude = molen.Long,
+                LastUpdated = molen.LastUpdated
+            };
+
+            await _dbContext.MolenData.AddAsync(molenData);
+            await _dbContext.SaveChangesAsync();
+
+            if (molen.MolenMakers != null)
+            {
+                foreach (var maker in molen.MolenMakers)
+                {
+                    var existingMaker = await _dbContext.MolenMakers
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(m => m.Id == maker.Id);
+
+                    if (existingMaker == null)
+                    {
+                        var molenMaker = new MolenMaker
+                        {
+                            Name = maker.Name,
+                            Year = maker.Year,
+                            MolenDataId = molenData.Id
+                        };
+                        await _dbContext.MolenMakers.AddAsync(molenMaker);
+                    }
+                }
+            }
+
+            if (molen.DisappearedYears != null)
+            {
+                foreach (var yearInfo in molen.DisappearedYears)
+                {
+                    var verdwenen = new DisappearedYearInfo
+                    {
+                        Year = yearInfo.Year,
+                        Status_after = yearInfo.Status_after,
+                        Status_before = yearInfo.Status_before,
+                        MolenDataId = molenData.Id
+                    };
+                    await _dbContext.VerdwenenYearInfos.AddAsync(verdwenen);
+                }
+            }
+
+            if (molen.AddedImages != null)
+            {
+                foreach (var addedImage in molen.AddedImages)
+                {
+                    var added = new AddedImage
+                    {
+                        Name = addedImage.Name,
+                        Description = addedImage.Description,
+                        FilePath = addedImage.FilePath,
+                        DateTaken = addedImage.DateTaken,
+                        IsAddedImage = addedImage.IsAddedImage,
+                        CanBeDeleted = addedImage.CanBeDeleted,
+                        MolenDataId = molenData.Id
+                    };
+                    await _dbContext.AddedImages.AddAsync(added);
+                }
+            }
+
+            if (molen.ModelType != null)
+            {
+                foreach (var molenTypeOld in molen.ModelType)
+                {
+                    var trackedType = _dbContext.ChangeTracker.Entries<MolenType>()
+                        .Select(e => e.Entity)
+                        .FirstOrDefault(t => t.Name == molenTypeOld.Name);
+
+                    MolenType? existingType = trackedType;
+
+                    if (existingType == null)
+                    {
+                        existingType = await _dbContext.MolenTypes.FirstOrDefaultAsync(t => t.Name == molenTypeOld.Name);
+
+                        if (existingType == null)
+                        {
+                            existingType = new MolenType
+                            {
+                                Name = molenTypeOld.Name
+                            };
+                            await _dbContext.MolenTypes.AddAsync(existingType);
+                        }
+                    }
+
+                    var association = new MolenTypeAssociation
+                    {
+                        MolenData = molenData,
+                        MolenType = existingType
+                    };
+
+                    await _dbContext.MolenTypeAssociations.AddAsync(association);
+                }
+            }
+
+            if (molen.Images != null)
+            {
+                foreach (var image in molen.Images)
+                {
+                    var img = new MolenImage
+                    {
+                        FilePath = image.FilePath,
+                        Name = image.Name,
+                        Description = image.Description,
+                        IsAddedImage = image.IsAddedImage,
+                        CanBeDeleted = image.CanBeDeleted,
+                        MolenDataId = molenData.Id,
+                        ExternalUrl = image.ExternalUrl,
+                    };
+                    await _dbContext.MolenImages.AddAsync(img);
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+
+        public async Task<(MolenDataOld, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr = null, string url = null)
+        {
+            List<MolenTypeOld> MolenTypes = await _db.Table<MolenTypeOld>();
+            List<MolenTypeOld> NewAddedTypes = new List<MolenTypeOld>();
+            List<VerdwenenYearInfoOld> MolenRemovedYears = new List<VerdwenenYearInfoOld>();
+            List<MolenMakerOld> molenmakers = await _db.Table<MolenMakerOld>();
+            List<MolenTypeAssociationOld> MolenTypeAssociations = await _db.Table<MolenTypeAssociationOld>();
+            List<VerdwenenYearInfoOld> AllMolenRemovedYears = await _db.Table<VerdwenenYearInfoOld>();
+            MolenDataOld oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
+            MolenRemovedYears = oldMolenData?.DisappearedYears ?? new List<VerdwenenYearInfoOld>();
             try
             {
                 HttpResponseMessage response;
@@ -65,7 +459,7 @@ namespace MolenApplicatie.Server.Services
                 if (divs != null)
                 {
                     Dictionary<string, object> data = new Dictionary<string, object>();
-                    MolenData newMolenData = new MolenData() { Id = -1, DisappearedYears = MolenRemovedYears, Images = new List<MolenImage>() };
+                    MolenDataOld newMolenData = new MolenDataOld() { Id = -1, DisappearedYears = MolenRemovedYears, Images = new List<MolenImageOld>() };
                     foreach (var div in divs)
                     {
                         var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
@@ -157,7 +551,7 @@ namespace MolenApplicatie.Server.Services
                                             {
                                                 string name = molenmakerMatch.Groups[1].Value;
                                                 string year = molenmakerMatch.Groups[2].Value;
-                                                newMolenData.MolenMakers.Add(new MolenMaker()
+                                                newMolenData.MolenMakers.Add(new MolenMakerOld()
                                                 {
                                                     Id = -1,
                                                     Name = name,
@@ -192,14 +586,14 @@ namespace MolenApplicatie.Server.Services
                                     string completeGemeente = null;
                                     if (gemeente.Length >= 2 && gemeente[gemeente.Length - 1] != null)
                                     {
-                                        if(newMolenData.Ten_Brugge_Nr == "17563")
+                                        if (newMolenData.Ten_Brugge_Nr == "17563")
                                         {
-                                            Place place = await _placesService.GetPlaceByName(gemeente[0]);
-                                            if(place == null)
+                                            PlaceOld place = await _placesService.GetPlaceByName(gemeente[0]);
+                                            if (place == null)
                                             {
                                                 place = await _placesService.GetPlaceByName(newMolenData.Plaats);
                                             }
-                                            if(place != null)
+                                            if (place != null)
                                             {
                                                 provincie = place.Province;
                                             }
@@ -430,7 +824,7 @@ namespace MolenApplicatie.Server.Services
                                                 i++;
                                             }
 
-                                            VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
+                                            VerdwenenYearInfoOld newMolenYearInfo = new VerdwenenYearInfoOld
                                             {
                                                 Year = Convert.ToInt32(year),
                                                 Status_after = status
@@ -448,7 +842,7 @@ namespace MolenApplicatie.Server.Services
                                             string prefix = match1.Groups[1].Value.Trim();
                                             string year = match1.Groups[2].Value;
 
-                                            VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
+                                            VerdwenenYearInfoOld newMolenYearInfo = new VerdwenenYearInfoOld
                                             {
                                                 Status_before = prefix,
                                                 Year = Convert.ToInt32(year)
@@ -472,7 +866,7 @@ namespace MolenApplicatie.Server.Services
                                                 if (prefixStatus == "") prefixStatus = null;
                                                 if (suffixStatus == "") suffixStatus = null;
 
-                                                VerdwenenYearInfo newMolenYearInfo = new VerdwenenYearInfo
+                                                VerdwenenYearInfoOld newMolenYearInfo = new VerdwenenYearInfoOld
                                                 {
                                                     Status_before = prefixStatus,
                                                     Year = Convert.ToInt32(year),
@@ -511,7 +905,8 @@ namespace MolenApplicatie.Server.Services
                                 await _db.UpdateAsync(nogWaarneembareImage.Image);
                             }
                             isNogWaarneembaarPrevious = false;
-                        }else if (isGeschiedenisPrevious && string.IsNullOrEmpty(dt))
+                        }
+                        else if (isGeschiedenisPrevious && string.IsNullOrEmpty(dt))
                         {
                             var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
                             if (imageInGeschiedenis.Image != null)
@@ -524,7 +919,7 @@ namespace MolenApplicatie.Server.Services
                             }
                         }
 
-                        if(dt?.ToLower() != "geschiedenis" && isGeschiedenisPrevious)
+                        if (dt?.ToLower() != "geschiedenis" && isGeschiedenisPrevious)
                         {
                             isGeschiedenisPrevious = !isGeschiedenisPrevious;
                         }
@@ -549,7 +944,7 @@ namespace MolenApplicatie.Server.Services
                                 foreach (string type in dd.Split(','))
                                 {
                                     string trimmedType = type.Trim();
-                                    var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
+                                    var molenType = new MolenTypeOld() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
                                     if (MolenTypes.Concat(NewAddedTypes).Where(x => x.Name == molenType.Name).Count() == 0 && Globals.AllowedMolenTypes.Contains(molenType.Name.ToLower()))
                                     {
                                         await _db.InsertAsync(molenType);
@@ -562,7 +957,7 @@ namespace MolenApplicatie.Server.Services
                                         var existingType = newMolenData.ModelType.Find(x => x.Name == molenType.Name);
                                         if (existingType == null)
                                         {
-                                            newMolenData.ModelType.Add(new MolenType { Name = molenType.Name });
+                                            newMolenData.ModelType.Add(new MolenTypeOld { Name = molenType.Name });
                                         }
                                     }
                                 }
@@ -594,7 +989,7 @@ namespace MolenApplicatie.Server.Services
 
                                 if (newMolenData.Images.Find(x => x.Name == "base-image") == null)
                                 {
-                                    newMolenData.Images.Add(new MolenImage()
+                                    newMolenData.Images.Add(new MolenImageOld()
                                     {
                                         FilePath = CreateCleanPath.CreatePathWithoutWWWROOT($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg"),
                                         Name = "base-image",
@@ -711,7 +1106,7 @@ namespace MolenApplicatie.Server.Services
 
                         foreach (var year in newMolenData.DisappearedYears)
                         {
-                            var molenYearInfo = new VerdwenenYearInfo
+                            var molenYearInfo = new VerdwenenYearInfoOld
                             {
                                 Status_before = year.Status_before,
                                 Year = year.Year,
@@ -737,7 +1132,7 @@ namespace MolenApplicatie.Server.Services
                         await _db.UpdateAsync(newMolenData);
 
                         var molenYearInfoList = MolenRemovedYears
-                            .Select(year => new VerdwenenYearInfo
+                            .Select(year => new VerdwenenYearInfoOld
                             {
                                 Status_before = year.Status_before,
                                 Year = year.Year,
@@ -755,7 +1150,7 @@ namespace MolenApplicatie.Server.Services
                                 await _db.InsertAsync(molenYearInfo);
                             }
                         }
-                        List<(int, VerdwenenYearInfo)> updatedYears = new List<(int, VerdwenenYearInfo)>();
+                        List<(int, VerdwenenYearInfoOld)> updatedYears = new List<(int, VerdwenenYearInfoOld)>();
                         foreach (var molenYearInfo in oldMolenData.DisappearedYears)
                         {
                             int index = newMolenData.DisappearedYears.FindIndex(year => year.Status_before == molenYearInfo.Status_before && year.Year == molenYearInfo.Year && year.Status_after == molenYearInfo.Status_after);
@@ -777,7 +1172,7 @@ namespace MolenApplicatie.Server.Services
 
                         foreach (var molenmaker in newMolenData.MolenMakers)
                         {
-                            MolenMaker foundMolenMaker = molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && x.MolenDataId == newMolenData.Id);
+                            MolenMakerOld foundMolenMaker = molenmakers.Find(x => x.Name == molenmaker.Name && x.Year == molenmaker.Year && x.MolenDataId == newMolenData.Id);
                             if (foundMolenMaker == null)
                             {
                                 molenmaker.Id = -1;
@@ -794,8 +1189,8 @@ namespace MolenApplicatie.Server.Services
                     }
 
 
-                    var allExistingTypes = await _db.QueryAsync<MolenTypeAssociation>(
-                        "SELECT * FROM MolenTypeAssociation WHERE MolenDataId = ?", new object[] { newMolenData.Id }
+                    var allExistingTypes = await _db.QueryAsync<MolenTypeAssociationOld>(
+                        "SELECT * FROM MolenTypeAssociationOld WHERE MolenDataId = ?", new object[] { newMolenData.Id }
                     );
 
                     foreach (var type in newMolenData.ModelType)
@@ -815,7 +1210,7 @@ namespace MolenApplicatie.Server.Services
 
                             if (MolenTypeAssociations.Find(x => x.MolenTypeId == type.Id && x.MolenDataId == newMolenData.Id) == null)
                             {
-                                await _db.InsertAsync(new MolenTypeAssociation() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
+                                await _db.InsertAsync(new MolenTypeAssociationOld() { MolenDataId = newMolenData.Id, MolenTypeId = type.Id });
                             }
                         }
                     }
@@ -832,25 +1227,25 @@ namespace MolenApplicatie.Server.Services
                                 File.WriteAllBytes(Globals.WWWROOTPath + newMolenData.Images[i].FilePath, await _client.GetByteArrayAsync(newMolenData.Images[i].ExternalUrl));
                                 await _db.InsertAsync(newMolenData.Images[i]);
                             }
-                            else if(File.Exists(Globals.WWWROOTPath + newMolenData.Images[i].FilePath))
+                            else if (File.Exists(Globals.WWWROOTPath + newMolenData.Images[i].FilePath))
                             {
                                 await _db.InsertAsync(newMolenData.Images[i]);
                             }
                         }
                         else if (imageInOldMolen != null)
                         {
-                            if((imageInOldMolen.Description == null && newMolenData.Images[i].Description != null) || imageInOldMolen.ExternalUrl == null)
+                            if ((imageInOldMolen.Description == null && newMolenData.Images[i].Description != null) || imageInOldMolen.ExternalUrl == null)
                             {
-                                await _db.UpdateAsync(new MolenImage()
+                                await _db.UpdateAsync(new MolenImageOld()
                                 {
-                                   Id = imageInOldMolen.Id,
-                                   CanBeDeleted = imageInOldMolen.CanBeDeleted,
-                                   Description = newMolenData.Images[i].Description,
-                                   ExternalUrl = newMolenData.Images[i].ExternalUrl,
-                                   FilePath = imageInOldMolen.FilePath,
-                                   IsAddedImage = imageInOldMolen.IsAddedImage,
-                                   MolenDataId = imageInOldMolen.MolenDataId,
-                                   Name = imageInOldMolen.Name
+                                    Id = imageInOldMolen.Id,
+                                    CanBeDeleted = imageInOldMolen.CanBeDeleted,
+                                    Description = newMolenData.Images[i].Description,
+                                    ExternalUrl = newMolenData.Images[i].ExternalUrl,
+                                    FilePath = imageInOldMolen.FilePath,
+                                    IsAddedImage = imageInOldMolen.IsAddedImage,
+                                    MolenDataId = imageInOldMolen.MolenDataId,
+                                    Name = imageInOldMolen.Name
                                 });
                             }
                             newMolenData.Images[i] = imageInOldMolen;
@@ -878,7 +1273,7 @@ namespace MolenApplicatie.Server.Services
                             string imagePath = CreateCleanPath.CreatePathWithoutWWWROOT(image);
                             if (newMolenData?.AddedImages.Find(x => x.Name == imageName && x.FilePath == imagePath) == null)
                             {
-                                var newAddedMolenImage = new AddedImage
+                                var newAddedMolenImage = new AddedImageOld
                                 {
                                     FilePath = imagePath,
                                     Name = imageName,
@@ -895,7 +1290,7 @@ namespace MolenApplicatie.Server.Services
                     if (oldMolenData != null)
                     {
                         bool somethingChanged = false;
-                        PropertyInfo[] properties = typeof(MolenData).GetProperties();
+                        PropertyInfo[] properties = typeof(MolenDataOld).GetProperties();
 
                         foreach (var property in properties)
                         {
@@ -927,16 +1322,16 @@ namespace MolenApplicatie.Server.Services
             return (null, null);
         }
 
-        public async Task<(bool isAlreadyInDB, MolenImage Image)> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, string filePath, string? description = null, bool canBeDeleted = false)
+        public async Task<(bool isAlreadyInDB, MolenImageOld Image)> GetImageFromHtmlNode(HtmlNode dd2, string Ten_Brugge_Nr, string filePath, string? description = null, bool canBeDeleted = false)
         {
             var nogWaarneembareImages = dd2.SelectNodes(".//img");
             if (nogWaarneembareImages != null && nogWaarneembareImages.Count > 0)
             {
                 var nogWaarneembareImage = nogWaarneembareImages.First();
                 var nogWaarneembareImageSrc = nogWaarneembareImage.GetAttributeValue("src", string.Empty);
-                if(!Uri.IsWellFormedUriString(nogWaarneembareImageSrc, UriKind.Absolute))
+                if (!Uri.IsWellFormedUriString(nogWaarneembareImageSrc, UriKind.Absolute))
                 {
-                    if(Uri.IsWellFormedUriString("https://www.molendatabase.nl/" + nogWaarneembareImageSrc, UriKind.Absolute))
+                    if (Uri.IsWellFormedUriString("https://www.molendatabase.nl/" + nogWaarneembareImageSrc, UriKind.Absolute))
                     {
                         nogWaarneembareImageSrc = "https://www.molendatabase.nl/" + nogWaarneembareImageSrc;
                     }
@@ -958,7 +1353,7 @@ namespace MolenApplicatie.Server.Services
                     }
 
                     string imagePath = CreateCleanPath.CreatePathToWWWROOT($"{filePath}/{Ten_Brugge_Nr}/{ImageName}.jpg");
-                    var foundImagesInDB = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE ExternalUrl = ?", new object[] { nogWaarneembareImageSrc });
+                    var foundImagesInDB = await _db.QueryAsync<MolenImageOld>("SELECT * FROM MolenImageOld WHERE ExternalUrl = ?", new object[] { nogWaarneembareImageSrc });
                     bool isImagePathAlreadyInDB = foundImagesInDB?.Count > 0;
 
                     using (var md5 = MD5.Create())
@@ -981,7 +1376,7 @@ namespace MolenApplicatie.Server.Services
                         if (existingPath == null)
                         {
                             File.WriteAllBytes(imagePath, nogWaarneembaarImage);
-                            return (false, new MolenImage
+                            return (false, new MolenImageOld
                             {
                                 FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imagePath),
                                 Name = ImageName.ToString(),
@@ -993,11 +1388,11 @@ namespace MolenApplicatie.Server.Services
                         else if (existingPath != null)
                         {
                             string pathWithoutRoot = CreateCleanPath.CreatePathWithoutWWWROOT(existingPath);
-                            foundImagesInDB = await _db.QueryAsync<MolenImage>("SELECT * FROM MolenImage WHERE FilePath = ?", new object[] { pathWithoutRoot });
+                            foundImagesInDB = await _db.QueryAsync<MolenImageOld>("SELECT * FROM MolenImageOld WHERE FilePath = ?", new object[] { pathWithoutRoot });
                             if (foundImagesInDB.Count > 0)
                             {
-                                MolenImage firstImage = foundImagesInDB.First();
-                                return (true, new MolenImage
+                                MolenImageOld firstImage = foundImagesInDB.First();
+                                return (true, new MolenImageOld
                                 {
                                     Id = firstImage.Id,
                                     FilePath = pathWithoutRoot,
@@ -1048,10 +1443,10 @@ namespace MolenApplicatie.Server.Services
             return null;
         }
 
-        public async Task<List<MolenTBN>> AddMolenTBNToDB()
+        public async Task<List<MolenTBNOld>> AddMolenTBNToDB()
         {
-            List<MolenTBN> alleMolenTBNR = await _db.Table<MolenTBN>();
-            List<MolenTBN> molenList = await ReadAllActiveMolenTBN();
+            List<MolenTBNOld> alleMolenTBNR = await _db.Table<MolenTBNOld>();
+            List<MolenTBNOld> molenList = await ReadAllActiveMolenTBN();
             foreach (var molen in molenList)
             {
                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == molen.Ten_Brugge_Nr).Count() == 0)
@@ -1059,18 +1454,18 @@ namespace MolenApplicatie.Server.Services
                     await _db.InsertAsync(molen);
                 }
             }
-            return await _db.Table<MolenTBN>();
+            return await _db.Table<MolenTBNOld>();
         }
 
-        public async Task<(List<MolenData> MolenData, bool isDone, TimeSpan timeToWait)> UpdateDataOfLastUpdatedMolens()
+        public async Task<(List<MolenDataOld> MolenData, bool isDone, TimeSpan timeToWait)> UpdateDataOfLastUpdatedMolens()
         {
-            MolenData newestUpdateTimeMolen = await _db.FindWithQueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated DESC LIMIT 1");
+            MolenDataOld newestUpdateTimeMolen = await _db.FindWithQueryAsync<MolenDataOld>("SELECT * FROM MolenDataOld ORDER BY LastUpdated DESC LIMIT 1");
             if (newestUpdateTimeMolen != null && newestUpdateTimeMolen.LastUpdated >= DateTime.Now.AddMinutes(-30))
             {
                 return (null, false, newestUpdateTimeMolen.LastUpdated.AddMinutes(30) - DateTime.Now);
             }
-            List<MolenData> oldestUpdateTimesMolens = await _db.QueryAsync<MolenData>("SELECT * FROM MolenData ORDER BY LastUpdated ASC LIMIT 50");
-            List<MolenData> updatedMolens = new List<MolenData>();
+            List<MolenDataOld> oldestUpdateTimesMolens = await _db.QueryAsync<MolenDataOld>("SELECT * FROM MolenDataOld ORDER BY LastUpdated ASC LIMIT 50");
+            List<MolenDataOld> updatedMolens = new List<MolenDataOld>();
 
             foreach (var molen in oldestUpdateTimesMolens)
             {
@@ -1083,16 +1478,16 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<Dictionary<string, object>>> GetAllMolenData()
         {
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
-            List<MolenData> currentData = await _db.Table<MolenData>();
+            List<MolenDataOld> currentData = await _db.Table<MolenDataOld>();
             //List<MolenTBN> Data = await ReadAllMolenTBN();
-            List<MolenTBN> Data = await _db.Table<MolenTBN>();
+            List<MolenTBNOld> Data = await _db.Table<MolenTBNOld>();
             int count = 0;
-            foreach (MolenTBN tbn in Data)
+            foreach (MolenTBNOld tbn in Data)
             {
                 //if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
                 count++;
                 Thread.Sleep(1500);
-                (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
+                (MolenDataOld, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 Console.WriteLine("nr-" + tbn.Id);
                 keyValuePairs.Add(molen.Item2);
                 //if (count == 9600)
@@ -1119,9 +1514,9 @@ namespace MolenApplicatie.Server.Services
             return keyValuePairs;
         }
 
-        public async Task<List<MolenTBN>> ReadAllMolenTBN()
+        public async Task<List<MolenTBNOld>> ReadAllMolenTBN()
         {
-            List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
+            List<MolenTBNOld> alleMolenTBNR = new List<MolenTBNOld>();
 
             int countDivsAtNull = 0;
             int i = 1;
@@ -1156,7 +1551,7 @@ namespace MolenApplicatie.Server.Services
                                 url = match.Groups[1].Value;
                                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
                                 {
-                                    alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
+                                    alleMolenTBNR.Add(new MolenTBNOld() { Ten_Brugge_Nr = url });
                                 }
                             }
                         }
@@ -1164,16 +1559,16 @@ namespace MolenApplicatie.Server.Services
                 }
                 i++;
             }
-            foreach (MolenTBN tbn in alleMolenTBNR)
+            foreach (MolenTBNOld tbn in alleMolenTBNR)
             {
                 await _db.InsertAsync(tbn);
             }
             return alleMolenTBNR;
         }
 
-        public async Task<List<MolenTBN>> ReadAllActiveMolenTBN()
+        public async Task<List<MolenTBNOld>> ReadAllActiveMolenTBN()
         {
-            List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
+            List<MolenTBNOld> alleMolenTBNR = new List<MolenTBNOld>();
 
             int countDivsAtNull = 0;
             int i = 1;
@@ -1207,7 +1602,7 @@ namespace MolenApplicatie.Server.Services
                                 url = match.Groups[1].Value;
                                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
                                 {
-                                    alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
+                                    alleMolenTBNR.Add(new MolenTBNOld() { Ten_Brugge_Nr = url });
                                 }
                             }
                         }
@@ -1221,23 +1616,23 @@ namespace MolenApplicatie.Server.Services
 
         private readonly TimeSpan cooldownTime = TimeSpan.FromHours(1);
 
-        public async Task<(List<MolenData> MolenData, TimeSpan timeToWait)> SearchForNewMolens()
+        public async Task<(List<MolenDataOld> MolenData, TimeSpan timeToWait)> SearchForNewMolens()
         {
-            var newestSearch = await _db.QueryAsync<LastSearchedForNewData>("SELECT * FROM LastSearchedForNewData ORDER BY LastSearched DESC LIMIT 1");
+            var newestSearch = await _db.QueryAsync<LastSearchedForNewDataOld>("SELECT * FROM LastSearchedForNewDataOld ORDER BY LastSearched DESC LIMIT 1");
             if (newestSearch.Count > 0 && newestSearch[0].LastSearched >= DateTime.Now.Add(cooldownTime * -1))
             {
                 return (null, cooldownTime - (DateTime.Now - newestSearch[0].LastSearched));
             }
 
-            List<MolenData> allAddedMolens = new List<MolenData>();
-            List<MolenTBN> allAddedMolenTBN = new List<MolenTBN>();
-            List<MolenTBN> allFoundMolenTBN = await ReadAllActiveMolenTBN();
+            List<MolenDataOld> allAddedMolens = new List<MolenDataOld>();
+            List<MolenTBNOld> allAddedMolenTBN = new List<MolenTBNOld>();
+            List<MolenTBNOld> allFoundMolenTBN = await ReadAllActiveMolenTBN();
 
-            foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
+            foreach (MolenTBNOld readMolenTBN in allFoundMolenTBN)
             {
                 if (allAddedMolens.Count == 50) break;
 
-                var results = await _db.QueryAsync<MolenTBN>("SELECT * FROM MolenTBN WHERE Ten_Brugge_Nr = ?", readMolenTBN.Ten_Brugge_Nr);
+                var results = await _db.QueryAsync<MolenTBNOld>("SELECT * FROM MolenTBNOld WHERE Ten_Brugge_Nr = ?", readMolenTBN.Ten_Brugge_Nr);
                 if (results?.Count == 0)
                 {
                     await _db.InsertAsync(readMolenTBN);
@@ -1263,12 +1658,12 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<bool> AddDateTimeFromSearches()
         {
-            var searchesLongerThanOneDay = await _db.QueryAsync<LastSearchedForNewData>("SELECT * FROM LastSearchedForNewData WHERE LastSearched < ?", new object[] { DateTime.Now.AddDays(-1) });
+            var searchesLongerThanOneDay = await _db.QueryAsync<LastSearchedForNewDataOld>("SELECT * FROM LastSearchedForNewDataOld WHERE LastSearched < ?", new object[] { DateTime.Now.AddDays(-1) });
             foreach (var search in searchesLongerThanOneDay)
             {
                 await _db.DeleteAsync(search);
             }
-            await _db.InsertAsync(new LastSearchedForNewData() { LastSearched = DateTime.Now });
+            await _db.InsertAsync(new LastSearchedForNewDataOld() { LastSearched = DateTime.Now });
             return true;
         }
     }

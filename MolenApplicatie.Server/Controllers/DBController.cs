@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Filters;
+using MolenApplicatie.Server.Models;
+using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services;
 
 namespace MolenApplicatie.Server.Controllers
@@ -10,11 +13,15 @@ namespace MolenApplicatie.Server.Controllers
     {
         private readonly NewMolenDataService _NewMolenDataService;
         private readonly PlacesService _PlacesService;
+        private readonly MolenDbContext _dbContext;
+        private readonly MolenService _molenService;
 
-        public DBController(NewMolenDataService newMolenDataService, PlacesService placesService)
+        public DBController(NewMolenDataService newMolenDataService, PlacesService placesService, MolenDbContext dbContext, MolenService molenService)
         {
             _NewMolenDataService = newMolenDataService;
             _PlacesService = placesService;
+            _dbContext = dbContext;
+            _molenService = molenService;
         }
 
         [FileUploadFilter]
@@ -24,6 +31,18 @@ namespace MolenApplicatie.Server.Controllers
             await _PlacesService.ReadAllNetherlandsPlaces();
             await _NewMolenDataService.ReadAllMolenTBN();
             await _NewMolenDataService.GetAllMolenData();
+            return Ok();
+        }
+
+        [HttpGet("FillMariaDB")]
+        public async Task<IActionResult> FillMariaDB()
+        {
+            List<MolenDataOld> molens = await _molenService.GetAllMolenData();
+            await _NewMolenDataService.AddMolensToMariaDb(molens);
+            //foreach (var molen in molens)
+            //{
+            //    await _NewMolenDataService.AddMolenToMariaDb(molen);
+            //}
             return Ok();
         }
     }
