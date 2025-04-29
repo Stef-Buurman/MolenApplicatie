@@ -2,6 +2,12 @@
 using System.Text.Json;
 using System.Globalization;
 using MolenApplicatie.Server.Utils;
+using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Data;
+using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
+using Microsoft.Extensions.Logging;
+using System.Data;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -12,11 +18,13 @@ namespace MolenApplicatie.Server.Services
         private List<string> allowedTypes = new List<string>();
 
         private readonly DbConnection _db;
+        private readonly MolenDbContext _dbContext;
 
-        public PlacesService()
+        public PlacesService(MolenDbContext dbContext)
         {
             _client = new HttpClient();
             _db = new DbConnection(Globals.DBAlleMolens);
+            _dbContext = dbContext;
         }
 
         List<string> provinces = new List<string>
@@ -61,8 +69,8 @@ namespace MolenApplicatie.Server.Services
                         if (totalResults == -1) totalResults = placesResponse.TotalResultsCount;
                         foreach (var geoName in placesResponse.Geonames)
                         {
-                            if (places.Find(x=> x.Name == geoName.Name) == null)
-                            { 
+                            if (places.Find(x => x.Name == geoName.Name) == null)
+                            {
                                 var place = new PlaceOld
                                 {
                                     Name = geoName.Name,
@@ -156,6 +164,71 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<PlaceOld>> GetAllNetherlandsPlaces()
         {
             return await _db.Table<PlaceOld>();
+        }
+
+        public async Task<List<Place>> AddPlacesToMariaDb(List<PlaceOld> placeOlds)
+        {
+            HashSet<string> alreadyProcessed = new(StringComparer.OrdinalIgnoreCase);
+            List<Place> placesToAdd = new();
+
+            var connection = _dbContext.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+            foreach (PlaceOld placeOld in placeOlds)
+            {
+                var normalizedName = placeOld.Name.Trim();
+
+                if (alreadyProcessed.Contains(normalizedName))
+                    continue;
+
+                alreadyProcessed.Add(normalizedName);
+
+                Place? tracked = _dbContext.ChangeTracker.Entries<Place>()
+                    .Select(e => e.Entity)
+                    .FirstOrDefault(t => t.Name.Trim().Equals(normalizedName, StringComparison.OrdinalIgnoreCase));
+
+                Place? existingPlace = tracked;
+                if (existingPlace == null)
+                {
+                    try
+                    {
+                        existingPlace = await _dbContext.Places
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(pl => pl.Name == normalizedName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DB Error] State: {connection.State}, Message: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                if (existingPlace == null)
+                {
+                    Place place = new()
+                    {
+                        Name = normalizedName,
+                        Population = placeOld.Population,
+                        Province = placeOld.Province.Trim(),
+                        Latitude = placeOld.Lat,
+                        Longitude = placeOld.Lon
+                    };
+
+                    placesToAdd.Add(place);
+
+                    Console.WriteLine($"Adding place: {normalizedName}");
+                }
+            }
+
+            if (placesToAdd.Any())
+            {
+                await _dbContext.Places.AddRangeAsync(placesToAdd);
+                await _dbContext.SaveChangesAsync();
+                Console.WriteLine("All changes saved.");
+            }
+
+            return await _dbContext.Places.ToListAsync();
         }
     }
 }
