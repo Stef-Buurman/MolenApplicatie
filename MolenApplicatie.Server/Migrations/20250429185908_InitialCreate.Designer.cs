@@ -11,7 +11,7 @@ using MolenApplicatie.Server.Data;
 namespace MolenApplicatie.Server.Migrations
 {
     [DbContext(typeof(MolenDbContext))]
-    [Migration("20250428203412_InitialCreate")]
+    [Migration("20250429185908_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -435,6 +435,7 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
                     b.Property<int>("Population")
@@ -446,7 +447,8 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Name");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("place");
                 });

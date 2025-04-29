@@ -9,7 +9,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public virtual List<MolenTypeAssociation> MolenTypeAssociations { get; set; } = new List<MolenTypeAssociation>();
     }
 }

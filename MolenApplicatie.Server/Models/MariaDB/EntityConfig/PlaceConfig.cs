@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 
 namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
 {
@@ -8,9 +7,12 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
     {
         public void Configure(EntityTypeBuilder<Place> builder)
         {
-            builder.HasAlternateKey(p => p.Name);
             builder.Property(p => p.Name)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.HasIndex(p => p.Name)
+                .IsUnique();
         }
     }
 }
