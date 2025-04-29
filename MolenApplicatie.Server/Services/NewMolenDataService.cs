@@ -33,10 +33,10 @@ namespace MolenApplicatie.Server.Services
             _dbContext = dbContext;
         }
 
-        public async Task AddMolensToMariaDb(List<MolenDataOld> molens)
+        public async Task<List<MolenData>?> AddMolensToMariaDb(List<MolenDataOld> molens)
         {
             _dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
-            if (molens == null || molens.Count == 0) return;
+            if (molens == null || molens.Count == 0) return null;
 
             await _dbContext.Database.EnsureCreatedAsync();
 
@@ -44,26 +44,16 @@ namespace MolenApplicatie.Server.Services
             {
                 if (molen == null) continue;
 
-                var foundMolen = await _dbContext.MolenData
+                var existingMolen = await _dbContext.MolenData
                     .FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
 
-                var foundMolenTBN = await _dbContext.MolenTBNs.
-                    FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
+                var existingTBN = await _dbContext.MolenTBNs
+                    .FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
 
-                if (foundMolen != null && foundMolenTBN != null) continue;
-                if (foundMolenTBN == null && foundMolen != null)
+                if (existingMolen != null && existingTBN != null) continue;
+
+                var molenData = existingMolen ?? new MolenData
                 {
-                    var molenTBN = new MolenTBN
-                    {
-                        Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
-                        MolenData = foundMolen,
-                    };
-                    await _dbContext.MolenTBNs.AddAsync(molenTBN);
-                }
-
-                var molenData = new MolenData
-                {
-
                     Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
                     Name = molen.Name,
                     ToelichtingNaam = molen.ToelichtingNaam,
@@ -130,207 +120,158 @@ namespace MolenApplicatie.Server.Services
                     LastUpdated = molen.LastUpdated
                 };
 
-                await _dbContext.MolenData.AddAsync(molenData);
+                if (existingMolen == null)
+                    await _dbContext.MolenData.AddAsync(molenData);
 
-                if (foundMolenTBN == null)
+                if (existingTBN == null)
                 {
-                    var molenTBN = new MolenTBN
+                    await _dbContext.MolenTBNs.AddAsync(new MolenTBN
                     {
                         Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
-                        MolenData = molenData,
-                    };
-                    await _dbContext.MolenTBNs.AddAsync(molenTBN);
+                        MolenData = molenData
+                    });
                 }
 
-                if (molen.MolenMakers != null)
+                await AddMakersAsync(molen, molenData);
+                await AddDisappearedYearsAsync(molen, molenData);
+                await AddAddedImagesAsync(molen, molenData);
+                await AddModelTypesAsync(molen, molenData);
+                await AddMolenImagesAsync(molen, molenData);
+            }
+            await _dbContext.SaveChangesAsync();
+            _dbContext.ChangeTracker.AutoDetectChangesEnabled = true;
+            return null;
+        }
+
+        private async Task AddMakersAsync(MolenDataOld molen, MolenData molenData)
+        {
+            if (molen.MolenMakers == null) return;
+            foreach (var maker in molen.MolenMakers)
+            {
+                var existing = await _dbContext.MolenMakers.AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.Name == maker.Name && m.Year == maker.Year && m.MolenDataId == molenData.Id);
+
+                if (existing == null)
                 {
-                    foreach (var maker in molen.MolenMakers)
+                    await _dbContext.MolenMakers.AddAsync(new MolenMaker
                     {
-                        var existingMaker = await _dbContext.MolenMakers
-                            .AsNoTracking()
-                            .FirstOrDefaultAsync(m => m.Name == maker.Name && m.Year == maker.Year && m.MolenDataId == molenData.Id);
-
-                        if (existingMaker == null)
-                        {
-                            var molenMaker = new MolenMaker
-                            {
-                                Name = maker.Name,
-                                Year = maker.Year,
-                                MolenData = molenData
-                            };
-                            await _dbContext.MolenMakers.AddAsync(molenMaker);
-                        }
-                        else
-                        {
-                            existingMaker.Name = maker.Name;
-                            existingMaker.Year = maker.Year;
-                            _dbContext.MolenMakers.Update(existingMaker);
-                        }
-                    }
+                        Name = maker.Name,
+                        Year = maker.Year,
+                        MolenData = molenData
+                    });
                 }
-
-                if (molen.DisappearedYears != null)
-                {
-                    foreach (var yearInfo in molen.DisappearedYears)
-                    {
-                        var existingYearInfo = await _dbContext.VerdwenenYearInfos
-                            .AsNoTracking()
-                            .FirstOrDefaultAsync(y => y.Year == yearInfo.Year && y.MolenDataId == molenData.Id);
-                        if (existingYearInfo == null)
-                        {
-                            var verdwenen = new DisappearedYearInfo
-                            {
-                                Year = yearInfo.Year,
-                                Status_after = yearInfo.Status_after,
-                                Status_before = yearInfo.Status_before,
-                                MolenData = molenData
-                            };
-                            await _dbContext.VerdwenenYearInfos.AddAsync(verdwenen);
-                        }
-                        else
-                        {
-                            existingYearInfo.Status_after = yearInfo.Status_after;
-                            existingYearInfo.Status_before = yearInfo.Status_before;
-                            _dbContext.VerdwenenYearInfos.Update(existingYearInfo);
-                        }
-                    }
-                }
-
-                if (molen.AddedImages != null)
-                {
-                    foreach (var addedImage in molen.AddedImages)
-                    {
-                        var existingImage = await _dbContext.AddedImages
-                            .AsNoTracking()
-                            .FirstOrDefaultAsync(i => i.Name == addedImage.Name && i.FilePath == addedImage.FilePath && i.MolenDataId == molenData.Id);
-                        if (existingImage == null)
-                        {
-                            var added = new AddedImage
-                            {
-                                Name = addedImage.Name,
-                                Description = addedImage.Description,
-                                FilePath = addedImage.FilePath,
-                                DateTaken = addedImage.DateTaken,
-                                IsAddedImage = addedImage.IsAddedImage,
-                                CanBeDeleted = addedImage.CanBeDeleted,
-                                MolenData = molenData
-                            };
-                            await _dbContext.AddedImages.AddAsync(added);
-                        }
-                        else
-                        {
-                            existingImage.Name = addedImage.Name;
-                            existingImage.Description = addedImage.Description;
-                            existingImage.FilePath = addedImage.FilePath;
-                            existingImage.DateTaken = addedImage.DateTaken;
-                            existingImage.IsAddedImage = addedImage.IsAddedImage;
-                            existingImage.CanBeDeleted = addedImage.CanBeDeleted;
-                            _dbContext.AddedImages.Update(existingImage);
-                        }
-                    }
-                }
-
-                if (molen.ModelType != null)
-                {
-                    foreach (var molenTypeOld in molen.ModelType)
-                    {
-                        var trackedType = _dbContext.ChangeTracker.Entries<MolenType>()
-                            .Select(e => e.Entity)
-                            .FirstOrDefault(t => t.Name == molenTypeOld.Name);
-
-                        MolenType? existingType = trackedType;
-
-                        if (existingType == null)
-                        {
-                            existingType = await _dbContext.MolenTypes.FirstOrDefaultAsync(t => t.Name == molenTypeOld.Name);
-
-                            if (existingType == null)
-                            {
-                                existingType = new MolenType
-                                {
-                                    Name = molenTypeOld.Name
-                                };
-                                await _dbContext.MolenTypes.AddAsync(existingType);
-
-                                var association = new MolenTypeAssociation
-                                {
-                                    MolenData = molenData,
-                                    MolenType = existingType
-                                };
-
-                                await _dbContext.MolenTypeAssociations.AddAsync(association);
-                            }
-                        }
-                        if (existingType != null && existingType.Id != 0)
-                        {
-                            existingType.Name = molenTypeOld.Name;
-                            _dbContext.MolenTypes.Update(existingType);
-
-                            var existingAssociation = await _dbContext.MolenTypeAssociations
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(a => a.MolenDataId == molenData.Id && a.MolenTypeId == existingType.Id);
-                            if (existingAssociation == null)
-                            {
-                                var assoc = new MolenTypeAssociation
-                                {
-                                    MolenData = molenData,
-                                    MolenType = existingType
-                                };
-                                await _dbContext.MolenTypeAssociations.AddAsync(assoc);
-                            }
-                        }
-                    }
-                }
-
-                if (molen.Images != null)
-                {
-                    foreach (var image in molen.Images)
-                    {
-                        var existingImage = await _dbContext.MolenImages
-                            .AsNoTracking()
-                            .FirstOrDefaultAsync(i => i.Name == image.Name && i.FilePath == image.FilePath && i.MolenDataId == molenData.Id);
-                        if (existingImage == null)
-                        {
-                            var img = new MolenImage
-                            {
-                                FilePath = image.FilePath,
-                                Name = image.Name,
-                                Description = image.Description,
-                                IsAddedImage = image.IsAddedImage,
-                                CanBeDeleted = image.CanBeDeleted,
-                                ExternalUrl = image.ExternalUrl,
-                                MolenData = molenData
-                            };
-                            await _dbContext.MolenImages.AddAsync(img);
-                        }
-                        else
-                        {
-                            existingImage.Name = image.Name;
-                            existingImage.Description = image.Description;
-                            existingImage.FilePath = image.FilePath;
-                            existingImage.IsAddedImage = image.IsAddedImage;
-                            existingImage.CanBeDeleted = image.CanBeDeleted;
-                            existingImage.ExternalUrl = image.ExternalUrl;
-                            _dbContext.MolenImages.Update(existingImage);
-                        }
-                    }
-                }
-
-                await _dbContext.SaveChangesAsync();
-                _dbContext.ChangeTracker.AutoDetectChangesEnabled = true;
             }
         }
 
-        public async Task AddMolenToMariaDb(MolenDataOld molen)
+        private async Task AddDisappearedYearsAsync(MolenDataOld molen, MolenData molenData)
         {
-            if (molen == null) return;
+            if (molen.DisappearedYears == null) return;
+            foreach (var year in molen.DisappearedYears)
+            {
+                var existing = await _dbContext.DisappearedYearInfos.AsNoTracking()
+                    .FirstOrDefaultAsync(y => y.Year == year.Year && y.MolenDataId == molenData.Id);
+
+                if (existing == null)
+                {
+                    await _dbContext.DisappearedYearInfos.AddAsync(new DisappearedYearInfo
+                    {
+                        Year = year.Year,
+                        Status_after = year.Status_after,
+                        Status_before = year.Status_before,
+                        MolenData = molenData
+                    });
+                }
+            }
+        }
+
+        private async Task AddAddedImagesAsync(MolenDataOld molen, MolenData molenData)
+        {
+            if (molen.AddedImages == null) return;
+            foreach (var img in molen.AddedImages)
+            {
+                var existing = await _dbContext.AddedImages.AsNoTracking()
+                    .FirstOrDefaultAsync(i => i.Name == img.Name && i.FilePath == img.FilePath && i.MolenDataId == molenData.Id);
+
+                if (existing == null)
+                {
+                    await _dbContext.AddedImages.AddAsync(new AddedImage
+                    {
+                        Name = img.Name,
+                        Description = img.Description,
+                        FilePath = img.FilePath,
+                        DateTaken = img.DateTaken,
+                        IsAddedImage = img.IsAddedImage,
+                        CanBeDeleted = img.CanBeDeleted,
+                        MolenData = molenData
+                    });
+                }
+            }
+        }
+
+        private async Task AddModelTypesAsync(MolenDataOld molen, MolenData molenData)
+        {
+            if (molen.ModelType == null) return;
+            foreach (var type in molen.ModelType)
+            {
+                var tracked = _dbContext.ChangeTracker.Entries<MolenType>().Select(e => e.Entity)
+                    .FirstOrDefault(t => t.Name == type.Name);
+
+                var existingType = tracked ?? await _dbContext.MolenTypes.FirstOrDefaultAsync(t => t.Name == type.Name);
+
+                if (existingType == null)
+                {
+                    existingType = new MolenType { Name = type.Name };
+                    await _dbContext.MolenTypes.AddAsync(existingType);
+                }
+
+                var existingAssoc = await _dbContext.MolenTypeAssociations.AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.MolenDataId == molenData.Id && a.MolenTypeId == existingType.Id);
+
+                if (existingAssoc == null)
+                {
+                    await _dbContext.MolenTypeAssociations.AddAsync(new MolenTypeAssociation
+                    {
+                        MolenData = molenData,
+                        MolenType = existingType
+                    });
+                }
+            }
+        }
+
+        private async Task AddMolenImagesAsync(MolenDataOld molen, MolenData molenData)
+        {
+            if (molen.Images == null) return;
+            foreach (var img in molen.Images)
+            {
+                var existing = await _dbContext.MolenImages.AsNoTracking()
+                    .FirstOrDefaultAsync(i => i.Name == img.Name && i.FilePath == img.FilePath && i.MolenDataId == molenData.Id);
+
+                if (existing == null)
+                {
+                    await _dbContext.MolenImages.AddAsync(new MolenImage
+                    {
+                        FilePath = img.FilePath,
+                        Name = img.Name,
+                        Description = img.Description,
+                        IsAddedImage = img.IsAddedImage,
+                        CanBeDeleted = img.CanBeDeleted,
+                        ExternalUrl = img.ExternalUrl,
+                        MolenData = molenData
+                    });
+                }
+            }
+        }
+
+        public async Task<MolenData?> AddMolenToMariaDb(MolenDataOld molen)
+        {
+            if (molen == null) return null;
 
             await _dbContext.Database.EnsureCreatedAsync();
             MolenData? foundMolen = await _dbContext.MolenData.FirstOrDefaultAsync(m => m.Ten_Brugge_Nr == molen.Ten_Brugge_Nr);
 
-            if (foundMolen != null) return;
+            if (foundMolen != null) return null;
 
-            var molenData = new MolenData
+            MolenData molenData = new MolenData
             {
 
                 Ten_Brugge_Nr = molen.Ten_Brugge_Nr,
@@ -406,13 +347,13 @@ namespace MolenApplicatie.Server.Services
             {
                 foreach (var maker in molen.MolenMakers)
                 {
-                    var existingMaker = await _dbContext.MolenMakers
+                    MolenMaker? existingMaker = await _dbContext.MolenMakers
                         .AsNoTracking()
                         .FirstOrDefaultAsync(m => m.Id == maker.Id);
 
                     if (existingMaker == null)
                     {
-                        var molenMaker = new MolenMaker
+                        MolenMaker molenMaker = new MolenMaker
                         {
                             Name = maker.Name,
                             Year = maker.Year,
@@ -427,25 +368,25 @@ namespace MolenApplicatie.Server.Services
             {
                 foreach (var yearInfo in molen.DisappearedYears)
                 {
-                    var existingYearInfo = await _dbContext.VerdwenenYearInfos
+                    DisappearedYearInfo? existingYearInfo = await _dbContext.DisappearedYearInfos
                         .AsNoTracking()
                         .FirstOrDefaultAsync(y => y.Year == yearInfo.Year && y.MolenDataId == molenData.Id);
                     if (existingYearInfo == null)
                     {
-                        var verdwenen = new DisappearedYearInfo
+                        DisappearedYearInfo verdwenen = new DisappearedYearInfo
                         {
                             Year = yearInfo.Year,
                             Status_after = yearInfo.Status_after,
                             Status_before = yearInfo.Status_before,
                             MolenDataId = molenData.Id
                         };
-                        await _dbContext.VerdwenenYearInfos.AddAsync(verdwenen);
+                        await _dbContext.DisappearedYearInfos.AddAsync(verdwenen);
                     }
                     else
                     {
                         existingYearInfo.Status_after = yearInfo.Status_after;
                         existingYearInfo.Status_before = yearInfo.Status_before;
-                        _dbContext.VerdwenenYearInfos.Update(existingYearInfo);
+                        _dbContext.DisappearedYearInfos.Update(existingYearInfo);
                     }
                 }
             }
@@ -454,12 +395,12 @@ namespace MolenApplicatie.Server.Services
             {
                 foreach (var addedImage in molen.AddedImages)
                 {
-                    var existingImage = await _dbContext.AddedImages
+                    AddedImage? existingImage = await _dbContext.AddedImages
                         .AsNoTracking()
                         .FirstOrDefaultAsync(i => i.Name == addedImage.Name && i.FilePath == addedImage.FilePath && i.MolenDataId == molenData.Id);
                     if (existingImage == null)
                     {
-                        var added = new AddedImage
+                        AddedImage added = new AddedImage
                         {
                             Name = addedImage.Name,
                             Description = addedImage.Description,
@@ -488,11 +429,9 @@ namespace MolenApplicatie.Server.Services
             {
                 foreach (var molenTypeOld in molen.ModelType)
                 {
-                    var trackedType = _dbContext.ChangeTracker.Entries<MolenType>()
+                    MolenType? existingType = _dbContext.ChangeTracker.Entries<MolenType>()
                         .Select(e => e.Entity)
                         .FirstOrDefault(t => t.Name == molenTypeOld.Name);
-
-                    MolenType? existingType = trackedType;
 
                     if (existingType == null)
                     {
@@ -506,7 +445,7 @@ namespace MolenApplicatie.Server.Services
                             };
                             await _dbContext.MolenTypes.AddAsync(existingType);
 
-                            var association = new MolenTypeAssociation
+                            MolenTypeAssociation association = new MolenTypeAssociation
                             {
                                 MolenData = molenData,
                                 MolenType = existingType
@@ -520,12 +459,12 @@ namespace MolenApplicatie.Server.Services
                         existingType.Name = molenTypeOld.Name;
                         _dbContext.MolenTypes.Update(existingType);
 
-                        var existingAssociation = await _dbContext.MolenTypeAssociations
+                        MolenTypeAssociation? existingAssociation = await _dbContext.MolenTypeAssociations
                             .AsNoTracking()
                             .FirstOrDefaultAsync(a => a.MolenDataId == molenData.Id && a.MolenTypeId == existingType.Id);
                         if (existingAssociation == null)
                         {
-                            var assoc = new MolenTypeAssociation
+                            MolenTypeAssociation assoc = new MolenTypeAssociation
                             {
                                 MolenData = molenData,
                                 MolenType = existingType
@@ -540,12 +479,12 @@ namespace MolenApplicatie.Server.Services
             {
                 foreach (var image in molen.Images)
                 {
-                    var existingImage = await _dbContext.MolenImages
+                    MolenImage? existingImage = await _dbContext.MolenImages
                         .AsNoTracking()
                         .FirstOrDefaultAsync(i => i.Name == image.Name && i.FilePath == image.FilePath && i.MolenDataId == molenData.Id);
                     if (existingImage == null)
                     {
-                        var img = new MolenImage
+                        MolenImage img = new MolenImage
                         {
                             FilePath = image.FilePath,
                             Name = image.Name,
@@ -571,6 +510,7 @@ namespace MolenApplicatie.Server.Services
             }
 
             await _dbContext.SaveChangesAsync();
+            return molenData;
         }
 
 
