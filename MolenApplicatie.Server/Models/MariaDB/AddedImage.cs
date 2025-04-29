@@ -9,8 +9,8 @@ namespace MolenApplicatie.Server.Models.MariaDB
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string FilePath { get; set; }
-        public string Name { get; set; }
+        public required string FilePath { get; set; }
+        public required string Name { get; set; }
         public bool CanBeDeleted { get; set; }
         public DateTime? DateTaken { get; set; }
         public string? Description { get; set; }

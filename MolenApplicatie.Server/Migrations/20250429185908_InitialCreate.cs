@@ -166,7 +166,7 @@ namespace MolenApplicatie.Server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "varchar(255)", nullable: false)
+                    Name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Province = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -177,7 +177,6 @@ namespace MolenApplicatie.Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_place", x => x.Id);
-                    table.UniqueConstraint("AK_place_Name", x => x.Name);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -397,6 +396,12 @@ namespace MolenApplicatie.Server.Migrations
                 name: "IX_molen_type_association_MolenTypeId",
                 table: "molen_type_association",
                 column: "MolenTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_place_Name",
+                table: "place",
+                column: "Name",
+                unique: true);
         }
 
         /// <inheritdoc />

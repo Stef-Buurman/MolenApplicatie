@@ -432,6 +432,7 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
                     b.Property<int>("Population")
@@ -443,7 +444,8 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Name");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("place");
                 });
