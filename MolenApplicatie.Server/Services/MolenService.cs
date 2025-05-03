@@ -1,5 +1,6 @@
 ﻿using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
+using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
@@ -19,6 +20,18 @@ namespace MolenApplicatie.Server.Services
             _client = new HttpClient();
             _db = new DbConnection(Globals.DBAlleMolens);
             _dbContext = dbContext;
+        }
+
+        public MolenData GetMolenData(MolenData molen)
+        {
+            molen.ModelTypes = molen.MolenTypeAssociations
+                .Where(a => a.MolenType != null)
+                .Select(a =>
+                {
+                    a.MolenType.MolenTypeAssociations = null;
+                    return a.MolenType;
+                }).ToList();
+            return molen;
         }
 
         public async Task<List<string>> GetAllMolenProvincies()
@@ -464,16 +477,16 @@ namespace MolenApplicatie.Server.Services
         private async Task<int> GetCountOfRemainderMolens() => await _db.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM MolenDataOld WHERE Toestand = 'Restant'");
 
-        private async Task<List<CountDisappearedMolens>> GetCountOfDisappearedMolens()
+        private async Task<List<CountDisappearedMolensOld>> GetCountOfDisappearedMolens()
         {
             List<string> provincies = await GetAllMolenProvincies();
-            List<CountDisappearedMolens> disappearedMolens = new List<CountDisappearedMolens>();
+            List<CountDisappearedMolensOld> disappearedMolens = new List<CountDisappearedMolensOld>();
             foreach (string provincie in provincies)
             {
                 Console.WriteLine(provincie);
                 int count = await _db.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM MolenDataOld WHERE Toestand = 'Verdwenen' AND Provincie = ?", new object[] { provincie });
-                disappearedMolens.Add(new CountDisappearedMolens
+                disappearedMolens.Add(new CountDisappearedMolensOld
                 {
                     Provincie = provincie,
                     Count = count
@@ -483,7 +496,7 @@ namespace MolenApplicatie.Server.Services
         }
 
 
-        public async Task<MolensResponseType> MolensResponse(List<MolenDataOld> molens)
+        public async Task<MolensResponseTypeOld> MolensResponse(List<MolenDataOld> molens)
         {
             int activeMolensWithImage = await GetCountOfActiveMolensWithImages();
             int remainderMolensWithImage = await GetCountOfRemainderMolensWithImage();
@@ -493,11 +506,11 @@ namespace MolenApplicatie.Server.Services
             int totalRemainderMolens = await GetCountOfRemainderMolens();
             int totalExistingMolens = totalActiveMolens + totalRemainderMolens;
 
-            List<CountDisappearedMolens> totalDisappearedMolens = await GetCountOfDisappearedMolens();
+            List<CountDisappearedMolensOld> totalDisappearedMolens = await GetCountOfDisappearedMolens();
 
             int totalMolens = totalMolensWithImage + totalExistingMolens;
             totalDisappearedMolens.ForEach(x => totalMolens += x.Count);
-            return new MolensResponseType
+            return new MolensResponseTypeOld
             {
                 Molens = molens,
                 ActiveMolensWithImage = activeMolensWithImage,
