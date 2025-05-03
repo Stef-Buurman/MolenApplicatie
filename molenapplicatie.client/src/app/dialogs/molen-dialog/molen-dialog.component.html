@@ -30,7 +30,7 @@
       <p><strong>Adres:</strong> {{ molen.adres }}</p>
       <p *ngIf="molen.provincie"><strong>Provincie:</strong> {{ molen.provincie }} <span *ngIf="molen.gemeente"><strong>Gemeente:</strong> {{ molen.gemeente }}</span></p>
       <p *ngIf="molen.streek"><strong>Streek:</strong> {{ molen.streek }}</p>
-      <p><strong>Coordinates:</strong> Lat: {{ molen.lat }}, Long: {{ molen.long }}</p>
+      <p><strong>Coordinates:</strong> Lat: {{ molen.latitude }}, Long: {{ molen.longitude }}</p>
       <p *ngIf="molen.plaatsaanduiding"><strong>Plaatsaanduiding:</strong> {{ sanitizeHtml(molen.plaatsaanduiding) }}</p>
 
       <p *ngIf="molen.monument"><strong>Monument: </strong> <a href="{{molen.monument}}" target="_blank">Register</a></p>
@@ -38,7 +38,7 @@
 
       <p><strong>Model Types:</strong></p>
       <ul>
-        <li *ngFor="let model of molen.modelType">
+        <li *ngFor="let model of molen.modelTypes">
           {{ model.name }}
         </li>
       </ul>

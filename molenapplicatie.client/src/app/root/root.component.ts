@@ -33,8 +33,8 @@ export class RootComponent {
     return this.errors.HasError;
   }
 
-  get getMolenWithImageAmount(): number {
-    return this.molenService.getMolenWithImageAmount();
+  get getMolenWithImageAmount(): number | undefined {
+    return this.molenService.getActiveMolenWithImageAmount();
   }
 
   constructor(private route: ActivatedRoute,
@@ -165,7 +165,7 @@ export class RootComponent {
               }
               else if (result.length == 1) {
                 this.toasts.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
-                this.mapService.setView([result[0].lat, result[0].long], 13);
+                this.mapService.setView([result[0].latitude, result[0].longitude], 13);
               }
               else {
                 this.toasts.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");

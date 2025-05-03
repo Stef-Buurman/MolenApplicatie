@@ -25,7 +25,7 @@
          [value]="'remainder'"
          [(ngModel)]="selectedOption" />
   <label for="remainder">
-    Remainder
+    Overblijfselen
   </label>
   <br />
   <input type="radio"
@@ -34,7 +34,7 @@
          [value]="'existing'"
          [(ngModel)]="selectedOption" />
   <label for="existing">
-    Existing
+    Alle bestaande molens
   </label>
   <br />
   <input type="radio"
@@ -43,7 +43,7 @@
          [value]="'disappeared'"
          [(ngModel)]="selectedOption" />
   <label for="disappeared">
-    Disappeared
+    Verdwenen
   </label>
   <div *ngIf="selectedOption == 'disappeared'">
     <select class="provincie-dropdown" [(ngModel)]="provincie">
