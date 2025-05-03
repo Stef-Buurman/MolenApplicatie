@@ -5,18 +5,13 @@ using MolenApplicatie.Server.Utils;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Data;
 using Microsoft.EntityFrameworkCore;
-using MySqlConnector;
-using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace MolenApplicatie.Server.Services
 {
     public class PlacesService
     {
-        readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         private readonly HttpClient _client;
-        private List<string> allowedTypes = new List<string>();
-
         private readonly DbConnection _db;
         private readonly MolenDbContext _dbContext;
 
@@ -47,7 +42,7 @@ namespace MolenApplicatie.Server.Services
             "Zeeland"
         };
 
-        public async Task<List<PlaceOld>> ReadAllNetherlandsPlaces()
+        public async Task<List<PlaceOld>> ReadAllNetherlandsPlaces2_0()
         {
             int maxRows = 1000;
             int startRow = 0;
@@ -141,6 +136,123 @@ namespace MolenApplicatie.Server.Services
             return await _db.Table<PlaceOld>();
         }
 
+        public async Task<List<Place>> ReadAllNetherlandsPlaces()
+        {
+            int maxRows = 1000;
+            int startRow = 0;
+            int totalResults = -1;
+            List<Place> places = new List<Place>();
+
+            while (startRow < 5000 || totalResults == -1)
+            {
+                try
+                {
+                    var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&lang=local");
+                    response.EnsureSuccessStatusCode();
+
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                    var placesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(jsonResponse);
+                    if (placesResponse != null && placesResponse.Geonames != null)
+                    {
+                        if (totalResults == -1) totalResults = placesResponse.TotalResultsCount;
+
+                        List<Place>? placesFound = placesResponse.Geonames.Select(geoName => new Place
+                        {
+                            Name = geoName.Name,
+                            Province = geoName.Province,
+                            Latitude = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
+                            Longitude = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
+                            Population = geoName.Population
+                        }).ToList();
+
+                        if(placesFound != null) places.AddRange(placesFound);
+
+                        //foreach (var geoName in placesResponse.Geonames)
+                        //{
+
+                        //if (places.Find(x => x.Name == geoName.Name) == null)
+                        //{
+                        //    var place = new PlaceOld
+                        //    {
+                        //        Name = geoName.Name,
+                        //        Province = geoName.Province,
+                        //        Lat = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
+                        //        Lon = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
+                        //        Population = geoName.Population
+                        //    };
+                        //    await _db.InsertAsync(place);
+                        //    places.Add(place);
+                        //}
+                        //}
+                        startRow += maxRows;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    return null;
+                }
+            }
+
+
+            foreach (var province in provinces)
+            {
+                startRow = 0;
+                int totalResultsProvince = -1;
+                while (startRow < 5000 || totalResultsProvince == -1)
+                {
+                    try
+                    {
+                        var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&q={province}&lang=local");
+                        response.EnsureSuccessStatusCode();
+
+                        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                        var placesResponse = JsonSerializer.Deserialize<GeoNamesResponse>(jsonResponse);
+                        if (placesResponse != null && placesResponse.Geonames != null)
+                        {
+                            if (totalResultsProvince == -1) totalResultsProvince = placesResponse.TotalResultsCount;
+                            List<Place>? placesFound = placesResponse.Geonames.Select(geoName => new Place
+                            {
+                                Name = geoName.Name,
+                                Province = geoName.Province,
+                                Latitude = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
+                                Longitude = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
+                                Population = geoName.Population
+                            }).ToList();
+
+                            if (placesFound != null) places.AddRange(placesFound);
+                            //foreach (var geoName in placesResponse.Geonames)
+                            //{
+                            //    if (places.Find(x => x.Name == geoName.Name) == null)
+                            //    {
+                            //        var place = new PlaceOld
+                            //        {
+                            //            Name = geoName.Name,
+                            //            Province = geoName.Province,
+                            //            Lat = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
+                            //            Lon = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
+                            //            Population = geoName.Population
+                            //        };
+                            //        await _db.InsertAsync(place);
+                            //        places.Add(place);
+                            //    }
+                            //}
+                            //startRow += maxRows;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"An error occurred: {ex.Message}");
+                        return null;
+                    }
+                }
+            }
+
+            return await AddPlacesToMariaDb(places);
+        }
+
         public async Task<List<PlaceOld>> GetPlacesByProvince(string province)
         {
             return await _db.QueryAsync<PlaceOld>($"SELECT * FROM PlaceOld WHERE Name LIKE '%{province}%'");
@@ -166,7 +278,7 @@ namespace MolenApplicatie.Server.Services
             return await _db.Table<PlaceOld>();
         }
 
-        public async Task<List<Place>> AddPlacesToMariaDb(List<PlaceOld> placeOlds)
+        public async Task<List<Place>> AddPlacesToMariaDb(List<Place> placeOlds)
         {
             HashSet<string> alreadyProcessed = new(StringComparer.OrdinalIgnoreCase);
             List<Place> placesToAdd = new();
@@ -175,9 +287,9 @@ namespace MolenApplicatie.Server.Services
             if (connection.State != ConnectionState.Open)
                 await connection.OpenAsync();
 
-            foreach (PlaceOld placeOld in placeOlds)
+            foreach (Place place in placeOlds)
             {
-                var normalizedName = placeOld.Name.Trim();
+                var normalizedName = place.Name.Trim();
 
                 if (alreadyProcessed.Contains(normalizedName))
                     continue;
@@ -206,18 +318,7 @@ namespace MolenApplicatie.Server.Services
 
                 if (existingPlace == null)
                 {
-                    Place place = new()
-                    {
-                        Name = normalizedName,
-                        Population = placeOld.Population,
-                        Province = placeOld.Province.Trim(),
-                        Latitude = placeOld.Lat,
-                        Longitude = placeOld.Lon
-                    };
-
                     placesToAdd.Add(place);
-
-                    Console.WriteLine($"Adding place: {normalizedName}");
                 }
             }
 
@@ -225,10 +326,23 @@ namespace MolenApplicatie.Server.Services
             {
                 await _dbContext.Places.AddRangeAsync(placesToAdd);
                 await _dbContext.SaveChangesAsync();
-                Console.WriteLine("All changes saved.");
             }
 
             return await _dbContext.Places.ToListAsync();
+        }
+
+        public async Task<List<Place>> AddPlacesToMariaDb(List<PlaceOld> placeOlds)
+        {
+            List<Place> place = placeOlds.Select(placeOld => new Place()
+            {
+                Name = placeOld.Name.Trim(),
+                Population = placeOld.Population,
+                Province = placeOld.Province.Trim(),
+                Latitude = placeOld.Lat,
+                Longitude = placeOld.Lon
+            }).ToList();
+
+            return await AddPlacesToMariaDb(place);
         }
     }
 }
