@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MolenApplicatie.Server.Filters;
-using MolenApplicatie.Server.Models;
+using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services;
-using System.Text.Json;
 
 namespace MolenApplicatie.Server.Controllers
 {
@@ -10,10 +9,10 @@ namespace MolenApplicatie.Server.Controllers
     [Route("api/molen")]
     public class MolenController : ControllerBase
     {
-        private readonly MolenService _MolenService;
-        private readonly NewMolenDataService _NewMolenDataService;
+        private readonly MolenService2_0 _MolenService;
+        private readonly NewMolenDataService2_0 _NewMolenDataService;
 
-        public MolenController(MolenService molenService, NewMolenDataService newMolenDataService)
+        public MolenController(MolenService2_0 molenService, NewMolenDataService2_0 newMolenDataService)
         {
             _MolenService = molenService;
             _NewMolenDataService = newMolenDataService;
@@ -26,7 +25,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
-        [FileUploadFilter]
+        //[FileUploadFilter]
         [HttpGet("all")]
         public async Task<IActionResult> GetAllMolens()
         {
@@ -91,7 +90,7 @@ namespace MolenApplicatie.Server.Controllers
             if (image == null || image.Length == 0)
                 return BadRequest("Geen foto meegestuurd!");
 
-            MolenData molen = await _MolenService.GetMolenByTBN(tbNumber);
+            MolenData? molen = await _MolenService.GetMolenByTBN(tbNumber);
             if (molen == null) return NotFound("Molen niet gevonden!");
             var result = await _MolenService.SaveMolenImage(molen.Id, tbNumber, image);
             IFormFile savedImage = result.file;
@@ -145,7 +144,12 @@ namespace MolenApplicatie.Server.Controllers
             {
                 return Ok(result.MolenData);
             }
-            return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
+            if (result.timeToWait.HasValue)
+            {
+                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.Value.TotalMinutes)} minuten nog een keer proberen!");
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets misgegaan bij het updaten van de molens.");
+
         }
 
         [FileUploadFilter]
@@ -153,11 +157,15 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetNewAddedMolens()
         {
             var result = await _NewMolenDataService.SearchForNewMolens();
-            if (result.MolenData == null)
+            if (result.MolenData == null && result.timeToWait.HasValue)
             {
-                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.TotalMinutes)} minuten nog een keer proberen!");
+                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.Value.TotalMinutes)} minuten nog een keer proberen!");
             }
-            return Ok(result.MolenData);
+            else if (result.MolenData != null)
+            {
+                return Ok(result.MolenData);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets fout gegaan bij het zoeken naar nieuwe molens.");
         }
 
         [FileUploadFilter]
@@ -184,52 +192,6 @@ namespace MolenApplicatie.Server.Controllers
         {
             var results = await _NewMolenDataService.GetAllMolenData();
             return Ok(results);
-        }
-
-        [HttpGet]
-        [Route("provinces")]
-        public async Task<IActionResult> GetAllProvinces()
-        {
-            var results = await _MolenService.GetAllMolenData();
-            var provinces = new List<string>();
-            for (int i = 0; i < results.Count; i++)
-            {
-                if (results[i].Lat != null && results[i].Long != null)
-                {
-                    provinces.Add(await GetProvinceByCoordinates((double)results[i].Lat, (double)results[i].Long));
-                }
-                if (i == 100) break;
-            }
-            return Ok(provinces);
-        }
-
-        private static readonly string apiUrl = "https://nominatim.openstreetmap.org/reverse";
-
-        public static async Task<string> GetProvinceByCoordinates(double latitude, double longitude)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("User-Agent", "MyApp/1.0 (email@example.com)");
-
-                string url = $"{apiUrl}?lat={latitude}&lon={longitude}&format=json";
-
-                HttpResponseMessage response = await client.GetAsync(url);
-
-                response.EnsureSuccessStatusCode();
-
-                string responseBody = await response.Content.ReadAsStringAsync();
-                JsonDocument jsonResponse = JsonDocument.Parse(responseBody);
-
-                if (jsonResponse.RootElement.TryGetProperty("address", out JsonElement address))
-                {
-                    if (address.TryGetProperty("state", out JsonElement state))
-                    {
-                        return state.GetString();
-                    }
-                }
-
-                return "Province not found";
-            }
         }
     }
 }
