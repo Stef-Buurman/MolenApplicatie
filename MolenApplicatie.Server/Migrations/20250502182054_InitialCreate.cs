@@ -234,28 +234,6 @@ namespace MolenApplicatie.Server.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "molen_btn",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Ten_Brugge_Nr = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    MolenDataId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_molen_btn", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_molen_btn_molen_data_MolenDataId",
-                        column: x => x.MolenDataId,
-                        principalTable: "molen_data",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "molen_image",
                 columns: table => new
                 {
@@ -301,6 +279,28 @@ namespace MolenApplicatie.Server.Migrations
                     table.PrimaryKey("PK_molen_maker", x => x.Id);
                     table.ForeignKey(
                         name: "FK_molen_maker_molen_data_MolenDataId",
+                        column: x => x.MolenDataId,
+                        principalTable: "molen_data",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "molen_tbn",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Ten_Brugge_Nr = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    MolenDataId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_molen_tbn", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_molen_tbn_molen_data_MolenDataId",
                         column: x => x.MolenDataId,
                         principalTable: "molen_data",
                         principalColumn: "Id",
@@ -367,12 +367,6 @@ namespace MolenApplicatie.Server.Migrations
                 column: "MolenDataId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_molen_btn_MolenDataId",
-                table: "molen_btn",
-                column: "MolenDataId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_molen_image_MolenDataId",
                 table: "molen_image",
                 column: "MolenDataId");
@@ -381,6 +375,12 @@ namespace MolenApplicatie.Server.Migrations
                 name: "IX_molen_maker_MolenDataId",
                 table: "molen_maker",
                 column: "MolenDataId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_molen_tbn_MolenDataId",
+                table: "molen_tbn",
+                column: "MolenDataId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_molen_type_MolenDataId",
@@ -417,13 +417,13 @@ namespace MolenApplicatie.Server.Migrations
                 name: "last_searched_for_new_data");
 
             migrationBuilder.DropTable(
-                name: "molen_btn");
-
-            migrationBuilder.DropTable(
                 name: "molen_image");
 
             migrationBuilder.DropTable(
                 name: "molen_maker");
+
+            migrationBuilder.DropTable(
+                name: "molen_tbn");
 
             migrationBuilder.DropTable(
                 name: "molen_type_association");
