@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Models;
-using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services;
 
 namespace MolenApplicatie.Server.Controllers
@@ -48,14 +47,19 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("GetMolens")]
         public async Task<IActionResult> GetMolens()
         {
-            var molens = await _dbContext.MolenData.Include(m => m.MolenTypeAssociations)
-                .ThenInclude(mt => mt.MolenType)
-                .Include(m => m.AddedImages)
-                .Include(m => m.Images)
-                .Include(m => m.DisappearedYearInfos)
-                .Include(m => m.MolenMakers)
-                .ToListAsync();
-            return Ok(molens);
+            var molens2 = await _dbContext.MolenData
+                .Include(m => m.MolenTBN).Include(m => m.Images).Include(m => m.AddedImages)
+                .Include(m => m.MolenTypeAssociations).ThenInclude(a => a.MolenType)
+                .Include(m => m.MolenMakers).Include(m => m.DisappearedYearInfos)
+                .Select(m => _molenService.GetMolenData(m)).ToListAsync();
+            return Ok(molens2);
+        }
+
+        [HttpGet("GetMolens2")]
+        public async Task<IActionResult> GetMolens2()
+        {
+            var molens = await _molenService.GetAllMolenData();
+            return Ok(molens.Take(1000));
         }
     }
 }

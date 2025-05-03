@@ -8,9 +8,9 @@ namespace MolenApplicatie.Server.Controllers
     [Route("api")]
     public class PlacesController : ControllerBase
     {
-        private readonly PlacesService _PlacesService;
+        private readonly PlacesService2_0 _PlacesService;
 
-        public PlacesController(PlacesService placesService)
+        public PlacesController(PlacesService2_0 placesService)
         {
             _PlacesService = placesService;
         }
@@ -20,7 +20,7 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> ReadAllNetherlandsPlaces()
         {
             var locations = await _PlacesService.ReadAllNetherlandsPlaces();
-            return Ok(locations);
+            return Ok();
         }
 
         [HttpGet("get_all_netherlands_places")]
