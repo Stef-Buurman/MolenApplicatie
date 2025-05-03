@@ -11,7 +11,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public int Id { get; set; }
         public required string Name { get; set; }
         public required string Year { get; set; }
-        public MolenData MolenData { get; set; }
+        public MolenData MolenData { get; set; } = null!;
         public int MolenDataId { get; set; }
     }
 }

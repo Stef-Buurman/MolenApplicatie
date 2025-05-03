@@ -14,7 +14,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public bool CanBeDeleted { get; set; }
         public string? Description { get; set; }
         public required string ExternalUrl { get; set; }
-        public MolenData MolenData { get; set; }
+        public MolenData MolenData { get; set; } = null!;
         public int MolenDataId { get; set; }
         public bool IsAddedImage = false;
     }

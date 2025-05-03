@@ -9,7 +9,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public MolenTBN MolenTBN { get; set; }
+        public virtual MolenTBN MolenTBN { get; set; }
         public required string Ten_Brugge_Nr { get; set; }
         public required string Name { get; set; }
         public string? ToelichtingNaam { get; set; }
@@ -66,12 +66,24 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public string? LandschappelijkeWaarde { get; set; }
         public string? KadastraleAanduiding { get; set; }
         public bool CanAddImages { get; set; }
-        public virtual List<MolenImage> Images { get; set; }
-        public virtual List<MolenType> ModelTypes { get; set; } = new List<MolenType>();
-        public virtual List<MolenTypeAssociation> MolenTypeAssociations { get; set; } = new List<MolenTypeAssociation>();
-        public virtual List<AddedImage> AddedImages { get; set; } = new List<AddedImage>();
-        public virtual List<MolenMaker> MolenMakers { get; set; } = new List<MolenMaker>();
-        public virtual List<DisappearedYearInfo> DisappearedYearInfos { get; set; } = new List<DisappearedYearInfo>();
+        //[JsonIgnore]
+        public virtual List<MolenImage> Images { get; set; } = null!;
+        public virtual List<MolenType> ModelTypes { get; set; } = null!;
+        //public List<MolenType>? MolenTypes => MolenTypeAssociations?
+        //.Where(a => a.MolenType != null)
+        //.Select(a => {
+        //    a.MolenType.MolenTypeAssociations = null;
+        //    return a.MolenType;
+        //})
+        //.ToList();
+        //[JsonIgnore]
+        public virtual List<MolenTypeAssociation> MolenTypeAssociations { get; set; } = null!;
+        //[JsonIgnore]
+        public virtual List<AddedImage> AddedImages { get; set; } = null!;
+        //[JsonIgnore]
+        public virtual List<MolenMaker> MolenMakers { get; set; } = null!;
+        //[JsonIgnore]
+        public virtual List<DisappearedYearInfo> DisappearedYearInfos { get; set; } = null!;
         [NotMapped]
         public bool HasImage { get; set; }
         public string? Eigenaar { get; set; }
