@@ -11,7 +11,7 @@ using MolenApplicatie.Server.Data;
 namespace MolenApplicatie.Server.Migrations
 {
     [DbContext(typeof(MolenDbContext))]
-    [Migration("20250429185908_InitialCreate")]
+    [Migration("20250502182054_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -359,7 +359,7 @@ namespace MolenApplicatie.Server.Migrations
                     b.ToTable("molen_maker");
                 });
 
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -377,7 +377,7 @@ namespace MolenApplicatie.Server.Migrations
                     b.HasIndex("MolenDataId")
                         .IsUnique();
 
-                    b.ToTable("molen_btn");
+                    b.ToTable("molen_tbn");
                 });
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenType", b =>
@@ -497,11 +497,11 @@ namespace MolenApplicatie.Server.Migrations
                     b.Navigation("MolenData");
                 });
 
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", b =>
                 {
                     b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
-                        .WithOne("MolenTBN")
-                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenTBN", "MolenDataId")
+                        .WithOne("MolenTBNs")
+                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", "MolenDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -546,7 +546,7 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Navigation("MolenMakers");
 
-                    b.Navigation("MolenTBN")
+                    b.Navigation("MolenTBNs")
                         .IsRequired();
 
                     b.Navigation("MolenTypeAssociations");
