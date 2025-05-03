@@ -86,25 +86,25 @@ export class MapService {
       if (molen.toestand?.toLowerCase() == "restant") {
         icon = 'remainder';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "weidemolen")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "weidemolen")) {
         icon = 'weidemolen';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "paltrokmolen")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "paltrokmolen")) {
         icon = 'paltrokmolen';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "standerdmolen")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "standerdmolen")) {
         icon = 'standerdmolen';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "wipmolen" || m.name.toLowerCase() === "spinnenkop")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "wipmolen" || m.name.toLowerCase() === "spinnenkop")) {
         icon = 'wipmolen';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "grondzeiler")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "grondzeiler")) {
         icon = 'grondzeiler';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "stellingmolen")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "stellingmolen")) {
         icon = 'stellingmolen';
       }
-      else if (molen.modelType.some(m => m.name.toLowerCase() === "beltmolen")) {
+      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "beltmolen")) {
         icon = 'beltmolen';
       }
 
@@ -121,7 +121,7 @@ export class MapService {
         popupAnchor: [0, -32]
       });
 
-      const marker = L.marker([molen.lat, molen.long], { icon: customIcon }).addTo(this.maps[indexOfMap].Map);
+      const marker = L.marker([molen.latitude, molen.longitude], { icon: customIcon }).addTo(this.maps[indexOfMap].Map);
 
       marker.on('click', () => {
         const targetUrl = `${this.router.url}/${molen.ten_Brugge_Nr}`;

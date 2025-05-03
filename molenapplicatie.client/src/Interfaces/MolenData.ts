@@ -7,10 +7,10 @@ export interface MolenData {
   name: string; 
   ten_Brugge_Nr: string; 
   toelichtingNaam?: string; 
-  bouwjaar?: number;  //2
-  herbouwdJaar?: string;  //2
-  bouwjaarStart?: number;  //2
-  bouwjaarEinde?: number;  //2
+  bouwjaar?: number;
+  herbouwdJaar?: string;
+  bouwjaarStart?: number;
+  bouwjaarEinde?: number;
   functie: string; 
   doel?: string; 
   toestand?: string; 
@@ -67,11 +67,11 @@ export interface MolenData {
   rad?: string; 
   radDiameter?: string; 
   wateras?: string; 
-  lat: number; 
-  long: number; 
+  latitude: number; 
+  longitude: number; 
   lastUpdated?: Date; 
   images?: MolenImage[]; 
   addedImages?: MolenImage[]; 
-  modelType: MolenType[]; 
+  modelTypes: MolenType[]; 
   hasImage: boolean; 
 }

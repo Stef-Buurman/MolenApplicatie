@@ -45,7 +45,7 @@ export class MolenDataClass implements MolenData {
   website?: string;
   winkelInformatie?: string;
   bouwbestek?: string;
-  bijzonderheden?: string; //-----------
+  bijzonderheden?: string;
   museuminformatie?: string;
   molenaar?: string;
   eigendomshistorie?: string;
@@ -67,12 +67,12 @@ export class MolenDataClass implements MolenData {
   rad?: string;
   radDiameter?: string;
   wateras?: string;
-  lat: number;
-  long: number;
+  latitude: number;
+  longitude: number;
   lastUpdated?: Date;
   images?: MolenImage[];
   addedImages?: MolenImage[];
-  modelType: MolenType[];
+  modelTypes: MolenType[];
   hasImage: boolean;
 
   constructor(
@@ -91,7 +91,7 @@ export class MolenDataClass implements MolenData {
     hasImage: boolean,
     modelType: MolenType[] = [],
     canAddImages: boolean,
-    // Additional optional properties:
+
     toelichtingNaam?: string,
     bouwjaar?: number,
     herbouwdJaar?: string,
@@ -127,7 +127,7 @@ export class MolenDataClass implements MolenData {
     museuminformatie?: string,
     molenaar?: string,
     eigendomshistorie?: string,
-    molenMakers?:MolenMaker[],
+    molenMakers?: MolenMaker[],
     molenerf?: string,
     trivia?: string,
     geschiedenis?: string,
@@ -211,12 +211,12 @@ export class MolenDataClass implements MolenData {
     this.rad = rad;
     this.radDiameter = radDiameter;
     this.wateras = wateras;
-    this.lat = lat;
-    this.long = long;
+    this.latitude = lat;
+    this.longitude = long;
     this.lastUpdated = lastUpdated;
     this.images = images;
     this.addedImages = addedImages || [];
-    this.modelType = modelType;
+    this.modelTypes = modelType;
     this.hasImage = hasImage;
   }
 }

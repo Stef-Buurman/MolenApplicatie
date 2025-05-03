@@ -19,12 +19,11 @@ export class MolenService {
   public existingMolens?: SavedMolens;
   public disappearedMolens: { [key: string]: SavedMolens } = {};
   public remainderMolens?: SavedMolens;
-  private lastUpdatedTimestamp?: number;
   private readonly refreshInterval = 30 * 60 * 1000;
-  private allMolenProvincies: string[] = []; 
+  private allMolenProvincies: string[] = [];
+  private response!: MolensResponseType;
 
   constructor(private http: HttpClient,
-    private toasts: Toasts,
     private mapService: MapService) { }
 
   public getMolenFromBackend(ten_Brugge_Nr: string): Observable<MolenDataClass> {
@@ -62,8 +61,8 @@ export class MolenService {
     if (needsRefresh) {
       return this.http.get<MolensResponseType>('/api/molen/active').pipe(
         tap((molensResponseType) => {
+          this.response = molensResponseType;
           this.activeMolens = new SavedMolens(currentTime, molensResponseType.molens);
-          this.lastUpdatedTimestamp = currentTime;
         }),
         map(molensResponseType => molensResponseType.molens)
       );
@@ -80,8 +79,8 @@ export class MolenService {
     if (needsRefresh) {
       return this.http.get<MolensResponseType>('/api/molen/existing').pipe(
         tap((molensResponseType) => {
+          this.response = molensResponseType;
           this.existingMolens = new SavedMolens(currentTime, molensResponseType.molens);
-          this.lastUpdatedTimestamp = currentTime;
         }),
         map(molensResponseType => molensResponseType.molens)
       );
@@ -99,8 +98,8 @@ export class MolenService {
     if (needsRefresh) {
       return this.http.get<MolensResponseType>('/api/molen/disappeared/' + provincie).pipe(
         tap((molensResponseType) => {
+          this.response = molensResponseType;
           this.disappearedMolens[provincie] = new SavedMolens(currentTime, molensResponseType.molens);
-          this.lastUpdatedTimestamp = currentTime;
         }),
         map(molensResponseType => molensResponseType.molens)
       );
@@ -117,8 +116,8 @@ export class MolenService {
     if (needsRefresh) {
       return this.http.get<MolensResponseType>('/api/molen/remainder').pipe(
         tap((molensResponseType) => {
+          this.response = molensResponseType;
           this.remainderMolens = new SavedMolens(currentTime, molensResponseType.molens);
-          this.lastUpdatedTimestamp = currentTime;
         }),
         map(molensResponseType => molensResponseType.molens)
       );
@@ -132,51 +131,13 @@ export class MolenService {
     this.selectedMolen = undefined;
   }
 
-  public getMolenWithImageAmount(): number {
-    var molensCounted: string[] = [];
-    if (this.allMolens != undefined) {
-      var molensWithImage = this.getMolenTBNWithImages(this.allMolens.Molens);
-      for (let i = 0; i < molensWithImage.length; i++) {
-        if (!molensCounted.includes(molensWithImage[i])) {
-          molensCounted.push(molensWithImage[i]);
-        }
-      }
-    }
-    if (this.activeMolens != undefined) {
-      var molensWithImage = this.getMolenTBNWithImages(this.activeMolens.Molens);
-      for (let i = 0; i < molensWithImage.length; i++) {
-        if (!molensCounted.includes(molensWithImage[i])) {
-          molensCounted.push(molensWithImage[i]);
-        }
-      }
-    }
-    if (this.existingMolens != undefined) {
-      var molensWithImage = this.getMolenTBNWithImages(this.existingMolens.Molens);
-      for (let i = 0; i < molensWithImage.length; i++) {
-        if (!molensCounted.includes(molensWithImage[i])) {
-          molensCounted.push(molensWithImage[i]);
-        }
-      }
-    }
-    if (this.disappearedMolens != undefined) {
-      for (const provincie in this.disappearedMolens) {
-        var molensWithImage = this.getMolenTBNWithImages(this.disappearedMolens[provincie].Molens);
-        for (let i = 0; i < molensWithImage.length; i++) {
-          if (!molensCounted.includes(molensWithImage[i])) {
-            molensCounted.push(molensWithImage[i]);
-          }
-        }
-      }
-    }
-    if (this.remainderMolens != undefined) {
-      var molensWithImage = this.getMolenTBNWithImages(this.remainderMolens.Molens);
-      for (let i = 0; i < molensWithImage.length; i++) {
-        if (!molensCounted.includes(molensWithImage[i])) {
-          molensCounted.push(molensWithImage[i]);
-        }
-      }
-    }
-    return molensCounted.length;
+  public getActiveMolenWithImageAmount(): number | undefined {
+    if (!this.response) return undefined;
+     return this.response.activeMolensWithImage;
+  }
+  public getRemainderMolenWithImageAmount(): number | undefined {
+    if (!this.response) return undefined;
+    return this.response.remainderMolensWithImage;
   }
 
   private getMolenTBNWithImages(molens: MolenData[]): string[] {
