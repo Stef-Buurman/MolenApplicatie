@@ -192,7 +192,7 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                foreach (MolenImage IMG in MolenData[i].Images)
+                foreach (MolenImageOld IMG in MolenData[i].Images)
                 {
                     if (!File.Exists(CreateCleanPath.CreatePathToWWWROOT(IMG.FilePath)))
                     {
