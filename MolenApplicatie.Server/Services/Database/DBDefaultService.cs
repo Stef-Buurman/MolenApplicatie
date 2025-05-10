@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Interfaces;
+using System.Linq.Expressions;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -99,5 +100,20 @@ namespace MolenApplicatie.Server.Services.Database
         }
 
         public abstract bool Exists(TEntity entity, out TEntity? existing);
+
+        public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
+        {
+            existing = _context.ChangeTracker.Entries<TEntity>()
+                .Select(e => e.Entity)
+                .FirstOrDefault(predicate.Compile());
+
+            if (existing == null)
+                existing = _dbSet.Local.SingleOrDefault(predicate.Compile())!;
+
+            if (existing == null)
+                existing = _dbSet.SingleOrDefault(predicate)!;
+
+            return existing != null;
+        }
     }
 }

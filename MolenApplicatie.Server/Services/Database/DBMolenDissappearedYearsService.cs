@@ -13,8 +13,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(DisappearedYearInfo molenDissappearedYears, out DisappearedYearInfo? existing)
         {
-            existing = _context.DisappearedYearInfos.FirstOrDefault(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year);
-            return existing != null;
+            return Exists(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year, out existing);
         }
         public async Task<List<DisappearedYearInfo>> GetDissappearedYearsOfMolen(int MolenId)
         {

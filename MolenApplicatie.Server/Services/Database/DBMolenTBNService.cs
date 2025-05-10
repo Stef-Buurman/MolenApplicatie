@@ -12,8 +12,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenTBN molenTBN, out MolenTBN? existing)
         {
-            existing = _context.MolenTBNs.FirstOrDefault(e => e.Ten_Brugge_Nr == molenTBN.Ten_Brugge_Nr);
-            return existing != null;
+            return Exists(e => e.Ten_Brugge_Nr == molenTBN.Ten_Brugge_Nr, out existing);
         }
     }
 }

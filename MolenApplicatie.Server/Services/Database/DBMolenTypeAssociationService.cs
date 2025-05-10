@@ -13,8 +13,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenTypeAssociation molenTypeAssociation, out MolenTypeAssociation? existing)
         {
-            existing = _context.MolenTypeAssociations.FirstOrDefault(e => e.MolenDataId == molenTypeAssociation.MolenDataId && e.MolenTypeId == molenTypeAssociation.MolenTypeId);
-            return existing != null;
+            return Exists(e => e.MolenDataId == molenTypeAssociation.MolenDataId && e.MolenTypeId == molenTypeAssociation.MolenTypeId, out existing);
         }
         public async Task<List<MolenTypeAssociation>> GetMolenTypeAssociationsOfMolen(int MolenId)
         {

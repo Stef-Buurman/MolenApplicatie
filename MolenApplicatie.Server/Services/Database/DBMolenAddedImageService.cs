@@ -15,8 +15,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override bool Exists(AddedImage addedImage, out AddedImage? existing)
         {
-            existing = _context.AddedImages.FirstOrDefault(e => e.FilePath == addedImage.FilePath);
-            return existing != null;
+            return Exists(e => e.FilePath == addedImage.FilePath, out existing);
         }
 
         public override async Task<AddedImage> Add(AddedImage addedImage)

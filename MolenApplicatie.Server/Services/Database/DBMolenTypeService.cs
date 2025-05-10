@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MolenApplicatie.Server.Data;
+﻿using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -15,8 +14,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenType molenType, out MolenType? existing)
         {
-            existing = _context.MolenTypes.FirstOrDefault(e => e.Name == molenType.Name);
-            return existing != null;
+            return Exists(e => e.Name == molenType.Name, out existing);
         }
         public override async Task Delete(MolenType molenType)
         {

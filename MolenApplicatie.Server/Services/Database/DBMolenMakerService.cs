@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
-using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -14,8 +13,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenMaker molenMaker, out MolenMaker? existing)
         {
-            existing = _context.MolenMakers.FirstOrDefault(e => e.Name == molenMaker.Name && e.MolenDataId == molenMaker.MolenDataId);
-            return existing != null;
+            return Exists(e => e.Name == molenMaker.Name && e.MolenDataId == molenMaker.MolenDataId, out existing);
         }
         public async Task<List<MolenMaker>> GetMakersOfMolen(int MolenId)
         {

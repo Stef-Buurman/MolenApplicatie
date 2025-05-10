@@ -1,5 +1,4 @@
 ﻿using MolenApplicatie.Server.Data;
-using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -13,8 +12,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(Place place, out Place? existing)
         {
-            existing = _context.Places.FirstOrDefault(e => e.Name == place.Name);
-            return existing != null;
+            return Exists(e => e.Name == place.Name, out existing);
         }
     }
 }

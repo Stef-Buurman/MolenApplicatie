@@ -34,8 +34,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenData molenData, out MolenData? existing)
         {
-            existing = _context.MolenData.FirstOrDefault(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr);
-            return existing != null;
+            return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
         }
 
         public override async Task<MolenData> Add(MolenData molenData)
