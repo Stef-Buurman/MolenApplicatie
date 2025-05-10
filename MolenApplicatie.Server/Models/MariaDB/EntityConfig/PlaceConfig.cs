@@ -9,7 +9,8 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
         {
             builder.Property(p => p.Name)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci");
 
             builder.HasIndex(p => p.Name)
                 .IsUnique();
