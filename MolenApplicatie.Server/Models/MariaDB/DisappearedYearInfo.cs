@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MolenApplicatie.Server.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("disappeared_year_info")]
-    public class DisappearedYearInfo
+    public class DisappearedYearInfo : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

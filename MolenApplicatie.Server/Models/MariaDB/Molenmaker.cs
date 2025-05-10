@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_maker")]
-    public class MolenMaker
+    public class MolenMaker : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

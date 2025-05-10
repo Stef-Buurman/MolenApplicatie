@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("last_searched_for_new_data")]
-    public class LastSearchedForNewData
+    public class LastSearchedForNewData : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

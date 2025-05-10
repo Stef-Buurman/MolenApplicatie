@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MolenApplicatie.Server.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_type")]
-    public class MolenType
+    public class MolenType : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

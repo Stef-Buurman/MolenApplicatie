@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MolenApplicatie.Server.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_image")]
-    public class MolenImage
+    public class MolenImage : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

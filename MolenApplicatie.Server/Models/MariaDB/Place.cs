@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("place")]
-    public class Place
+    public class Place : DefaultModel
     {
         [Key]
         public int Id { get; set; }

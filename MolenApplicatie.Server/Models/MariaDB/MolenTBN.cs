@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_tbn")]
-    public class MolenTBN
+    public class MolenTBN : DefaultModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
