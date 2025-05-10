@@ -20,7 +20,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override async Task Delete(MolenType molenType)
         {
-            MolenType? molenTypeToDetele = await GetById(molenType);
+            MolenType? molenTypeToDetele = await GetById(molenType.Id);
             if (molenTypeToDetele != null)
             {
                 List<MolenTypeAssociation> molenTypeAssociations = _context.MolenTypeAssociations.Where(e => e.MolenTypeId == molenTypeToDetele.Id).ToList();

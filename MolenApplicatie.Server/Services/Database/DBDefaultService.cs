@@ -20,14 +20,14 @@ namespace MolenApplicatie.Server.Services.Database
             return _dbSet.ToList();
         }
 
-        public virtual async Task<TEntity?> GetById(object id)
+        public virtual async Task<TEntity?> GetById(int id)
         {
             return await _dbSet.FindAsync(id);
         }
 
         public virtual async Task<TEntity> Add(TEntity entity)
         {
-            if (Exists(entity, out var existingEntity))
+            if (Exists(entity, out TEntity? existingEntity))
             {
                 return existingEntity!;
             }
@@ -37,7 +37,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> AddRange(List<TEntity> entities)
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 await Add(entity);
             }
@@ -52,7 +52,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual List<TEntity> UpdateRange(List<TEntity> entities)
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 Update(entity);
             }
@@ -61,7 +61,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<TEntity> AddOrUpdate(TEntity entity)
         {
-            if (Exists(entity, out var existingEntity))
+            if (Exists(entity, out TEntity? existingEntity))
             {
                 Update(existingEntity!);
                 return existingEntity!;
@@ -74,7 +74,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities)
         {
-            foreach (var entity in entities)
+            foreach (TEntity entity in entities)
             {
                 await AddOrUpdate(entity);
             }
@@ -83,7 +83,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task Delete(TEntity entity)
         {
-            var existingEntity = await GetById(entity.Id);
+            TEntity? existingEntity = await GetById(entity.Id);
             if (existingEntity != null)
             {
                 _dbSet.Remove(existingEntity);

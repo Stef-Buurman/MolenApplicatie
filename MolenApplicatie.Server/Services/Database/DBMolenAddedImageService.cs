@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -12,10 +13,16 @@ namespace MolenApplicatie.Server.Services.Database
             _context = context;
         }
 
-        public override bool Exists(AddedImage entity, out AddedImage? existing)
+        public override bool Exists(AddedImage addedImage, out AddedImage? existing)
         {
-            existing = _context.AddedImages.FirstOrDefault(e => e.FilePath == entity.FilePath);
+            existing = _context.AddedImages.FirstOrDefault(e => e.FilePath == addedImage.FilePath);
             return existing != null;
+        }
+
+        public override async Task<AddedImage> Add(AddedImage addedImage)
+        {
+            if (!File.Exists(Globals.WWWROOTPath + addedImage.FilePath)) return addedImage;
+            return await base.Add(addedImage);
         }
 
         public async Task<List<AddedImage>> GetImagesOfMolen(int MolenId)
@@ -24,6 +31,19 @@ namespace MolenApplicatie.Server.Services.Database
                 .Where(e => e.MolenDataId == MolenId)
                 .ToListAsync();
             return images;
+        }
+
+        public override async Task Delete(AddedImage image)
+        {
+            AddedImage? addedImageToDelete = await GetById(image.Id);
+            if (addedImageToDelete != null)
+            {
+                if (!File.Exists(Globals.WWWROOTPath + addedImageToDelete.FilePath))
+                {
+                    File.Delete(Globals.WWWROOTPath + addedImageToDelete.FilePath);
+                }
+                _context.AddedImages.Remove(addedImageToDelete);
+            }
         }
     }
 }
