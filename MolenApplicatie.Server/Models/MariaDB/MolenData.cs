@@ -67,23 +67,10 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public string? LandschappelijkeWaarde { get; set; }
         public string? KadastraleAanduiding { get; set; }
         public bool CanAddImages { get; set; }
-        //[JsonIgnore]
         public virtual List<MolenImage> Images { get; set; } = null!;
-        public virtual List<MolenType> ModelTypes { get; set; } = null!;
-        //public List<MolenType>? MolenTypes => MolenTypeAssociations?
-        //.Where(a => a.MolenType != null)
-        //.Select(a => {
-        //    a.MolenType.MolenTypeAssociations = null;
-        //    return a.MolenType;
-        //})
-        //.ToList();
-        //[JsonIgnore]
         public virtual List<MolenTypeAssociation> MolenTypeAssociations { get; set; } = null!;
-        //[JsonIgnore]
         public virtual List<AddedImage> AddedImages { get; set; } = null!;
-        //[JsonIgnore]
         public virtual List<MolenMaker> MolenMakers { get; set; } = null!;
-        //[JsonIgnore]
         public virtual List<DisappearedYearInfo> DisappearedYearInfos { get; set; } = null!;
         [NotMapped]
         public bool HasImage { get; set; }
