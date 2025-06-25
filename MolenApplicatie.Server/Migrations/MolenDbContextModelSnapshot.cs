@@ -356,7 +356,7 @@ namespace MolenApplicatie.Server.Migrations
                     b.ToTable("molen_maker");
                 });
 
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", b =>
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -383,23 +383,21 @@ namespace MolenApplicatie.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int?>("MolenDataId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MolenDataId");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("molen_type");
                 });
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTypeAssociation", b =>
                 {
-                    b.Property<int>("MolenTypeAssociationId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -409,7 +407,7 @@ namespace MolenApplicatie.Server.Migrations
                     b.Property<int>("MolenTypeId")
                         .HasColumnType("int");
 
-                    b.HasKey("MolenTypeAssociationId");
+                    b.HasKey("Id");
 
                     b.HasIndex("MolenDataId");
 
@@ -433,7 +431,8 @@ namespace MolenApplicatie.Server.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("varchar(255)")
+                        .UseCollation("utf8mb4_general_ci");
 
                     b.Property<int>("Population")
                         .HasColumnType("int");
@@ -494,22 +493,15 @@ namespace MolenApplicatie.Server.Migrations
                     b.Navigation("MolenData");
                 });
 
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", b =>
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
                 {
                     b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
-                        .WithOne("MolenTBNs")
-                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenTBNs", "MolenDataId")
+                        .WithOne("MolenTBN")
+                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenTBN", "MolenDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("MolenData");
-                });
-
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenType", b =>
-                {
-                    b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", null)
-                        .WithMany("ModelTypes")
-                        .HasForeignKey("MolenDataId");
                 });
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTypeAssociation", b =>
@@ -539,11 +531,9 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Navigation("Images");
 
-                    b.Navigation("ModelTypes");
-
                     b.Navigation("MolenMakers");
 
-                    b.Navigation("MolenTBNs")
+                    b.Navigation("MolenTBN")
                         .IsRequired();
 
                     b.Navigation("MolenTypeAssociations");
