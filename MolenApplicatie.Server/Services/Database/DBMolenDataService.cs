@@ -1,5 +1,7 @@
 ﻿using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -32,6 +34,7 @@ namespace MolenApplicatie.Server.Services.Database
             _dBMolenTBNService = dBMolenTBNService;
             _dBMolenTypeAssociationService = dBMolenTypeAssociationService;
         }
+
         public override bool Exists(MolenData molenData, out MolenData? existing)
         {
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
@@ -39,29 +42,94 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<MolenData> Add(MolenData molenData)
         {
-            molenData.AddedImages = await _dBMolenAddedImageService.AddRange(molenData.AddedImages);
-            molenData.DisappearedYearInfos = await _dBMolenDissappearedYearsService.AddRange(molenData.DisappearedYearInfos);
-            molenData.Images = await _dBMolenImageService.AddRange(molenData.Images);
-            molenData.MolenMakers = await _dBMolenMakerService.AddRange(molenData.MolenMakers);
-            molenData.ModelTypes = await _dBMolenTypeService.AddRange(molenData.ModelTypes);
-            molenData.MolenTBN = await _dBMolenTBNService.Add(molenData.MolenTBN);
-            molenData.MolenTypeAssociations = await _dBMolenTypeAssociationService.AddRange(molenData.MolenTypeAssociations);
-
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+            var TypeAss = molenData.MolenTypeAssociations.ToList();
+            var images = molenData.Images.ToList();
+            var makers = molenData.MolenMakers.ToList();
+            var addedImages = molenData.AddedImages.ToList();
+            var dissappearedYears = molenData.DisappearedYearInfos.ToList();
+            var tbn = molenData.MolenTBN;
+            molenData.AddedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages);
+            molenData.DisappearedYearInfos = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears);
+            molenData.Images = await _dBMolenImageService.AddOrUpdateRange(images);
+            molenData.MolenMakers = await _dBMolenMakerService.AddOrUpdateRange(makers);
+            molenData.MolenTBN = await _dBMolenTBNService.AddOrUpdate(tbn);
+            TypeAss.ForEach(mak =>
+            {
+                var molenDataCopy = new MolenData
+                {
+                    Ten_Brugge_Nr = molenData.Ten_Brugge_Nr,
+                    Name = molenData.Name,
+                    MolenTBN = molenData.MolenTBN,
+                };
+                mak.MolenData = molenDataCopy;
+            });
+            molenData.MolenTypeAssociations = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss);
             await _context.MolenData.AddAsync(molenData);
+
             return molenData;
         }
 
-        public override MolenData Update(MolenData molenData)
+        public override async Task<MolenData> Update(MolenData molenData)
         {
-            molenData.AddedImages = _dBMolenAddedImageService.UpdateRange(molenData.AddedImages);
-            molenData.DisappearedYearInfos = _dBMolenDissappearedYearsService.UpdateRange(molenData.DisappearedYearInfos);
-            molenData.Images = _dBMolenImageService.UpdateRange(molenData.Images);
-            molenData.MolenMakers = _dBMolenMakerService.UpdateRange(molenData.MolenMakers);
-            molenData.ModelTypes = _dBMolenTypeService.UpdateRange(molenData.ModelTypes);
-            molenData.MolenTBN = _dBMolenTBNService.Update(molenData.MolenTBN);
-            molenData.MolenTypeAssociations = _dBMolenTypeAssociationService.UpdateRange(molenData.MolenTypeAssociations);
-            _context.MolenData.Update(molenData);
-            CheckToDeleteProperties(molenData).Wait();
+            var TypeAss = molenData.MolenTypeAssociations.ToList();
+            var images = molenData.Images.ToList();
+            var makers = molenData.MolenMakers.ToList();
+            var addedImages = molenData.AddedImages.ToList();
+            var dissappearedYears = molenData.DisappearedYearInfos.ToList();
+            var tbn = molenData.MolenTBN;
+
+            molenData.AddedImages.Clear();
+            molenData.DisappearedYearInfos.Clear();
+            molenData.Images.Clear();
+            molenData.MolenMakers.Clear();
+            molenData.MolenTypeAssociations.Clear();
+            molenData.MolenTBN = new MolenTBN { Ten_Brugge_Nr = string.Empty, MolenDataId = 0 };
+
+            molenData = await base.Update(molenData);
+
+            images.ForEach(mak =>
+            {
+                mak.MolenDataId = molenData.Id;
+                mak.MolenData = mak.MolenData;
+            });
+            makers.ForEach(mak =>
+            {
+                mak.MolenDataId = molenData.Id;
+                mak.MolenData = mak.MolenData;
+            });
+            addedImages.ForEach(mak =>
+            {
+                mak.MolenDataId = molenData.Id;
+                mak.MolenData = mak.MolenData;
+            });
+            dissappearedYears.ForEach(mak =>
+            {
+                mak.MolenDataId = molenData.Id;
+                mak.MolenData = mak.MolenData;
+            });
+            tbn.MolenDataId = molenData.Id;
+            tbn.MolenData = tbn.MolenData;
+
+            tbn = await _dBMolenTBNService.AddOrUpdate(tbn);
+            TypeAss.ForEach(mak =>
+            {
+                mak.MolenData = molenData;
+            });
+            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss);
+            images = await _dBMolenImageService.AddOrUpdateRange(images);
+            makers = await _dBMolenMakerService.AddOrUpdateRange(makers);
+            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages);
+            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears);
+            molenData.AddedImages = addedImages;
+            molenData.DisappearedYearInfos = dissappearedYears;
+            molenData.Images = images;
+            molenData.MolenMakers = makers;
+            molenData.MolenTypeAssociations = TypeAss;
+            molenData.MolenTBN = tbn;
             return molenData;
         }
 
@@ -79,7 +147,7 @@ namespace MolenApplicatie.Server.Services.Database
                 .ToList();
             foreach (var image in foundAddedImages)
             {
-                if (molenData.AddedImages.Find(img => img.FilePath == image.FilePath) == null)
+                if (molenData.AddedImages == null || molenData.AddedImages.Find(img => img.FilePath == image.FilePath) == null)
                 {
                     await _dBMolenAddedImageService.Delete(image);
                 }
@@ -101,7 +169,7 @@ namespace MolenApplicatie.Server.Services.Database
                 .ToList();
             foreach (var image in FoundImages)
             {
-                if (molenData.Images.Find(img => img.FilePath == image.FilePath) == null)
+                if (molenData.Images == null || molenData.Images.Find(img => img.FilePath == image.FilePath) == null)
                 {
                     await _dBMolenImageService.Delete(image);
                 }
@@ -123,7 +191,7 @@ namespace MolenApplicatie.Server.Services.Database
                 .ToList();
             foreach (var maker in FoundMakers)
             {
-                if (molenData.MolenMakers.Find(mk => mk.Name == maker.Name) == null)
+                if (molenData.MolenMakers == null || molenData.MolenMakers.Find(mk => mk.Name == maker.Name) == null)
                 {
                     await _dBMolenMakerService.Delete(maker);
                 }
@@ -143,9 +211,10 @@ namespace MolenApplicatie.Server.Services.Database
                 .Where(g => g.Count() > 1)
                 .Select(g => g.First())
                 .ToList();
+
             foreach (var association in FoundAssociations)
             {
-                if (molenData.MolenTypeAssociations.Find(asoc => asoc.MolenTypeId == association.MolenTypeId) == null)
+                if (molenData.MolenTypeAssociations == null || molenData.MolenTypeAssociations.Find(asoc => asoc.MolenTypeId == association.MolenTypeId) == null)
                 {
                     await _dBMolenTypeAssociationService.Delete(association);
                 }
@@ -167,7 +236,7 @@ namespace MolenApplicatie.Server.Services.Database
                 .ToList();
             foreach (var year in FoundDissappearedYears)
             {
-                if (molenData.DisappearedYearInfos.Find(yr => yr.Year == year.Year) == null)
+                if (molenData.DisappearedYearInfos == null || molenData.DisappearedYearInfos.Find(yr => yr.Year == year.Year) == null)
                 {
                     await _dBMolenDissappearedYearsService.Delete(year);
                 }

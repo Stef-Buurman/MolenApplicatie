@@ -13,7 +13,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
         public override bool Exists(MolenMaker molenMaker, out MolenMaker? existing)
         {
-            return Exists(e => e.Name == molenMaker.Name && e.MolenDataId == molenMaker.MolenDataId, out existing);
+            return Exists(e => e.Name == molenMaker.Name && e.Year == molenMaker.Year, out existing);
         }
         public async Task<List<MolenMaker>> GetMakersOfMolen(int MolenId)
         {

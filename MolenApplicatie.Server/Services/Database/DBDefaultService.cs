@@ -28,44 +28,72 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<TEntity> Add(TEntity entity)
         {
+            if (entity == null) return entity;
+
             if (Exists(entity, out TEntity? existingEntity))
             {
                 return existingEntity!;
             }
+
             await _dbSet.AddAsync(entity);
             return entity;
         }
 
         public virtual async Task<List<TEntity>> AddRange(List<TEntity> entities)
         {
+            if (entities == null) return entities;
+
+            var result = new List<TEntity>();
             foreach (TEntity entity in entities)
             {
-                await Add(entity);
+                var added = await Add(entity);
+                result.Add(added);
             }
-            return entities;
+
+            return result;
         }
 
-        public virtual TEntity Update(TEntity entity)
+        public virtual async Task<TEntity> Update(TEntity entity)
         {
+            if (entity == null) return entity;
+
+            var existingEntry = _context.ChangeTracker
+                .Entries<TEntity>()
+                .FirstOrDefault(e => e.Entity != null && e.Entity.Id == entity.Id);
+
+            if (existingEntry != null)
+            {
+                existingEntry.State = EntityState.Detached;
+            }
+
             _dbSet.Update(entity);
+            await Task.CompletedTask;
             return entity;
         }
 
-        public virtual List<TEntity> UpdateRange(List<TEntity> entities)
+        public virtual async Task<List<TEntity>> UpdateRange(List<TEntity> entities)
         {
+            if (entities == null) return entities;
+
             foreach (TEntity entity in entities)
             {
-                Update(entity);
+                await Update(entity);
             }
             return entities;
         }
 
         public virtual async Task<TEntity> AddOrUpdate(TEntity entity)
         {
+            if (entity == null)
+                return entity;
+
             if (Exists(entity, out TEntity? existingEntity))
             {
-                Update(existingEntity!);
-                return existingEntity!;
+                if (entity.Id == 0 && existingEntity != null && existingEntity.Id != 0)
+                    entity.Id = existingEntity.Id;
+
+                await Update(entity);
+                return entity;
             }
             else
             {
@@ -75,15 +103,21 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities)
         {
-            foreach (TEntity entity in entities)
+            if (entities == null)
+                return entities;
+
+            foreach (TEntity entity in entities.ToList())
             {
                 await AddOrUpdate(entity);
             }
+
             return entities;
         }
 
         public virtual async Task Delete(TEntity entity)
         {
+            if (entity == null) return;
+
             TEntity? existingEntity = await GetById(entity.Id);
             if (existingEntity != null)
             {
@@ -93,6 +127,8 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task DeleteRange(List<TEntity> entities)
         {
+            if (entities == null) return;
+
             foreach (var entity in entities)
             {
                 await Delete(entity);
@@ -103,16 +139,16 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
-            existing = _context.ChangeTracker.Entries<TEntity>()
-                .Select(e => e.Entity)
-                .FirstOrDefault(predicate.Compile());
-
-            if (existing == null)
-                existing = _dbSet.Local.SingleOrDefault(predicate.Compile())!;
-
-            if (existing == null)
-                existing = _dbSet.SingleOrDefault(predicate)!;
-
+            existing = _context.ChangeTracker
+                .Entries<TEntity>()
+                .FirstOrDefault(e =>
+                    (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Unchanged) &&
+                    predicate.Compile().Invoke(e.Entity)
+                )?.Entity;
+            if (existing != null) return true;
+            existing = _dbSet.Local.SingleOrDefault(predicate.Compile());
+            if (existing != null) return true;
+            existing = _dbSet.SingleOrDefault(predicate);
             return existing != null;
         }
     }
