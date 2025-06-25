@@ -7,6 +7,7 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
     {
         public void Configure(EntityTypeBuilder<MolenData> builder)
         {
+            builder.HasKey(m => m.Id);
             builder.HasAlternateKey(m => m.Ten_Brugge_Nr);
             builder.HasMany(m => m.AddedImages)
                 .WithOne(ai => ai.MolenData)
@@ -24,10 +25,10 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
                 .WithOne(dyi => dyi.MolenData)
                 .HasForeignKey(dyi => dyi.MolenDataId)
                 .OnDelete(DeleteBehavior.Cascade);
-            builder.HasOne(m => m.MolenTBN)
+            builder.HasOne(md => md.MolenTBN)
                 .WithOne(mtbn => mtbn.MolenData)
-                .HasForeignKey<MolenTBN>(mtbn => mtbn.MolenDataId);
-
+                .HasForeignKey<MolenTBN>(mtbn => mtbn.MolenDataId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

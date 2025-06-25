@@ -7,11 +7,11 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
     {
         public void Configure(EntityTypeBuilder<Place> builder)
         {
+            builder.HasKey(p => p.Id);
             builder.Property(p => p.Name)
                 .IsRequired()
                 .HasMaxLength(255)
                 .UseCollation("utf8mb4_general_ci");
-
             builder.HasIndex(p => p.Name)
                 .IsUnique();
         }

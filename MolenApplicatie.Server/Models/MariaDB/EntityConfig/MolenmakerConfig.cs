@@ -7,9 +7,12 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
     {
         public void Configure(EntityTypeBuilder<MolenMaker> builder)
         {
+            builder.HasKey(m => m.Id);
+            builder.Property(ai => ai.MolenDataId)
+                .IsRequired();
             builder.HasOne(m => m.MolenData)
                 .WithMany(md => md.MolenMakers)
-                .HasForeignKey(md => md.MolenDataId)
+                .HasForeignKey(m => m.MolenDataId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

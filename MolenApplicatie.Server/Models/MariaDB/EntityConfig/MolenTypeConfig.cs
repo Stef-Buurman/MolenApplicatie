@@ -7,9 +7,12 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
     {
         public void Configure(EntityTypeBuilder<MolenType> builder)
         {
-            //builder.HasMany(mt => mt.MolenTypeAssociations)
-            //.WithOne(mta => mta.MolenType)
-            //.HasForeignKey(mta => mta.MolenTypeId);
+            builder.HasKey(mt => mt.Id);
+            builder.HasMany(mt => mt.MolenTypeAssociations)
+                .WithOne(mta => mta.MolenType)
+                .HasForeignKey(mta => mta.MolenTypeId);
+            builder.HasIndex(p => p.Name)
+                .IsUnique();
         }
     }
 }
