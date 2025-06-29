@@ -8,9 +8,9 @@ namespace MolenApplicatie.Server.Controllers
     [Route("api")]
     public class PlacesController : ControllerBase
     {
-        private readonly PlacesService2_0 _PlacesService;
+        private readonly PlacesService _PlacesService;
 
-        public PlacesController(PlacesService2_0 placesService)
+        public PlacesController(PlacesService placesService)
         {
             _PlacesService = placesService;
         }

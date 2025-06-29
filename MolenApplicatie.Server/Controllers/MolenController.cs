@@ -9,10 +9,10 @@ namespace MolenApplicatie.Server.Controllers
     [Route("api/molen")]
     public class MolenController : ControllerBase
     {
-        private readonly MolenService2_0 _MolenService;
-        private readonly NewMolenDataService2_0 _NewMolenDataService;
+        private readonly MolenService _MolenService;
+        private readonly NewMolenDataService _NewMolenDataService;
 
-        public MolenController(MolenService2_0 molenService, NewMolenDataService2_0 newMolenDataService)
+        public MolenController(MolenService molenService, NewMolenDataService newMolenDataService)
         {
             _MolenService = molenService;
             _NewMolenDataService = newMolenDataService;
