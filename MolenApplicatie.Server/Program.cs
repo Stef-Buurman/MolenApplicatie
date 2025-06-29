@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
+using MolenApplicatie.Server.Services.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +16,20 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<NewMolenDataService>();
-builder.Services.AddTransient<NewMolenDataService2_0>();
 builder.Services.AddTransient<PlacesService>();
-builder.Services.AddTransient<PlacesService2_0>();
-builder.Services.AddTransient<MolenService2_0>();
+builder.Services.AddTransient<MolenService>();
+builder.Services.AddTransient<DBMolenAddedImageService>();
+builder.Services.AddTransient<DBMolenDissappearedYearsService>();
+builder.Services.AddTransient<DBPlaceService>();
+builder.Services.AddTransient<DBPlaceTypeService>();
+builder.Services.AddTransient<DBMolenTypeService>();
+builder.Services.AddTransient<DBMolenDataService>();
+builder.Services.AddTransient<DBMolenMakerService>();
+builder.Services.AddTransient<DBMolenImageService>();
+builder.Services.AddTransient<DBMolenTBNService>();
+builder.Services.AddTransient<DBMolenTypeAssociationService>();
+builder.Services.AddTransient<HttpClient>();
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
@@ -29,20 +38,12 @@ builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("
 
 string connectionString = "server=localhost;user=root;database=molen_database;port=3306;password=DitIsEchtEenLastigWW";
 builder.Services.AddDbContext<MolenDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).LogTo(_ => { }, LogLevel.None)
 );
-
-builder.Services.AddTransient<MolenDbContext>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(x =>
         x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
-//builder.Services.AddControllers().AddJsonOptions(x =>
-//{
-//    x.JsonSerializerOptions.ReferenceHandler = null;
-//    x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-//});
-
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
