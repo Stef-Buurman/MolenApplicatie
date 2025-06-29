@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_data")]
-    public class MolenData : DefaultModel
+    public class MolenData : DefaultModel, IEquatable<MolenData>
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -82,5 +82,25 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public DateTime LastUpdated { get; set; }
+
+        public bool Equals(MolenData? other)
+        {
+            if (other == null) return false;
+            return Ten_Brugge_Nr == other.Ten_Brugge_Nr;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is MolenData other)
+            {
+                return Equals(other);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Ten_Brugge_Nr);
+        }
     }
 }
