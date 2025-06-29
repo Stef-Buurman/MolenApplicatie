@@ -5,14 +5,15 @@ using System.Linq.Expressions;
 
 namespace MolenApplicatie.Server.Services.Database
 {
-    public abstract class DBDefaultService<TEntity> where TEntity : class, DefaultModel
+    public abstract class DBDefaultService<TEntity> where TEntity : class, DefaultModel, IEquatable<TEntity>
     {
         private readonly MolenDbContext _context;
         private readonly DbSet<TEntity> _dbSet;
-
+        public readonly DBCache<TEntity> _cache;
         public DBDefaultService(MolenDbContext context)
         {
             _context = context;
+            _cache = new DBCache<TEntity>(context);
             _dbSet = _context.Set<TEntity>();
         }
 
@@ -35,22 +36,18 @@ namespace MolenApplicatie.Server.Services.Database
                 return existingEntity!;
             }
 
-            await _dbSet.AddAsync(entity);
-            return entity;
+            var addedEntityEntry = await _dbSet.AddAsync(entity);
+            _cache.Add(addedEntityEntry.Entity);
+            return addedEntityEntry.Entity;
         }
 
         public virtual async Task<List<TEntity>> AddRange(List<TEntity> entities)
         {
             if (entities == null) return entities;
 
-            var result = new List<TEntity>();
-            foreach (TEntity entity in entities)
-            {
-                var added = await Add(entity);
-                result.Add(added);
-            }
+            await _dbSet.AddRangeAsync(entities);
 
-            return result;
+            return entities;
         }
 
         public virtual async Task<TEntity> Update(TEntity entity)
@@ -67,6 +64,7 @@ namespace MolenApplicatie.Server.Services.Database
             }
 
             _dbSet.Update(entity);
+            _cache.Update(entity);
             await Task.CompletedTask;
             return entity;
         }
@@ -75,10 +73,8 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entities == null) return entities;
 
-            foreach (TEntity entity in entities)
-            {
-                await Update(entity);
-            }
+            _dbSet.UpdateRange(entities);
+            await Task.CompletedTask;
             return entities;
         }
 
@@ -106,12 +102,44 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null)
                 return entities;
 
-            foreach (TEntity entity in entities.ToList())
+            var all = await _cache.GetAllAsync();
+            var entitiesToAdd = new List<TEntity>();
+            var entitiesToUpdate = new List<TEntity>();
+
+            foreach (TEntity entity in entities)
             {
-                await AddOrUpdate(entity);
+                var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
+                if (existingEntity != null)
+                {
+                    if (entity.Id == 0 && existingEntity.Id != 0)
+                        entity.Id = existingEntity.Id;
+
+                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                }
+                else if (entitiesToAdd.Contains(entity))
+                {
+                    continue;
+                }
+                else
+                {
+                    entitiesToAdd.Add(entity);
+                }
             }
+            await AddRangeAsync(entitiesToAdd);
 
             return entities;
+        }
+
+        public virtual async Task AddRangeAsync(List<TEntity> entities)
+        {
+            if (entities == null) return;
+
+            foreach (var entity in entities)
+            {
+                entity.Id = 0;
+            }
+            await _dbSet.AddRangeAsync(entities);
+            _cache.AddRange(entities);
         }
 
         public virtual async Task Delete(TEntity entity)
@@ -122,6 +150,7 @@ namespace MolenApplicatie.Server.Services.Database
             if (existingEntity != null)
             {
                 _dbSet.Remove(existingEntity);
+                _cache.Remove(existingEntity);
             }
         }
 
@@ -139,17 +168,33 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
+            bool exists = _cache.Exists(predicate, out existing);
+            Console.WriteLine($"Checking existence in cache: {exists} - {existing?.Id}");
+            if (exists) return true;
             existing = _context.ChangeTracker
                 .Entries<TEntity>()
                 .FirstOrDefault(e =>
                     (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Unchanged) &&
                     predicate.Compile().Invoke(e.Entity)
                 )?.Entity;
-            if (existing != null) return true;
+            if (existing != null)
+            {
+                _cache.Add(existing);
+                return true;
+            }
             existing = _dbSet.Local.SingleOrDefault(predicate.Compile());
-            if (existing != null) return true;
+            if (existing != null)
+            {
+                _cache.Add(existing);
+                return true;
+            }
             existing = _dbSet.SingleOrDefault(predicate);
-            return existing != null;
+            if (existing != null)
+            {
+                _cache.Add(existing);
+                return true;
+            }
+            return false;
         }
     }
 }
