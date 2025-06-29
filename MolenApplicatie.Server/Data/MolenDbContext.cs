@@ -13,6 +13,7 @@ namespace MolenApplicatie.Server.Data
         public DbSet<MolenTypeAssociation> MolenTypeAssociations { get; set; }
         public DbSet<LastSearchedForNewData> LastSearchedForNewDatas { get; set; }
         public DbSet<Place> Places { get; set; }
+        public DbSet<PlaceType> PlaceTypes { get; set; }
         public DbSet<DisappearedYearInfo> DisappearedYearInfos { get; set; }
         public DbSet<MolenMaker> MolenMakers { get; set; }
         public DbSet<MolenImage> MolenImages { get; set; }
