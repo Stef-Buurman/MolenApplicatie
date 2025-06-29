@@ -12,8 +12,20 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
                 .IsRequired()
                 .HasMaxLength(255)
                 .UseCollation("utf8mb4_general_ci");
-            builder.HasIndex(p => p.Name)
-                .IsUnique();
+            builder.Property(p => p.Province)
+                .IsRequired()
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci");
+            builder.Property(p => p.Latitude)
+                .HasPrecision(10, 6);
+            builder.Property(p => p.Longitude)
+                .HasPrecision(10, 6);
+            builder.Property(p => p.Population)
+                .HasDefaultValue(0);
+            builder.HasOne(p => p.Type)
+                .WithMany(pt => pt.Places)
+                .HasForeignKey(p => p.PlaceTypeId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
