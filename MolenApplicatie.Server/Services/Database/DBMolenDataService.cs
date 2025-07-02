@@ -1,7 +1,5 @@
 ﻿using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -42,10 +40,6 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<MolenData> Add(MolenData molenData)
         {
-            var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            };
             var TypeAss = molenData.MolenTypeAssociations.ToList();
             var images = molenData.Images.ToList();
             var makers = molenData.MolenMakers.ToList();
@@ -57,18 +51,8 @@ namespace MolenApplicatie.Server.Services.Database
             molenData.Images = await _dBMolenImageService.AddOrUpdateRange(images);
             molenData.MolenMakers = await _dBMolenMakerService.AddOrUpdateRange(makers);
             molenData.MolenTBN = await _dBMolenTBNService.AddOrUpdate(tbn);
-            TypeAss.ForEach(mak =>
-            {
-                var molenDataCopy = new MolenData
-                {
-                    Ten_Brugge_Nr = molenData.Ten_Brugge_Nr,
-                    Name = molenData.Name,
-                    MolenTBN = molenData.MolenTBN,
-                };
-                mak.MolenData = molenDataCopy;
-            });
             molenData.MolenTypeAssociations = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss);
-            await _context.MolenData.AddAsync(molenData);
+            await base.Add(molenData);
 
             return molenData;
         }
@@ -87,7 +71,10 @@ namespace MolenApplicatie.Server.Services.Database
             molenData.Images.Clear();
             molenData.MolenMakers.Clear();
             molenData.MolenTypeAssociations.Clear();
-            molenData.MolenTBN = new MolenTBN { Ten_Brugge_Nr = string.Empty, MolenDataId = 0 };
+            molenData.MolenTBN = null!;
+
+            tbn = await _dBMolenTBNService.AddOrUpdate(tbn);
+            molenData.MolenTBNId = tbn.Id;
 
             molenData = await base.Update(molenData);
 
@@ -111,10 +98,6 @@ namespace MolenApplicatie.Server.Services.Database
                 mak.MolenDataId = molenData.Id;
                 mak.MolenData = mak.MolenData;
             });
-            tbn.MolenDataId = molenData.Id;
-            tbn.MolenData = tbn.MolenData;
-
-            tbn = await _dBMolenTBNService.AddOrUpdate(tbn);
             TypeAss.ForEach(mak =>
             {
                 mak.MolenData = molenData;
