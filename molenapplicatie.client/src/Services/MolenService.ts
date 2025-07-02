@@ -1,10 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
-import { MolenDataClass } from '../Class/MolenDataClass';
 import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/MolenData';
-import { Toasts } from '../Utils/Toasts';
 import { MapService } from './MapService';
 import { MolensResponseType } from '../Interfaces/MolensResponseType';
 
@@ -26,11 +24,11 @@ export class MolenService {
   constructor(private http: HttpClient,
     private mapService: MapService) { }
 
-  public getMolenFromBackend(ten_Brugge_Nr: string): Observable<MolenDataClass> {
-    return this.http.get<MolenDataClass>('/api/molen/' + ten_Brugge_Nr);
+  public getMolenFromBackend(ten_Brugge_Nr: string): Observable<MolenData> {
+    return this.http.get<MolenData>('/api/molen/' + ten_Brugge_Nr);
   }
 
-  public getMolen(ten_Brugge_Nr: string): Observable<MolenDataClass> {
+  public getMolen(ten_Brugge_Nr: string): Observable<MolenData> {
     var molen = this.allMolens?.Molens.find(molen => molen.ten_Brugge_Nr == ten_Brugge_Nr);
     if (molen == undefined) {
       return this.getMolenFromBackend(ten_Brugge_Nr);
@@ -39,7 +37,6 @@ export class MolenService {
   }
 
   public getAllMolenProvincies(): Observable<string[]> {
-    const currentTime = Date.now();
     const needsRefresh = this.allMolenProvincies.length == 0;
 
     if (needsRefresh) {
@@ -71,7 +68,7 @@ export class MolenService {
     }
   }
 
-  public getAllExistingMolens(): Observable<MolenDataClass[]> {
+  public getAllExistingMolens(): Observable<MolenData[]> {
     const currentTime = Date.now();
     const needsRefresh = !this.existingMolens?.LastUpdatedTimestamp ||
       (currentTime - this.existingMolens.LastUpdatedTimestamp) > this.refreshInterval;
@@ -89,7 +86,7 @@ export class MolenService {
     }
   }
 
-  public getDisappearedMolensByProvincie(provincie: string): Observable<MolenDataClass[]> {
+  public getDisappearedMolensByProvincie(provincie: string): Observable<MolenData[]> {
     const currentTime = Date.now();
     const provincieMolens = this.disappearedMolens[provincie];
     const needsRefresh = (!provincieMolens?.LastUpdatedTimestamp ||
@@ -108,7 +105,7 @@ export class MolenService {
     }
   }
 
-  public getAllRemainderMolens(): Observable<MolenDataClass[]> {
+  public getAllRemainderMolens(): Observable<MolenData[]> {
     const currentTime = Date.now();
     const needsRefresh = !this.remainderMolens?.LastUpdatedTimestamp ||
       (currentTime - this.remainderMolens.LastUpdatedTimestamp) > this.refreshInterval;
@@ -138,17 +135,6 @@ export class MolenService {
   public getRemainderMolenWithImageAmount(): number | undefined {
     if (!this.response) return undefined;
     return this.response.remainderMolensWithImage;
-  }
-
-  private getMolenTBNWithImages(molens: MolenData[]): string[] {
-    var molensCounted: string[] = [];
-    molens.forEach(molen => {
-      if (molen.hasImage && !molensCounted.includes(molen.ten_Brugge_Nr)) {
-        molensCounted.push(molen.ten_Brugge_Nr);
-      }
-    }
-    );
-    return molensCounted;
   }
 
   public deleteImage(tbNr: string, imageName: string, APIKey: string): Observable<any> {
