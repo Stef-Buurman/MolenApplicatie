@@ -1,6 +1,7 @@
 ﻿using MolenApplicatie.Server.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace MolenApplicatie.Server.Models.MariaDB
 {
@@ -11,6 +12,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public required string Name { get; set; }
+        [JsonIgnore]
         public virtual List<MolenTypeAssociation>? MolenTypeAssociations { get; set; } = null!;
 
         public bool Equals(MolenType? other)

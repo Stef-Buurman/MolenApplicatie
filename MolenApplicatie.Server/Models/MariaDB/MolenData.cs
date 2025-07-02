@@ -11,6 +11,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public virtual MolenTBN MolenTBN { get; set; }
+        public virtual int MolenTBNId { get; set; }
         public required string Ten_Brugge_Nr { get; set; }
         public required string Name { get; set; }
         public string? ToelichtingNaam { get; set; }
