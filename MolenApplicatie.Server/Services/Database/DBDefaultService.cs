@@ -35,7 +35,7 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 return existingEntity!;
             }
-
+            entity.Id = 0;
             var addedEntityEntry = await _dbSet.AddAsync(entity);
             _cache.Add(addedEntityEntry.Entity);
             return addedEntityEntry.Entity;
@@ -73,6 +73,18 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entities == null) return entities;
 
+            foreach(var entity in entities)
+            {
+                var existingEntry = _context.ChangeTracker
+                    .Entries<TEntity>()
+                    .FirstOrDefault(e => e.Entity != null && e.Entity.Id == entity.Id);
+
+                if (existingEntry != null)
+                {
+                    existingEntry.State = EntityState.Detached;
+                }
+            }
+
             _dbSet.UpdateRange(entities);
             await Task.CompletedTask;
             return entities;
@@ -87,9 +99,7 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 if (entity.Id == 0 && existingEntity != null && existingEntity.Id != 0)
                     entity.Id = existingEntity.Id;
-
-                await Update(entity);
-                return entity;
+                return await Update(entity);
             }
             else
             {
@@ -102,6 +112,7 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null)
                 return entities;
 
+            //_cache.Invalidate();
             var all = await _cache.GetAllAsync();
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
@@ -113,8 +124,8 @@ namespace MolenApplicatie.Server.Services.Database
                 {
                     if (entity.Id == 0 && existingEntity.Id != 0)
                         entity.Id = existingEntity.Id;
-
-                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    //_context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    entitiesToUpdate.Add(entity);
                 }
                 else if (entitiesToAdd.Contains(entity))
                 {
@@ -126,6 +137,7 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
             await AddRangeAsync(entitiesToAdd);
+            await UpdateRange(entitiesToUpdate);
 
             return entities;
         }
@@ -169,8 +181,7 @@ namespace MolenApplicatie.Server.Services.Database
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
             bool exists = _cache.Exists(predicate, out existing);
-            Console.WriteLine($"Checking existence in cache: {exists} - {existing?.Id}");
-            if (exists) return true;
+            if (exists && existing?.Id != 0) return true;
             existing = _context.ChangeTracker
                 .Entries<TEntity>()
                 .FirstOrDefault(e =>
