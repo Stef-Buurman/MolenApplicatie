@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
-import { MolenDataClass } from '../Class/MolenDataClass';
-import { MarkerInfo } from '../Interfaces/MarkerInfo';
 import { MolenData } from '../Interfaces/MolenData';
 import { MapInformation } from '../Class/MapInformation';
 
@@ -67,16 +65,16 @@ export class MapService {
       mapInstance.setView([52, 4.4], 10);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution: ''
       }).addTo(mapInstance);
-
+      console.log(molens)
       molens.forEach(molen => {
         this.addMarker(molen, mapId!);
       });
     });
   }
 
-  addMarker(molen: MolenDataClass, mapId: string | undefined = undefined): void {
+  addMarker(molen: MolenData, mapId: string | undefined = undefined): void {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
     if (indexOfMap != -1) {
@@ -86,25 +84,25 @@ export class MapService {
       if (molen.toestand?.toLowerCase() == "restant") {
         icon = 'remainder';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "weidemolen")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "weidemolen")) {
         icon = 'weidemolen';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "paltrokmolen")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "paltrokmolen")) {
         icon = 'paltrokmolen';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "standerdmolen")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "standerdmolen")) {
         icon = 'standerdmolen';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "wipmolen" || m.name.toLowerCase() === "spinnenkop")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "wipmolen" || m.molenType?.name.toLowerCase() === "spinnenkop")) {
         icon = 'wipmolen';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "grondzeiler")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "grondzeiler")) {
         icon = 'grondzeiler';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "stellingmolen")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "stellingmolen")) {
         icon = 'stellingmolen';
       }
-      else if (molen.modelTypes.some(m => m.name.toLowerCase() === "beltmolen")) {
+      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "beltmolen")) {
         icon = 'beltmolen';
       }
 
