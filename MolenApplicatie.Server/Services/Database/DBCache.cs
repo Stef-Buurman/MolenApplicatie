@@ -18,9 +18,10 @@ namespace MolenApplicatie.Server.Services.Database
         {
             _context = context;
             _dbSet = _context.Set<TEntity>();
+            GetAllAsync().Wait();
         }
 
-        public async  Task<List<TEntity>> GetAllAsync()
+        public async Task<List<TEntity>> GetAllAsync()
         {
             if ((DateTime.UtcNow - _lastRefreshTime) < _cacheDuration && _cachedData.Any())
             {
