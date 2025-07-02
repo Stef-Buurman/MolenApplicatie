@@ -32,6 +32,7 @@ namespace MolenApplicatie.Server.Services.Database
             molenTypeAssociation.MolenData = null!;
             molenTypeAssociation.MolenType = await _dBMolenTypeService.AddOrUpdate(molenTypeAssociation.MolenType);
             molenTypeAssociation.MolenTypeId = molenTypeAssociation.MolenType.Id;
+            molenTypeAssociation.MolenType = null;
             return await base.Add(molenTypeAssociation);
         }
 
@@ -42,7 +43,52 @@ namespace MolenApplicatie.Server.Services.Database
             molenTypeAssociation.MolenData = null!;
             molenTypeAssociation.MolenType = await _dBMolenTypeService.AddOrUpdate(molenTypeAssociation.MolenType);
             molenTypeAssociation.MolenTypeId = molenTypeAssociation.MolenType.Id;
+            molenTypeAssociation.MolenType = null;
             return await base.Update(molenTypeAssociation);
+        }
+
+        public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities)
+        {
+            if (entities == null)
+                return entities;
+
+            var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
+            if (all_types.Count > 0)
+            {
+                all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
+            }
+
+            var entitiesToAdd = new List<MolenTypeAssociation>();
+            var entitiesToUpdate = new List<MolenTypeAssociation>();
+
+            foreach (MolenTypeAssociation entity in entities)
+            {
+                if (entity.MolenType != null)
+                {
+                    entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
+                }
+                if (entity.MolenType != null && entity.MolenType.Id > 0)
+                {
+                    entity.MolenTypeId = entity.MolenType.Id;
+                    entity.MolenType = null;
+                }
+                if (Exists(entity, out var existingEntity))
+                {
+                    if (entity.Id == 0 && existingEntity.Id != 0)
+                        entity.Id = existingEntity.Id;
+
+                    existingEntity.MolenType = null;
+                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                }
+                else
+                {
+                    entitiesToAdd.Add(entity);
+                }
+            }
+
+            await AddRangeAsync(entitiesToAdd);
+
+            return entities;
         }
     }
 }
