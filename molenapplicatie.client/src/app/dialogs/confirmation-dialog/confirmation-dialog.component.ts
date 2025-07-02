@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, Input, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MolenImage } from '../../../Class/MolenImage';
 import { ConfirmationDialogData } from '../../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../../Utils/Toasts';
 import { DialogReturnType } from '../../../Interfaces/DialogReturnType';

@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
-import { MolenImage } from '../../Class/MolenImage';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { Toasts } from '../../Utils/Toasts';
 import { ImageDialogComponent } from '../dialogs/image-dialog/image-dialog.component';
+import { MolenImage } from '../../Interfaces/MolenImage';
 
 @Component({
   selector: 'app-image-selector',

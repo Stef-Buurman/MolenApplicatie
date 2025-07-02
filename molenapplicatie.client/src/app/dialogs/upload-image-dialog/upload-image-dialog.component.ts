@@ -1,10 +1,9 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MolenDataClass } from '../../../Class/MolenDataClass';
-import { MolenImage } from '../../../Class/MolenImage';
 import { MolenData } from '../../../Interfaces/MolenData';
 import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
+import { MolenImage } from '../../../Interfaces/MolenImage';
 
 @Component({
   selector: 'app-upload-image-dialog',

@@ -1,11 +1,10 @@
 import { AfterViewInit, Component } from '@angular/core';
-import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
-import { ActivatedRoute } from '@angular/router';
+import { MolenData } from '../../Interfaces/MolenData';
 
 @Component({
   selector: 'app-map-remainder-molens',
@@ -13,15 +12,14 @@ import { ActivatedRoute } from '@angular/router';
   styleUrl: './map-remainder-molens.component.scss'
 })
 export class MapRemainderMolensComponent implements AfterViewInit {
-  molens: MolenDataClass[] = [];
+  molens: MolenData[] = [];
   mapId: string = "remainderMolensMap"
 
   constructor(private toasts: Toasts,
     private errors: ErrorService,
     private sharedData: SharedDataService,
     private molenService: MolenService,
-    private mapService: MapService,
-    private route: ActivatedRoute) { }
+    private mapService: MapService) { }
 
   getMolens(): void {
     this.molenService.getAllRemainderMolens().subscribe({

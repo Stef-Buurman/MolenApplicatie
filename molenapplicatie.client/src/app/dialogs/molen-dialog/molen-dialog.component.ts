@@ -1,8 +1,6 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
-import { MolenDataClass } from '../../../Class/MolenDataClass';
-import { MolenImage } from '../../../Class/MolenImage';
 import { MolenData } from '../../../Interfaces/MolenData';
 import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
@@ -10,6 +8,7 @@ import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { MolenImage } from '../../../Interfaces/MolenImage';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -17,7 +16,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   styleUrl: './molen-dialog.component.scss'
 })
 export class MolenDialogComponent implements OnDestroy{
-  public molen?: MolenDataClass;
+  public molen?: MolenData;
   public status: "initial" | "uploading" | "success" | "fail" = "initial";
   public file: File | null = null;
   public imagePreview: string | null = null;
@@ -59,7 +58,7 @@ export class MolenDialogComponent implements OnDestroy{
     }
     if (this.data.tenBruggeNr) {
       this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
-        next: (molen: MolenDataClass) => {
+        next: (molen: MolenData) => {
           this.molen = molen;
           this.molenImages = this.getAllMolenImages();
           this.selectedImage = this.molenImages[0];

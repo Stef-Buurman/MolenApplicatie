@@ -1,12 +1,12 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { MolenImage } from '../../../Class/MolenImage';
 import { DialogReturnStatus } from '../../../Enums/DialogReturnStatus';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { ConfirmationDialogData } from '../../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../../Utils/Toasts';
 import { DialogReturnType } from '../../../Interfaces/DialogReturnType';
 import { HttpClient } from '@angular/common/http';
+import { MolenImage } from '../../../Interfaces/MolenImage';
 
 @Component({
   selector: 'app-image-dialog',

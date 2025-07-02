@@ -1,8 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
-import { MolenImage } from "../../Class/MolenImage";
-import { MolenData } from "../../Interfaces/MolenData";
 import { MolenService } from "../../Services/MolenService";
 import { MolenDialogComponent } from "../dialogs/molen-dialog/molen-dialog.component";
 
@@ -55,6 +53,5 @@ export class OpenMolenDetailsComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['../'], { relativeTo: this.route });
-    //this.router.navigate(['/']);
   }
 }

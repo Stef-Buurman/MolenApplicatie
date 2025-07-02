@@ -38,8 +38,10 @@
 
       <p><strong>Model Types:</strong></p>
       <ul>
-        <li *ngFor="let model of molen.modelTypes">
-          {{ model.name }}
+        <li *ngFor="let association of molen.molenTypeAssociations">
+          <span *ngIf="association.molenType != null">
+            {{ association.molenType.name }}
+          </span>
         </li>
       </ul>
 

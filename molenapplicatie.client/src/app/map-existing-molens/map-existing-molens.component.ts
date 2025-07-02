@@ -1,10 +1,10 @@
 import { AfterViewInit, Component } from '@angular/core';
-import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
+import { MolenData } from '../../Interfaces/MolenData';
 
 @Component({
   selector: 'app-map-existing-molens',
@@ -12,7 +12,7 @@ import { Toasts } from '../../Utils/Toasts';
   styleUrl: './map-existing-molens.component.scss'
 })
 export class MapExistingMolensComponent implements AfterViewInit {
-  molens: MolenDataClass[] = [];
+  molens: MolenData[] = [];
   mapId: string = "existingMolensMap"
 
   constructor(private toasts: Toasts,

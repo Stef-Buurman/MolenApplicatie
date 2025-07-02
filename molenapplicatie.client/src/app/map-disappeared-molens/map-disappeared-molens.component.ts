@@ -1,11 +1,11 @@
 import { AfterViewInit, Component } from '@angular/core';
-import { MolenDataClass } from '../../Class/MolenDataClass';
 import { ErrorService } from '../../Services/ErrorService';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MolenData } from '../../Interfaces/MolenData';
 
 @Component({
   selector: 'app-map-disappeared-molens',
@@ -13,7 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrl: './map-disappeared-molens.component.scss'
 })
 export class MapDisappearedMolensComponent implements AfterViewInit {
-  molens: MolenDataClass[] = [];
+  molens: MolenData[] = [];
   mapId: string = "disappearedMolensMap"
   private provincie!: string;
 
