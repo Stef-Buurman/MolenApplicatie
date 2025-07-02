@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
+using System.Linq;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -32,16 +34,16 @@ namespace MolenApplicatie.Server.Services
                 .ToList();
         }
 
-        public async Task<List<MolenData>> GetAllMolenDataByProvincie(string provincie)
+        public List<MolenData> GetAllMolenDataByProvincie(string provincie)
         {
-            List<MolenData> alleMolenData = await GetAllMolenData();
+            List<MolenData> alleMolenData = GetAllMolenData();
             List<MolenData> MolenDataByProvincie = alleMolenData.Where(molen => molen.Provincie != null && molen.Provincie.ToLower() == provincie.ToLower()).ToList();
             return MolenDataByProvincie;
         }
 
-        public async Task<List<MolenData>> GetAllMolenData()
+        public List<MolenData> GetAllMolenData()
         {
-            return await _dbContext.MolenData
+            return _dbContext.MolenData
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
@@ -49,37 +51,39 @@ namespace MolenApplicatie.Server.Services
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .Select(m => GetMolenData(m)).ToListAsync();
+                .ToList()
+                .Select(GetMolenData).ToList();
         }
 
-        public async Task<List<MolenData>> GetAllActiveMolenData()
+        public List<MolenData> GetAllActiveMolenData()
         {
-            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
-            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == "werkend").ToList();
+            IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
+            Console.WriteLine(alleMolenData.Count());
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Werkend).ToList();
             return GefilterdeMolenData;
         }
 
-        public async Task<List<MolenData>> GetAllMolenDataCorrectTypes()
+        public IQueryable<MolenData> GetAllMolenDataCorrectTypes()
         {
             List<string> allowedMolenTypes = Globals.AllowedMolenTypes.Select(t => t.ToLower()).ToList();
 
-            return await _dbContext.MolenData
+            return _dbContext.MolenData
                 .Include(m => m.MolenTypeAssociations)
                     .ThenInclude(a => a.MolenType)
-                        .Where(m => m.MolenTypeAssociations.Any(mta => allowedMolenTypes.Contains(mta.MolenType.Name.ToLower())))
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .Select(m => GetMolenData(m)).ToListAsync();
+                .Where(m => m.MolenTypeAssociations.Any(mta => allowedMolenTypes.Contains(mta.MolenType.Name.ToLower())))
+                .AsQueryable();
         }
 
 
-        public async Task<List<MolenData>> GetAllExistingMolens()
+        public List<MolenData> GetAllExistingMolens()
         {
-            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
-            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() != "verdwenen").ToList();
+            IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand != MolenToestand.Verdwenen).ToList();
             return GefilterdeMolenData;
         }
 
@@ -87,7 +91,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<MolenData>> GetAllDisappearedMolens(string provincie)
         {
             return await _dbContext.MolenData
-                .Where(m => m.Toestand != null && m.Toestand.ToLower() == "verdwenen" && m.Provincie != null && m.Provincie.ToLower() == provincie.ToLower())
+                .Where(m => m.Toestand != null && m.Toestand == MolenToestand.Verdwenen && m.Provincie != null && m.Provincie.ToLower() == provincie.ToLower())
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
@@ -98,10 +102,10 @@ namespace MolenApplicatie.Server.Services
                 .Select(m => GetMolenData(m)).ToListAsync();
         }
 
-        public async Task<List<MolenData>> GetAllRemainderMolens()
+        public List<MolenData> GetAllRemainderMolens()
         {
-            List<MolenData> alleMolenData = await GetAllMolenDataCorrectTypes();
-            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == "restant").ToList();
+            IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
+            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Restant).ToList();
             return GefilterdeMolenData;
         }
 
@@ -129,13 +133,14 @@ namespace MolenApplicatie.Server.Services
         {
             var molen = await _dbContext.MolenData
                 .Include(m => m.MolenTBN)
+                    .Where(m => m.MolenTBN.Ten_Brugge_Nr.ToLower() == tbn.ToLower())
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
                 .Include(m => m.MolenTypeAssociations)
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .FirstOrDefaultAsync(m => m != null && m.Ten_Brugge_Nr.ToLower() == tbn.ToLower());
+                .FirstOrDefaultAsync();
 
             if (molen == null) return null;
 
@@ -158,7 +163,7 @@ namespace MolenApplicatie.Server.Services
 
         public bool CanMolenHaveAddedImages(MolenData molen)
         {
-            return molen.Toestand.ToLower() != "verdwenen";
+            return molen.Toestand != MolenToestand.Verdwenen;
         }
 
         public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)
@@ -231,20 +236,20 @@ namespace MolenApplicatie.Server.Services
 
         private async Task<int> GetCountOfActiveMolensWithImages() => await _dbContext.MolenData
             .Include(m => m.AddedImages)
-            .Where(m => m.Toestand == "Werkend" && (m.AddedImages.Count > 0))
+            .Where(m => m.Toestand == MolenToestand.Werkend && (m.AddedImages.Count > 0))
             .CountAsync();
 
         private async Task<int> GetCountOfRemainderMolensWithImage() => await _dbContext.MolenData
             .Include(m => m.AddedImages)
-            .Where(m => m.Toestand == "Restant" && (m.AddedImages.Count > 0))
+            .Where(m => m.Toestand == MolenToestand.Restant && (m.AddedImages.Count > 0))
             .CountAsync();
 
         private async Task<int> GetCountOfActiveMolens() => await _dbContext.MolenData
-            .Where(m => m.Toestand == "Werkend")
+            .Where(m => m.Toestand == MolenToestand.Werkend)
             .CountAsync();
 
         private async Task<int> GetCountOfRemainderMolens() => await _dbContext.MolenData
-            .Where(m => m.Toestand == "Restant")
+            .Where(m => m.Toestand == MolenToestand.Restant)
             .CountAsync();
 
         private async Task<int> GetCountMolens() => await _dbContext.MolenData.CountAsync();
@@ -256,7 +261,7 @@ namespace MolenApplicatie.Server.Services
             foreach (string provincie in provincies)
             {
                 int count = await _dbContext.MolenData
-                    .Where(m => m.Toestand == "Verdwenen" &&
+                    .Where(m => m.Toestand == MolenToestand.Verdwenen &&
                                 m.Provincie != null &&
                                 EF.Functions.Like(m.Provincie.ToLower(), provincie.ToLower()))
                     .CountAsync();
