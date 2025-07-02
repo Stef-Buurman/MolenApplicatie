@@ -1,26 +1,17 @@
 import { ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector, Renderer2, RendererFactory2, ViewContainerRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ToastType } from '../Enums/ToastType';
-import { Toast } from '../Interfaces/Toast';
-import { BehaviorSubject } from 'rxjs';
 import { ToastComponent } from '../app/toast/toast.component';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Toasts {
-  private renderer: Renderer2;
   private activeToasts: ComponentRef<ToastComponent>[] = [];
   private viewContainerRef!: ViewContainerRef;
   private defaultToastTime = 4000;
 
-  constructor(
-    private rendererFactory: RendererFactory2,
-    private appRef: ApplicationRef,
-    private injector: Injector
-  ) {
-    this.renderer = this.rendererFactory.createRenderer(null, null);
-  }
+  constructor() {}
 
   showSuccess(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Success', message, ToastType.Success, duration);
