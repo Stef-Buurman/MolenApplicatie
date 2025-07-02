@@ -27,7 +27,7 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasOne(md => md.MolenTBN)
                 .WithOne(mtbn => mtbn.MolenData)
-                .HasForeignKey<MolenTBN>(mtbn => mtbn.MolenDataId)
+                .HasForeignKey<MolenData>(mtbn => mtbn.MolenTBNId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

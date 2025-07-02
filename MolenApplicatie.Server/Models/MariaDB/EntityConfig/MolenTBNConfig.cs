@@ -8,11 +8,9 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
         public void Configure(EntityTypeBuilder<MolenTBN> builder)
         {
             builder.HasKey(m => m.Id);
-            builder.Property(ai => ai.MolenDataId)
-                .IsRequired();
             builder.HasOne(m => m.MolenData)
                 .WithOne(md => md.MolenTBN)
-                .HasForeignKey<MolenTBN>(m => m.MolenDataId);
+                .HasForeignKey<MolenData>(m => m.MolenTBNId);
         }
     }
 }
