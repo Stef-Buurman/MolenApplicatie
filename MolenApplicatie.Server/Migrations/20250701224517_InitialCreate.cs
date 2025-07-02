@@ -30,12 +30,64 @@ namespace MolenApplicatie.Server.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "molen_tbn",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Ten_Brugge_Nr = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_molen_tbn", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "molen_type",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_molen_type", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "place_type",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    NameEn = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    NameMV = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Group = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_place_type", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "molen_data",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Ten_Brugge_Nr = table.Column<string>(type: "varchar(255)", nullable: false)
+                    MolenTBNId = table.Column<int>(type: "int", nullable: false),
+                    Ten_Brugge_Nr = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -156,22 +208,12 @@ namespace MolenApplicatie.Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_molen_data", x => x.Id);
-                    table.UniqueConstraint("AK_molen_data_Ten_Brugge_Nr", x => x.Ten_Brugge_Nr);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "molen_type",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_molen_type", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_molen_data_molen_tbn_MolenTBNId",
+                        column: x => x.MolenTBNId,
+                        principalTable: "molen_tbn",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -181,17 +223,25 @@ namespace MolenApplicatie.Server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
+                    Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Province = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    Country = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Latitude = table.Column<double>(type: "double", nullable: false),
                     Longitude = table.Column<double>(type: "double", nullable: false),
-                    Population = table.Column<int>(type: "int", nullable: false)
+                    Population = table.Column<int>(type: "int", nullable: false),
+                    PlaceTypeId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_place", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_place_place_type_PlaceTypeId",
+                        column: x => x.PlaceTypeId,
+                        principalTable: "place_type",
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -302,28 +352,6 @@ namespace MolenApplicatie.Server.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "molen_tbn",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Ten_Brugge_Nr = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    MolenDataId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_molen_tbn", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_molen_tbn_molen_data_MolenDataId",
-                        column: x => x.MolenDataId,
-                        principalTable: "molen_data",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "molen_type_association",
                 columns: table => new
                 {
@@ -361,6 +389,12 @@ namespace MolenApplicatie.Server.Migrations
                 column: "MolenDataId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_molen_data_MolenTBNId",
+                table: "molen_data",
+                column: "MolenTBNId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_molen_image_MolenDataId",
                 table: "molen_image",
                 column: "MolenDataId");
@@ -369,18 +403,6 @@ namespace MolenApplicatie.Server.Migrations
                 name: "IX_molen_maker_MolenDataId",
                 table: "molen_maker",
                 column: "MolenDataId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_molen_tbn_MolenDataId",
-                table: "molen_tbn",
-                column: "MolenDataId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_molen_type_Name",
-                table: "molen_type",
-                column: "Name",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_molen_type_association_MolenDataId",
@@ -393,10 +415,9 @@ namespace MolenApplicatie.Server.Migrations
                 column: "MolenTypeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_place_Name",
+                name: "IX_place_PlaceTypeId",
                 table: "place",
-                column: "Name",
-                unique: true);
+                column: "PlaceTypeId");
         }
 
         /// <inheritdoc />
@@ -418,9 +439,6 @@ namespace MolenApplicatie.Server.Migrations
                 name: "molen_maker");
 
             migrationBuilder.DropTable(
-                name: "molen_tbn");
-
-            migrationBuilder.DropTable(
                 name: "molen_type_association");
 
             migrationBuilder.DropTable(
@@ -431,6 +449,12 @@ namespace MolenApplicatie.Server.Migrations
 
             migrationBuilder.DropTable(
                 name: "molen_type");
+
+            migrationBuilder.DropTable(
+                name: "place_type");
+
+            migrationBuilder.DropTable(
+                name: "molen_tbn");
         }
     }
 }

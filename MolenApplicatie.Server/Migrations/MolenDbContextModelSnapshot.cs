@@ -175,6 +175,9 @@ namespace MolenApplicatie.Server.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("double");
 
+                    b.Property<int>("MolenTBNId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Molenaar")
                         .HasColumnType("longtext");
 
@@ -241,7 +244,7 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Ten_Brugge_Nr")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Toegangsprijzen")
                         .HasColumnType("longtext");
@@ -293,7 +296,8 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Ten_Brugge_Nr");
+                    b.HasIndex("MolenTBNId")
+                        .IsUnique();
 
                     b.ToTable("molen_data");
                 });
@@ -362,17 +366,11 @@ namespace MolenApplicatie.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Ten_Brugge_Nr")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MolenDataId")
-                        .IsUnique();
 
                     b.ToTable("molen_tbn");
                 });
@@ -385,12 +383,9 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("molen_type");
                 });
@@ -422,6 +417,10 @@ namespace MolenApplicatie.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<double>("Latitude")
                         .HasColumnType("double");
 
@@ -430,9 +429,10 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("utf8mb4_general_ci");
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("PlaceTypeId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Population")
                         .HasColumnType("int");
@@ -443,10 +443,36 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
+                    b.HasIndex("PlaceTypeId");
 
                     b.ToTable("place");
+                });
+
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.PlaceType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("NameMV")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("place_type");
                 });
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.AddedImage", b =>
@@ -471,6 +497,17 @@ namespace MolenApplicatie.Server.Migrations
                     b.Navigation("MolenData");
                 });
 
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenData", b =>
+                {
+                    b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenTBN", "MolenTBN")
+                        .WithOne("MolenData")
+                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenTBNId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MolenTBN");
+                });
+
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenImage", b =>
                 {
                     b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
@@ -487,17 +524,6 @@ namespace MolenApplicatie.Server.Migrations
                     b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
                         .WithMany("MolenMakers")
                         .HasForeignKey("MolenDataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MolenData");
-                });
-
-            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
-                {
-                    b.HasOne("MolenApplicatie.Server.Models.MariaDB.MolenData", "MolenData")
-                        .WithOne("MolenTBN")
-                        .HasForeignKey("MolenApplicatie.Server.Models.MariaDB.MolenTBN", "MolenDataId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -523,6 +549,15 @@ namespace MolenApplicatie.Server.Migrations
                     b.Navigation("MolenType");
                 });
 
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.Place", b =>
+                {
+                    b.HasOne("MolenApplicatie.Server.Models.MariaDB.PlaceType", "Type")
+                        .WithMany("Places")
+                        .HasForeignKey("PlaceTypeId");
+
+                    b.Navigation("Type");
+                });
+
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenData", b =>
                 {
                     b.Navigation("AddedImages");
@@ -533,15 +568,23 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Navigation("MolenMakers");
 
-                    b.Navigation("MolenTBN")
-                        .IsRequired();
-
                     b.Navigation("MolenTypeAssociations");
+                });
+
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
+                {
+                    b.Navigation("MolenData")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenType", b =>
                 {
                     b.Navigation("MolenTypeAssociations");
+                });
+
+            modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.PlaceType", b =>
+                {
+                    b.Navigation("Places");
                 });
 #pragma warning restore 612, 618
         }
