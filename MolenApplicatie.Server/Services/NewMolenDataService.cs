@@ -7,33 +7,29 @@ using MolenApplicatie.Server.Services.Database;
 using MolenApplicatie.Server.Utils;
 using System.Globalization;
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace MolenApplicatie.Server.Services
 {
     public class NewMolenDataService
     {
-        readonly string PathAlleInformatieMolens = $"Json/AlleInformatieMolens.json";
         readonly string baseUrl = "https://www.molendatabase.nl/molens/ten-bruggencate-nr-";
         private readonly HttpClient _client;
         private readonly MolenService _molenService;
         private readonly PlacesService _placesService;
         private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
-        private List<string> allverdwenenMolens = new List<string>();
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
-        private readonly DBMolenTypeService _dBMolenTypeService;
+        private readonly DBMolenTBNService _dBMolenTBNService;
 
-        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenTypeService dBMolenTypeService)
+        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenTBNService dBMolenTBNService)
         {
             _client = new HttpClient();
             _molenService = molenService;
             _placesService = placesService;
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
-            _dBMolenTypeService = dBMolenTypeService;
+            _dBMolenTBNService = dBMolenTBNService;
         }
 
         public async Task<List<MolenData>?> AddMolensToMariaDb(List<MolenData> molens)
@@ -126,17 +122,33 @@ namespace MolenApplicatie.Server.Services
                 await _dBMolenDataService.AddOrUpdate(molenData);
             }
             await _dbContext.SaveChangesAsync();
-            _dbContext.ChangeTracker.AutoDetectChangesEnabled = true;
             return null;
         }
 
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr, string? url = null)
         {
-            List<DisappearedYearInfo> MolenRemovedYears = new List<DisappearedYearInfo>();
-            //List<MolenMaker> molenmakers = await _dbContext.MolenMakers.ToListAsync();
-            //List<MolenTypeAssociation> MolenTypeAssociations = await _dbContext.MolenTypeAssociations.ToListAsync();
-            //List<DisappearedYearInfo> AllMolenRemovedYears = await _dbContext.DisappearedYearInfos.ToListAsync();
             MolenData? oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
+            oldMolenData?.MolenTypeAssociations.ForEach(mak =>
+            {
+                mak.MolenData = null;
+                if (mak.MolenType != null) mak.MolenType.MolenTypeAssociations = null;
+            });
+            oldMolenData?.MolenMakers.ForEach(mak =>
+            {
+                mak.MolenData = null;
+            });
+            oldMolenData?.AddedImages.ForEach(mak =>
+            {
+                mak.MolenData = null;
+            });
+            oldMolenData?.Images.ForEach(mak =>
+            {
+                mak.MolenData = null;
+            });
+            oldMolenData?.DisappearedYearInfos.ForEach(mak =>
+            {
+                mak.MolenData = null;
+            });
             try
             {
                 HttpResponseMessage response;
@@ -150,527 +162,529 @@ namespace MolenApplicatie.Server.Services
                 }
                 response.EnsureSuccessStatusCode();
 
-                string responseBody = await response.Content.ReadAsStringAsync();
-                var doc = new HtmlDocument();
-                doc.LoadHtml(responseBody);
+                string responseBodyWebsite = await response.Content.ReadAsStringAsync();
+                var docWebsite = new HtmlDocument();
+                docWebsite.LoadHtml(responseBodyWebsite);
 
-                var divs = doc.DocumentNode.SelectNodes("//div[contains(@class, 'attrib')]");
-                var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
-                var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
-                var ArticleAbout = doc.DocumentNode.SelectNodes("//article[@class='mill-about']");
-                var ArticleFotos = doc.DocumentNode.SelectNodes("//article[@class='mill-photos']");
-                bool isNogWaarneembaarPrevious = false;
-                bool isGeschiedenisPrevious = false;
-                if (divs != null)
+                List<HtmlDocument> htmlAttributes = new List<HtmlDocument>() { docWebsite };
+
+                var tabs = docWebsite.DocumentNode.SelectNodes("//nav[@aria-label='molenpaspoort tabs']//a");
+                if (tabs != null)
                 {
-                    Dictionary<string, object> data = new Dictionary<string, object>();
-                    MolenData newMolenData = new MolenData()
+                    foreach (var tab in tabs)
                     {
-                        Name = "",
-                        Ten_Brugge_Nr = Ten_Brugge_Nr,
-                        DisappearedYearInfos = oldMolenData?.DisappearedYearInfos ?? new List<DisappearedYearInfo>(),
-                        Images = oldMolenData?.Images ?? new List<MolenImage>(),
-                        AddedImages = oldMolenData?.AddedImages ?? new List<AddedImage>(),
-                        MolenMakers = oldMolenData?.MolenMakers ?? new List<MolenMaker>(),
-                        //ModelTypes = oldMolenData?.ModelTypes ?? new List<MolenType>(),
-                        MolenTypeAssociations = oldMolenData?.MolenTypeAssociations ?? new List<MolenTypeAssociation>(),
-                    };
-                    foreach (var div in divs)
+                        var href = tab.GetAttributeValue("href", string.Empty);
+                        Console.WriteLine(href);
+                        HttpResponseMessage responseTab = await _client.GetAsync(href);
+                        string responseBody = await responseTab.Content.ReadAsStringAsync();
+                        var doc = new HtmlDocument();
+                        doc.LoadHtml(responseBody);
+                        htmlAttributes.Add(doc);
+                    }
+                }
+
+                Dictionary<string, object> data = new Dictionary<string, object>();
+                MolenData newMolenData = new MolenData()
+                {
+                    Name = "",
+                    Ten_Brugge_Nr = Ten_Brugge_Nr,
+                    DisappearedYearInfos = oldMolenData?.DisappearedYearInfos ?? new List<DisappearedYearInfo>(),
+                    Images = oldMolenData?.Images ?? new List<MolenImage>(),
+                    AddedImages = oldMolenData?.AddedImages ?? new List<AddedImage>(),
+                    MolenMakers = oldMolenData?.MolenMakers ?? new List<MolenMaker>(),
+                    MolenTypeAssociations = oldMolenData?.MolenTypeAssociations ?? new List<MolenTypeAssociation>(),
+                };
+
+                foreach (var doc in htmlAttributes)
+                {
+                    var divs = doc.DocumentNode.SelectNodes("//div[contains(@class, 'attrib')]");
+                    var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
+                    var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
+                    var ArticleAbout = doc.DocumentNode.SelectNodes("//article[@class='mill-about']");
+                    var ArticleFotos = doc.DocumentNode.SelectNodes("//article[@class='mill-photos']");
+                    bool isNogWaarneembaarPrevious = false;
+                    bool isGeschiedenisPrevious = false;
+                    if (divs != null)
                     {
-                        var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
-                        var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
-                        var dd2 = div.SelectSingleNode(".//dd");
-                        if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
+                        foreach (var div in divs)
                         {
-                            if (strings.Find(x => x.ContainsKey(dt)) == null) strings.Add(new Dictionary<string, string> { { dt, Ten_Brugge_Nr } });
-                            switch (dt.ToLower())
+                            var dt = div.SelectSingleNode(".//dt")?.InnerText?.Trim();
+                            var dd = div.SelectSingleNode(".//dd")?.InnerText?.Trim();
+                            var dd2 = div.SelectSingleNode(".//dd");
+                            if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
                             {
-                                case "geo positie":
-                                    string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
-                                    var match = Regex.Match(dd, pattern);
-                                    if (Ten_Brugge_Nr == "12170")
-                                    {
-                                        newMolenData.Latitude = 51.91575984198239;
-                                        newMolenData.Longitude = 6.577599354094867;
-                                    }
-                                    else
-                                    {
-                                        if (match.Success)
+                                if (strings.Find(x => x.ContainsKey(dt)) == null) strings.Add(new Dictionary<string, string> { { dt, Ten_Brugge_Nr } });
+                                switch (dt.ToLower())
+                                {
+                                    case "geo positie":
+                                        string pattern = @"N:\s*([0-9.-]+),\s*O:\s*([0-9.-]+)";
+                                        var match = Regex.Match(dd, pattern);
+                                        if (Ten_Brugge_Nr == "12170")
                                         {
-                                            if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
-                                            {
-                                                newMolenData.Latitude = NorthValue;
-                                            }
-                                            if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
-                                            {
-                                                newMolenData.Longitude = EastValue;
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case "naam":
-                                    newMolenData.Name = dd;
-                                    break;
-                                case "toelichting naam":
-                                    newMolenData.ToelichtingNaam = dd;
-                                    break;
-                                case "bouwjaar":
-                                    if (dd.All(char.IsDigit)) newMolenData.Bouwjaar = Convert.ToInt32(dd);
-                                    else
-                                    {
-                                        Regex regexSingleYear = new Regex(@"\b\d{4}\b");
-                                        Match matchSingleYear = regexSingleYear.Match(dd);
-                                        Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-–]\s*(\d{4})\b");
-                                        Match matchMultiYear = regexMultiYear.Match(dd);
-
-                                        if (matchMultiYear.Success)
-                                        {
-                                            int startYear = int.Parse(matchMultiYear.Groups[1].Value);
-                                            int endYear = int.Parse(matchMultiYear.Groups[2].Value);
-
-                                            if (startYear <= endYear)
-                                            {
-                                                newMolenData.BouwjaarStart = startYear;
-                                                newMolenData.BouwjaarEinde = endYear;
-                                            }
-                                        }
-                                        else if (matchSingleYear.Success)
-                                        {
-                                            newMolenData.Bouwjaar = Convert.ToInt32(matchSingleYear.Value);
-                                        }
-                                    }
-                                    break;
-                                case "herbouwd":
-                                    newMolenData.HerbouwdJaar = dd;
-                                    break;
-                                case "bedrijfsvaardigheid":
-                                    if (string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Bedrijfsvaardigheid = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "functie":
-                                    if ((newMolenData.Functie == null || newMolenData.Functie == "Onbekend") && string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Functie = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "molenmaker":
-                                    string molenmakerPattern = @"^(.*?),.*\((\d{4})\)$";
-                                    if (dd != null && dd != "")
-                                    {
-                                        foreach (var line in dd.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
-                                        {
-                                            Match molenmakerMatch = Regex.Match(line, molenmakerPattern);
-                                            if (molenmakerMatch.Success)
-                                            {
-                                                string name = molenmakerMatch.Groups[1].Value;
-                                                string year = molenmakerMatch.Groups[2].Value;
-                                                if (!newMolenData.MolenMakers.Any(x => x.Name.ToLower() == name.ToLower() && x.Year == year))
-                                                {
-                                                    newMolenData.MolenMakers.Add(new MolenMaker()
-                                                    {
-                                                        Name = name,
-                                                        Year = year
-                                                    });
-                                                }
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case "bestemming":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Doel = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "ten bruggencate-nr.":
-                                    newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
-                                    break;
-                                case "monument":
-                                    newMolenData.Monument = GetUrlFromATag(dd2);
-                                    break;
-                                case "plaats":
-                                    newMolenData.Plaats = dd;
-                                    break;
-                                case "adres":
-                                    newMolenData.Adres = dd;
-                                    break;
-                                case "gemeente":
-                                    var gemeente = dd.Split(",");
-                                    string provincie = null;
-                                    string completeGemeente = null;
-                                    if (gemeente.Length >= 2 && gemeente[gemeente.Length - 1] != null)
-                                    {
-                                        if (newMolenData.Ten_Brugge_Nr == "17563")
-                                        {
-                                            Place? place = await _placesService.GetPlaceByName(gemeente[0]);
-                                            if (place == null)
-                                            {
-                                                place = await _placesService.GetPlaceByName(newMolenData.Plaats);
-                                            }
-                                            if (place != null)
-                                            {
-                                                provincie = place.Province;
-                                            }
+                                            newMolenData.Latitude = 51.91575984198239;
+                                            newMolenData.Longitude = 6.577599354094867;
                                         }
                                         else
                                         {
-                                            provincie = gemeente[gemeente.Length - 1];
-                                        }
-                                    }
-                                    if (gemeente.Length >= 1 && gemeente[0] != null)
-                                    {
-                                        completeGemeente = gemeente[0];
-                                    }
-                                    newMolenData.Provincie = provincie != null ? provincie.Trim() : null;
-                                    newMolenData.Gemeente = completeGemeente != null ? completeGemeente.Trim() : null;
-                                    break;
-                                case "streek":
-                                    newMolenData.Streek = dd;
-                                    break;
-                                case "plaatsaanduiding":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Plaatsaanduiding = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "plaats bediening":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.PlaatsBediening = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "bediening kruiwerk":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.BedieningKruiwerk = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "plaats kruiwerk":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.PlaatsKruiwerk = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "kruiwerk":
-                                    newMolenData.Kruiwerk = dd;
-                                    break;
-                                case "vlucht":
-                                    newMolenData.Vlucht = dd;
-                                    break;
-                                case "openingstijden":
-                                    newMolenData.Openingstijden = dd;
-                                    break;
-                                case "open voor publiek":
-                                    newMolenData.OpenVoorPubliek = dd.ToLower().Contains("ja");
-                                    break;
-                                case "open op zaterdag":
-                                    newMolenData.OpenOpZaterdag = dd.ToLower().Contains("ja");
-                                    break;
-                                case "open op zondag":
-                                    newMolenData.OpenOpZondag = dd.ToLower().Contains("ja");
-                                    break;
-                                case "open op afspraak":
-                                    newMolenData.OpenOpAfspraak = dd.ToLower().Contains("ja");
-                                    break;
-                                case "molenaar":
-                                    newMolenData.Molenaar = dd;
-                                    break;
-                                case "winkelinformatie":
-                                    newMolenData.WinkelInformatie = dd;
-                                    break;
-                                case "toestand":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Toestand = char.ToUpper(dd[0]) + dd.Substring(1);
-                                        newMolenData.CanAddImages = newMolenData.Toestand.ToLower() != "verdwenen";
-                                    }
-                                    break;
-                                case "krachtbron":
-                                    newMolenData.Krachtbron = dd.ToLower();
-                                    break;
-                                case "website":
-                                    newMolenData.Website = GetUrlFromATag(dd2);
-                                    break;
-                                case "eigenaar":
-                                    newMolenData.Eigenaar = dd;
-                                    break;
-                                case "wiekvorm":
-                                    newMolenData.Wiekvorm = dd;
-                                    break;
-                                case "wiekverbeteringen":
-                                    newMolenData.WiekVerbeteringen = dd;
-                                    break;
-                                case "literatuur":
-                                    newMolenData.Literatuur = dd;
-                                    break;
-                                case "bouwbestek":
-                                    newMolenData.Bouwbestek = dd;
-                                    break;
-                                case "bijzonderheden":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Bijzonderheden = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "museuminformatie":
-                                    newMolenData.Museuminformatie = dd;
-                                    break;
-                                case "wederopbouw":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Wederopbouw = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "over de as":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.As = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "over de wieken":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Wieken = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "unieke eigenschap":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.UniekeEigenschap = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "landschappelijke waarde":
-                                    newMolenData.LandschappelijkeWaarde = dd;
-                                    break;
-                                case "kadastrale aanduiding":
-                                    newMolenData.KadastraleAanduiding = dd;
-                                    break;
-                                case "opvolger":
-                                    newMolenData.Opvolger = GetTBNFromUrl(GetUrlFromATag(dd2));
-                                    break;
-                                case "voorganger":
-                                    newMolenData.Voorganger = GetTBNFromUrl(GetUrlFromATag(dd2));
-                                    break;
-                                case "verplaatst naar":
-                                    newMolenData.VerplaatstNaar = GetTBNFromUrl(GetUrlFromATag(dd2));
-                                    break;
-                                case "afkomstig van":
-                                    newMolenData.AfkomstigVan = GetTBNFromUrl(GetUrlFromATag(dd2));
-                                    break;
-                                case "plaats(en) voorheen":
-                                    newMolenData.PlaatsenVoorheen = dd;
-                                    break;
-                                case "molenerf":
-                                    newMolenData.Molenerf = dd;
-                                    break;
-                                case "trivia":
-                                    newMolenData.Trivia = dd;
-                                    break;
-                                case "geschiedenis":
-                                    isGeschiedenisPrevious = true;
-                                    newMolenData.Geschiedenis = dd;
-                                    var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
-                                    if (imageInGeschiedenis != null)
-                                    {
-                                        newMolenData.Images.Add(imageInGeschiedenis);
-                                    }
-                                    break;
-                                case "eigendomshistorie":
-                                    newMolenData.Eigendomshistorie = dd;
-                                    break;
-                                case "wetenswaardigheden":
-                                    newMolenData.Wetenswaardigheden = dd;
-                                    break;
-                                case "recente werkzaamheden":
-                                    newMolenData.RecenteWerkzaamheden = dd;
-                                    break;
-                                case "rad":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Rad = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "rad diameter":
-                                    newMolenData.RadDiameter = dd;
-                                    break;
-                                case "wateras":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Wateras = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "toegangsprijzen":
-                                    if (!string.IsNullOrEmpty(dd))
-                                    {
-                                        newMolenData.Toegangsprijzen = char.ToUpper(dd[0]) + dd.Substring(1);
-                                    }
-                                    break;
-                                case "nog waarneembaar":
-                                    isNogWaarneembaarPrevious = true;
-                                    var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
-                                    if (nogWaarneembareImage != null)
-                                    {
-                                        newMolenData.Images.Add(nogWaarneembareImage);
-                                    }
-                                    break;
-                                case "verdwenen":
-                                    allverdwenenMolens.Add(newMolenData.Ten_Brugge_Nr);
-                                    var lines = dd.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                                    if (lines.Length < MolenRemovedYears.Count) break;
-                                    MolenRemovedYears.Clear();
-                                    for (int i = 0; i < lines.Length; i++)
-                                    {
-                                        string line = lines[i].Trim();
-
-                                        // Case 1: Single year with no status on the same line
-                                        if (Regex.IsMatch(line, @"^\d{4}$") && lines.Length == 1)
-                                        {
-                                            string year = line;
-                                            string status = "gesloopt";
-
-                                            if (i + 1 < lines.Length && !Regex.IsMatch(lines[i + 1], @"^\d{4}$"))
+                                            if (match.Success)
                                             {
-                                                status = lines[i + 1].Trim();
-                                                i++;
-                                            }
-
-                                            DisappearedYearInfo newMolenYearInfo = new DisappearedYearInfo
-                                            {
-                                                Year = Convert.ToInt32(year),
-                                                Status_after = status
-                                            };
-
-                                            if (newMolenData.DisappearedYearInfos.Find(info => info.Year == Convert.ToInt32(year) && info.Status_after == newMolenYearInfo.Status_after) == null)
-                                            {
-                                                newMolenData.DisappearedYearInfos.Add(newMolenYearInfo);
+                                                if (float.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float NorthValue))
+                                                {
+                                                    newMolenData.Latitude = NorthValue;
+                                                }
+                                                if (double.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double EastValue))
+                                                {
+                                                    newMolenData.Longitude = EastValue;
+                                                }
                                             }
                                         }
-                                        // Case 2: Line with a prefix (like "na", "voor", etc.) before the year
-                                        else if (Regex.IsMatch(line, @"^\w+ \d{4}$"))
+                                        break;
+                                    case "naam":
+                                        newMolenData.Name = dd;
+                                        break;
+                                    case "toelichting naam":
+                                        newMolenData.ToelichtingNaam = dd;
+                                        break;
+                                    case "bouwjaar":
+                                        if (dd.All(char.IsDigit)) newMolenData.Bouwjaar = Convert.ToInt32(dd);
+                                        else
                                         {
-                                            var match1 = Regex.Match(line, @"^(\w+) (\d{4})$");
-                                            string prefix = match1.Groups[1].Value.Trim();
-                                            string year = match1.Groups[2].Value;
+                                            Regex regexSingleYear = new Regex(@"\b\d{4}\b");
+                                            Match matchSingleYear = regexSingleYear.Match(dd);
+                                            Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-–]\s*(\d{4})\b");
+                                            Match matchMultiYear = regexMultiYear.Match(dd);
 
-                                            DisappearedYearInfo newMolenYearInfo = new DisappearedYearInfo
+                                            if (matchMultiYear.Success)
                                             {
-                                                Status_before = prefix,
-                                                Year = Convert.ToInt32(year)
-                                            };
+                                                int startYear = int.Parse(matchMultiYear.Groups[1].Value);
+                                                int endYear = int.Parse(matchMultiYear.Groups[2].Value);
 
-                                            if (newMolenData.DisappearedYearInfos.Find(info => info.Year == Convert.ToInt32(year) && info.Status_before == newMolenYearInfo.Status_before) == null)
+                                                if (startYear <= endYear)
+                                                {
+                                                    newMolenData.BouwjaarStart = startYear;
+                                                    newMolenData.BouwjaarEinde = endYear;
+                                                }
+                                            }
+                                            else if (matchSingleYear.Success)
                                             {
-                                                newMolenData.DisappearedYearInfos.Add(newMolenYearInfo);
+                                                newMolenData.Bouwjaar = Convert.ToInt32(matchSingleYear.Value);
                                             }
                                         }
-                                        // Case 3: Line with both a year and a status in the same line
-                                        else if (!Regex.IsMatch(line, @"^\d{4}$"))
+                                        break;
+                                    case "herbouwd":
+                                        newMolenData.HerbouwdJaar = dd;
+                                        break;
+                                    case "bedrijfsvaardigheid":
+                                        if (!string.IsNullOrEmpty(dd))
                                         {
-                                            var match1 = Regex.Match(line, @"(.*?)\b(\d{4})\b\s*(.*)");
-                                            if (match1.Success)
+                                            newMolenData.Bedrijfsvaardigheid = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "functie":
+                                        if ((newMolenData.Functie == null || newMolenData.Functie == "Onbekend") && !string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Functie = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "molenmaker":
+                                        string molenmakerPattern = @"^(.*?),.*\((\d{4})\)$";
+                                        if (dd != null && dd != "")
+                                        {
+                                            foreach (var line in dd.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
                                             {
-                                                string prefixStatus = match1.Groups[1].Value.Trim();
-                                                string year = match1.Groups[2].Value;
-                                                string suffixStatus = match1.Groups[3].Value.Trim();
+                                                Match molenmakerMatch = Regex.Match(line, molenmakerPattern);
+                                                if (molenmakerMatch.Success)
+                                                {
+                                                    string name = molenmakerMatch.Groups[1].Value;
+                                                    string year = molenmakerMatch.Groups[2].Value;
+                                                    if (!newMolenData.MolenMakers.Any(x => x.Name.ToLower() == name.ToLower() && x.Year == year))
+                                                    {
+                                                        newMolenData.MolenMakers.Add(new MolenMaker()
+                                                        {
+                                                            Name = name,
+                                                            Year = year
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case "bestemming":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Doel = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "ten bruggencate-nr.":
+                                        newMolenData.Ten_Brugge_Nr = dd.Replace(" ", "-");
+                                        break;
+                                    case "monument":
+                                        newMolenData.Monument = GetUrlFromATag(dd2);
+                                        break;
+                                    case "plaats":
+                                        newMolenData.Plaats = dd;
+                                        break;
+                                    case "adres":
+                                        newMolenData.Adres = dd;
+                                        break;
+                                    case "gemeente":
+                                        var gemeente = dd.Split(",");
+                                        string provincie = null;
+                                        string completeGemeente = null;
+                                        if (gemeente.Length >= 2 && gemeente[gemeente.Length - 1] != null)
+                                        {
+                                            if (newMolenData.Ten_Brugge_Nr == "17563")
+                                            {
+                                                Place? place = await _placesService.GetPlaceByName(gemeente[0]);
+                                                if (place == null)
+                                                {
+                                                    place = await _placesService.GetPlaceByName(newMolenData.Plaats);
+                                                }
+                                                if (place != null)
+                                                {
+                                                    provincie = place.Province;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                provincie = gemeente[gemeente.Length - 1];
+                                            }
+                                        }
+                                        if (gemeente.Length >= 1 && gemeente[0] != null)
+                                        {
+                                            completeGemeente = gemeente[0];
+                                        }
+                                        newMolenData.Provincie = provincie != null ? provincie.Trim() : null;
+                                        newMolenData.Gemeente = completeGemeente != null ? completeGemeente.Trim() : null;
+                                        break;
+                                    case "streek":
+                                        newMolenData.Streek = dd;
+                                        break;
+                                    case "plaatsaanduiding":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Plaatsaanduiding = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "plaats bediening":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.PlaatsBediening = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "bediening kruiwerk":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.BedieningKruiwerk = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "plaats kruiwerk":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.PlaatsKruiwerk = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "kruiwerk":
+                                        newMolenData.Kruiwerk = dd;
+                                        break;
+                                    case "vlucht":
+                                        newMolenData.Vlucht = dd;
+                                        break;
+                                    case "openingstijden":
+                                        newMolenData.Openingstijden = dd;
+                                        break;
+                                    case "open voor publiek":
+                                        newMolenData.OpenVoorPubliek = dd.ToLower().Contains("ja");
+                                        break;
+                                    case "open op zaterdag":
+                                        newMolenData.OpenOpZaterdag = dd.ToLower().Contains("ja");
+                                        break;
+                                    case "open op zondag":
+                                        newMolenData.OpenOpZondag = dd.ToLower().Contains("ja");
+                                        break;
+                                    case "open op afspraak":
+                                        newMolenData.OpenOpAfspraak = dd.ToLower().Contains("ja");
+                                        break;
+                                    case "molenaar":
+                                        newMolenData.Molenaar = dd;
+                                        break;
+                                    case "winkelinformatie":
+                                        newMolenData.WinkelInformatie = dd;
+                                        break;
+                                    case "toestand":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Toestand = MolenToestand.From(dd);
+                                            newMolenData.CanAddImages = MolenToestand.Equals(newMolenData.Toestand, dd);
+                                        }
+                                        break;
 
-                                                if (prefixStatus == "") prefixStatus = null;
-                                                if (suffixStatus == "") suffixStatus = null;
+                                    case "krachtbron":
+                                        newMolenData.Krachtbron = dd.ToLower();
+                                        break;
+                                    case "website":
+                                        newMolenData.Website = GetUrlFromATag(dd2);
+                                        break;
+                                    case "eigenaar":
+                                        newMolenData.Eigenaar = dd;
+                                        break;
+                                    case "wiekvorm":
+                                        newMolenData.Wiekvorm = dd;
+                                        break;
+                                    case "wiekverbeteringen":
+                                        newMolenData.WiekVerbeteringen = dd;
+                                        break;
+                                    case "literatuur":
+                                        newMolenData.Literatuur = dd;
+                                        break;
+                                    case "bouwbestek":
+                                        newMolenData.Bouwbestek = dd;
+                                        break;
+                                    case "bijzonderheden":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Bijzonderheden = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "museuminformatie":
+                                        newMolenData.Museuminformatie = dd;
+                                        break;
+                                    case "wederopbouw":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Wederopbouw = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "over de as":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.As = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "over de wieken":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Wieken = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "unieke eigenschap":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.UniekeEigenschap = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "landschappelijke waarde":
+                                        newMolenData.LandschappelijkeWaarde = dd;
+                                        break;
+                                    case "kadastrale aanduiding":
+                                        newMolenData.KadastraleAanduiding = dd;
+                                        break;
+                                    case "opvolger":
+                                        newMolenData.Opvolger = GetTBNFromUrl(GetUrlFromATag(dd2));
+                                        break;
+                                    case "voorganger":
+                                        newMolenData.Voorganger = GetTBNFromUrl(GetUrlFromATag(dd2));
+                                        break;
+                                    case "verplaatst naar":
+                                        newMolenData.VerplaatstNaar = GetTBNFromUrl(GetUrlFromATag(dd2));
+                                        break;
+                                    case "afkomstig van":
+                                        newMolenData.AfkomstigVan = GetTBNFromUrl(GetUrlFromATag(dd2));
+                                        break;
+                                    case "plaats(en) voorheen":
+                                        newMolenData.PlaatsenVoorheen = dd;
+                                        break;
+                                    case "molenerf":
+                                        newMolenData.Molenerf = dd;
+                                        break;
+                                    case "trivia":
+                                        newMolenData.Trivia = dd;
+                                        break;
+                                    case "geschiedenis":
+                                        isGeschiedenisPrevious = true;
+                                        newMolenData.Geschiedenis = dd;
+                                        var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
+                                        if (imageInGeschiedenis != null)
+                                        {
+                                            newMolenData.Images.Add(imageInGeschiedenis);
+                                        }
+                                        break;
+                                    case "eigendomshistorie":
+                                        newMolenData.Eigendomshistorie = dd;
+                                        break;
+                                    case "wetenswaardigheden":
+                                        newMolenData.Wetenswaardigheden = dd;
+                                        break;
+                                    case "recente werkzaamheden":
+                                        newMolenData.RecenteWerkzaamheden = dd;
+                                        break;
+                                    case "rad":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Rad = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "rad diameter":
+                                        newMolenData.RadDiameter = dd;
+                                        break;
+                                    case "wateras":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Wateras = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "toegangsprijzen":
+                                        if (!string.IsNullOrEmpty(dd))
+                                        {
+                                            newMolenData.Toegangsprijzen = char.ToUpper(dd[0]) + dd.Substring(1);
+                                        }
+                                        break;
+                                    case "nog waarneembaar":
+                                        isNogWaarneembaarPrevious = true;
+                                        var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
+                                        if (nogWaarneembareImage != null)
+                                        {
+                                            newMolenData.Images.Add(nogWaarneembareImage);
+                                        }
+                                        break;
+                                    case "verdwenen":
+                                        var lines = dd.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                                        for (int i = 0; i < lines.Length; i++)
+                                        {
+                                            string line = lines[i].Trim();
+
+                                            // Case 1: Single year with no status on the same line
+                                            if (Regex.IsMatch(line, @"^\d{4}$") && lines.Length == 1)
+                                            {
+                                                string year = line;
+                                                string status = "gesloopt";
+
+                                                if (i + 1 < lines.Length && !Regex.IsMatch(lines[i + 1], @"^\d{4}$"))
+                                                {
+                                                    status = lines[i + 1].Trim();
+                                                    i++;
+                                                }
 
                                                 DisappearedYearInfo newMolenYearInfo = new DisappearedYearInfo
                                                 {
-                                                    Status_before = prefixStatus,
                                                     Year = Convert.ToInt32(year),
-                                                    Status_after = suffixStatus
+                                                    Status_after = status
                                                 };
 
-                                                if (newMolenData.DisappearedYearInfos.Find(info => info.Year == newMolenYearInfo.Year
-                                                && info.Status_before == newMolenYearInfo.Status_before
-                                                && info.Status_after == newMolenYearInfo.Status_after) == null)
+                                                if (newMolenData.DisappearedYearInfos.Find(info => info.Year == Convert.ToInt32(year) && info.Status_after == newMolenYearInfo.Status_after) == null)
                                                 {
                                                     newMolenData.DisappearedYearInfos.Add(newMolenYearInfo);
                                                 }
                                             }
-                                        }
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
-                            if (data.ContainsKey(dt)) data[dt] = dd;
-                            else data.Add(dt, dd);
-                        }
-                        else if (dt?.ToLower() == "nog waarneembaar")
-                        {
-                            isNogWaarneembaarPrevious = true;
-                        }
-                        else if (isNogWaarneembaarPrevious)
-                        {
-                            var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
-                            if (nogWaarneembareImage != null)
-                            {
-                                newMolenData.Images.Add(nogWaarneembareImage);
-                            }
-                            isNogWaarneembaarPrevious = false;
-                        }
-                        else if (isGeschiedenisPrevious && string.IsNullOrEmpty(dt))
-                        {
-                            var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
-                            if (imageInGeschiedenis != null)
-                            {
-                                newMolenData.Images.Add(imageInGeschiedenis);
-                            }
-                        }
-
-                        if (dt?.ToLower() != "geschiedenis" && isGeschiedenisPrevious)
-                        {
-                            isGeschiedenisPrevious = !isGeschiedenisPrevious;
-                        }
-                        if (dt?.ToLower() != "nog waarneembaar" && isNogWaarneembaarPrevious)
-                        {
-                            isNogWaarneembaarPrevious = !isNogWaarneembaarPrevious;
-                        }
-                    }
-
-                    if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
-
-                    if (ModelTypeDiv != null)
-                    {
-                        string name = "";
-                        foreach (var modelDiv in ModelTypeDiv)
-                        {
-                            var dt = modelDiv.SelectSingleNode(".//dt")?.InnerText?.Trim();
-                            name = dt ?? "";
-                            var dd = modelDiv.SelectSingleNode(".//dd")?.InnerText?.Trim();
-                            if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
-                            {
-                                foreach (string type in dd.Split(','))
-                                {
-                                    string trimmedType = type.Trim();
-                                    var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
-                                    //Console.WriteLine("============="+ molenType.Name);
-                                    if (!_dBMolenTypeService.Exists(molenType, out var found)) 
-                                    {
-                                        found = molenType;
-                                    }
-                                    //Console.WriteLine(JsonSerializer.Serialize(molenType));
-                                    //Console.WriteLine(char.ToUpper(trimmedType[0]) + trimmedType.Substring(1));
-                                    if (newMolenData.MolenTypeAssociations.Where(x => x.MolenType.Name.ToLower() == molenType.Name.ToLower()).Count() == 0)
-                                    {
-                                        if (found != null)
-                                        {
-                                            //Console.WriteLine("=============================");
-                                            var y = new MolenTypeAssociation()
+                                            // Case 2: Line with a prefix (like "na", "voor", etc.) before the year
+                                            else if (Regex.IsMatch(line, @"^\w+ \d{4}$"))
                                             {
-                                                MolenDataId = newMolenData.Id,
-                                                MolenType = found
-                                            };
-                                            newMolenData.MolenTypeAssociations.Add(y);
+                                                var match1 = Regex.Match(line, @"^(\w+) (\d{4})$");
+                                                string prefix = match1.Groups[1].Value.Trim();
+                                                string year = match1.Groups[2].Value;
+
+                                                DisappearedYearInfo newMolenYearInfo = new DisappearedYearInfo
+                                                {
+                                                    Status_before = prefix,
+                                                    Year = Convert.ToInt32(year)
+                                                };
+
+                                                if (newMolenData.DisappearedYearInfos.Find(info => info.Year == Convert.ToInt32(year) && info.Status_before == newMolenYearInfo.Status_before) == null)
+                                                {
+                                                    newMolenData.DisappearedYearInfos.Add(newMolenYearInfo);
+                                                }
+                                            }
+                                            // Case 3: Line with both a year and a status in the same line
+                                            else if (!Regex.IsMatch(line, @"^\d{4}$"))
+                                            {
+                                                var match1 = Regex.Match(line, @"(.*?)\b(\d{4})\b\s*(.*)");
+                                                if (match1.Success)
+                                                {
+                                                    string prefixStatus = match1.Groups[1].Value.Trim();
+                                                    string year = match1.Groups[2].Value;
+                                                    string suffixStatus = match1.Groups[3].Value.Trim();
+
+                                                    if (prefixStatus == "") prefixStatus = null;
+                                                    if (suffixStatus == "") suffixStatus = null;
+
+                                                    DisappearedYearInfo newMolenYearInfo = new DisappearedYearInfo
+                                                    {
+                                                        Status_before = prefixStatus,
+                                                        Year = Convert.ToInt32(year),
+                                                        Status_after = suffixStatus
+                                                    };
+
+                                                    if (newMolenData.DisappearedYearInfos.Find(info => info.Year == newMolenYearInfo.Year
+                                                    && info.Status_before == newMolenYearInfo.Status_before
+                                                    && info.Status_after == newMolenYearInfo.Status_after) == null)
+                                                    {
+                                                        newMolenData.DisappearedYearInfos.Add(newMolenYearInfo);
+                                                    }
+                                                }
+                                            }
                                         }
-                                        else
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                if (data.ContainsKey(dt)) data[dt] = dd;
+                                else data.Add(dt, dd);
+                            }
+                            else if (dt?.ToLower() == "nog waarneembaar")
+                            {
+                                isNogWaarneembaarPrevious = true;
+                            }
+                            else if (isNogWaarneembaarPrevious)
+                            {
+                                var nogWaarneembareImage = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Nog waarneembaar");
+                                if (nogWaarneembareImage != null)
+                                {
+                                    newMolenData.Images.Add(nogWaarneembareImage);
+                                }
+                                isNogWaarneembaarPrevious = false;
+                            }
+                            else if (isGeschiedenisPrevious && string.IsNullOrEmpty(dt))
+                            {
+                                var imageInGeschiedenis = await GetImageFromHtmlNode(dd2, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, "Geschiedenis", true);
+                                if (imageInGeschiedenis != null)
+                                {
+                                    newMolenData.Images.Add(imageInGeschiedenis);
+                                }
+                            }
+
+                            if (dt?.ToLower() != "geschiedenis" && isGeschiedenisPrevious)
+                            {
+                                isGeschiedenisPrevious = !isGeschiedenisPrevious;
+                            }
+                            if (dt?.ToLower() != "nog waarneembaar" && isNogWaarneembaarPrevious)
+                            {
+                                isNogWaarneembaarPrevious = !isNogWaarneembaarPrevious;
+                            }
+                        }
+
+                        if (oldMolenData != null) newMolenData.Id = oldMolenData.Id;
+
+                        if (ModelTypeDiv != null)
+                        {
+                            string name = "";
+                            foreach (var modelDiv in ModelTypeDiv)
+                            {
+                                var dt = modelDiv.SelectSingleNode(".//dt")?.InnerText?.Trim();
+                                name = dt ?? "";
+                                Console.WriteLine(name);
+                                var dd = modelDiv.SelectSingleNode(".//dd")?.InnerText?.Trim();
+                                Console.WriteLine(dd);
+                                if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
+                                {
+                                    foreach (string type in dd.Split(','))
+                                    {
+                                        string trimmedType = type.Trim();
+                                        var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
+                                        Console.WriteLine(dd);
+                                        Console.WriteLine(newMolenData.MolenTypeAssociations.Where(x => x.MolenType != null && x.MolenType.Name.ToLower() == molenType.Name.ToLower()).Count());
+                                        Console.WriteLine(molenType.Name);
+                                        if (newMolenData.MolenTypeAssociations.Where(x => x.MolenType != null && x.MolenType.Name.ToLower() == molenType.Name.ToLower()).Count() == 0)
                                         {
-                                            //Console.WriteLine("=============================");
                                             var y = new MolenTypeAssociation()
                                             {
                                                 MolenDataId = newMolenData.Id,
@@ -678,190 +692,205 @@ namespace MolenApplicatie.Server.Services
                                             };
                                             newMolenData.MolenTypeAssociations.Add(y);
                                         }
-                                        //Console.WriteLine(JsonSerializer.Serialize(y));
                                     }
                                 }
                             }
+                            if (data.ContainsKey(name)) data[name] = newMolenData.MolenTypeAssociations;
+                            else data.Add(name, newMolenData.MolenTypeAssociations);
                         }
-                        if (data.ContainsKey(name)) data[name] = newMolenData.MolenTypeAssociations;
-                        else data.Add(name, newMolenData.MolenTypeAssociations);
-                    }
 
-                    if (Image != null)
-                    {
-                        var src = Image.First().GetAttributeValue("src", string.Empty);
-                        if (!string.IsNullOrEmpty(src) && Uri.IsWellFormedUriString(src, UriKind.Absolute))
+                        if (Image != null)
                         {
-                            var imageResponse = await _client.GetAsync(src);
-                            byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
-                            try
+                            var src = Image.First().GetAttributeValue("src", string.Empty);
+                            if (!string.IsNullOrEmpty(src) && Uri.IsWellFormedUriString(src, UriKind.Absolute))
                             {
-                                if (newMolenData.Images.Find(x => x.Name == "base-image") == null)
+                                var imageResponse = await _client.GetAsync(src);
+                                byte[] image = await imageResponse.Content.ReadAsByteArrayAsync();
+                                try
                                 {
-                                    newMolenData.Images.Add(new MolenImage()
+                                    if (newMolenData.Images.Find(x => x.Name == "base-image") == null)
                                     {
-                                        FilePath = CreateCleanPath.CreatePathWithoutWWWROOT($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg"),
-                                        Name = "base-image",
-                                        MolenDataId = newMolenData.Id,
-                                        ExternalUrl = src
-                                    });
-                                }
-                            }
-                            catch (Exception err)
-                            {
-                                Console.WriteLine("Error: " + err.Message);
-                            }
-                        }
-                    }
-
-                    if (newMolenData.Images.Count < Globals.MaxNormalImagesCount)
-                    {
-                        bool isImageAdded = false;
-                        if (ArticleAbout != null)
-                        {
-                            var firstArticle = ArticleAbout.First();
-                            var images = firstArticle.SelectNodes(".//img");
-                            if (images != null)
-                            {
-                                var imageToAdd = images.First();
-                                var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder);
-                                if (molenImage != null)
-                                {
-                                    newMolenData.Images.Add(molenImage);
-                                    isImageAdded = true;
-                                }
-                            }
-                        }
-                        if (((isImageAdded && newMolenData.Images.Count < Globals.MaxNormalImagesCount) || !isImageAdded) && ArticleFotos != null)
-                        {
-                            string pattern = @"\((\d{1,2}-\d{1,2}-(\d{4}))\)";
-                            var firstArticle = ArticleFotos.First();
-                            var turboFrames = firstArticle.SelectNodes(".//turbo-frame");
-                            List<(string, HtmlNode)> foundTurboFrames = new List<(string, HtmlNode)>();
-                            for (int i = 0; i < turboFrames.Count; i++)
-                            {
-                                var divsInTurboFrame = turboFrames[i].SelectNodes(".//div");
-                                foreach (var div in divsInTurboFrame)
-                                {
-                                    Match match = Regex.Match(div.InnerText.Trim(), pattern);
-                                    if (match.Success)
-                                    {
-                                        foundTurboFrames.Add((match.Groups[2].Value, turboFrames[i]));
+                                        newMolenData.Images.Add(new MolenImage()
+                                        {
+                                            FilePath = CreateCleanPath.CreatePathWithoutWWWROOT($"{Globals.MolenImagesFolder}/{newMolenData.Ten_Brugge_Nr}/base-image.jpg"),
+                                            Name = "base-image",
+                                            MolenDataId = newMolenData.Id,
+                                            ExternalUrl = src
+                                        });
                                     }
                                 }
-                                if (i == 2)
+                                catch (Exception err)
                                 {
-                                    break;
+                                    Console.WriteLine("Error: " + err.Message);
                                 }
                             }
+                        }
 
-                            foundTurboFrames = foundTurboFrames
-                                .OrderByDescending(frame => int.Parse(frame.Item1))
-                                .ToList();
-
-                            List<HtmlNode> imagesPortraits = new List<HtmlNode>();
-                            foreach (var turboFrame in foundTurboFrames)
+                        if (newMolenData.Images.Count < Globals.MaxNormalImagesCount)
+                        {
+                            bool isImageAdded = false;
+                            if (ArticleAbout != null)
                             {
-                                var imageContainer = turboFrame.Item2;
-                                var images = imageContainer.SelectNodes(".//img[@class='figure-img img-fluid large portrait']");
-                                if (images != null && images.Count > 0)
-                                {
-                                    imagesPortraits.Add(imageContainer);
-                                }
-                            }
-                            if (imagesPortraits.Count > 0)
-                            {
-                                var imageToAdd = imagesPortraits.First();
-                                var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
-                                if (molenImage != null)
-                                {
-                                    newMolenData.Images.Add(molenImage);
-                                }
-
-                            }
-                            else if (foundTurboFrames.Count > 0)
-                            {
-                                var imageContainer = foundTurboFrames.First().Item2;
-                                var images = imageContainer.SelectNodes(".//img");
+                                var firstArticle = ArticleAbout.First();
+                                var images = firstArticle.SelectNodes(".//img");
                                 if (images != null)
                                 {
                                     var imageToAdd = images.First();
-                                    var molenImage = await GetImageFromHtmlNode(imageContainer, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                    var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder);
+                                    if (molenImage != null)
+                                    {
+                                        newMolenData.Images.Add(molenImage);
+                                        isImageAdded = true;
+                                    }
+                                }
+                            }
+                            if (((isImageAdded && newMolenData.Images.Count < Globals.MaxNormalImagesCount) || !isImageAdded) && ArticleFotos != null)
+                            {
+                                string pattern = @"\((\d{1,2}-\d{1,2}-(\d{4}))\)";
+                                var firstArticle = ArticleFotos.First();
+                                var turboFrames = firstArticle.SelectNodes(".//turbo-frame");
+                                List<(string, HtmlNode)> foundTurboFrames = new List<(string, HtmlNode)>();
+                                for (int i = 0; i < turboFrames.Count; i++)
+                                {
+                                    var divsInTurboFrame = turboFrames[i].SelectNodes(".//div");
+                                    foreach (var div in divsInTurboFrame)
+                                    {
+                                        Match match = Regex.Match(div.InnerText.Trim(), pattern);
+                                        if (match.Success)
+                                        {
+                                            foundTurboFrames.Add((match.Groups[2].Value, turboFrames[i]));
+                                        }
+                                    }
+                                    if (i == 2)
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                foundTurboFrames = foundTurboFrames
+                                    .OrderByDescending(frame => int.Parse(frame.Item1))
+                                    .ToList();
+
+                                List<HtmlNode> imagesPortraits = new List<HtmlNode>();
+                                foreach (var turboFrame in foundTurboFrames)
+                                {
+                                    var imageContainer = turboFrame.Item2;
+                                    var images = imageContainer.SelectNodes(".//img[@class='figure-img img-fluid large portrait']");
+                                    if (images != null && images.Count > 0)
+                                    {
+                                        imagesPortraits.Add(imageContainer);
+                                    }
+                                }
+                                if (imagesPortraits.Count > 0)
+                                {
+                                    var imageToAdd = imagesPortraits.First();
+                                    var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
                                     if (molenImage != null)
                                     {
                                         newMolenData.Images.Add(molenImage);
                                     }
+
+                                }
+                                else if (foundTurboFrames.Count > 0)
+                                {
+                                    var imageContainer = foundTurboFrames.First().Item2;
+                                    var images = imageContainer.SelectNodes(".//img");
+                                    if (images != null)
+                                    {
+                                        var molenImage = await GetImageFromHtmlNode(imageContainer, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                        if (molenImage != null)
+                                        {
+                                            newMolenData.Images.Add(molenImage);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        newMolenData.LastUpdated = DateTime.Now;
+                        for (int i = 0; i < newMolenData.Images.Count; i++)
+                        {
+                            var imageInOldMolen = oldMolenData?.Images.Find(x => x.Name == newMolenData.Images[i].Name && x.FilePath == newMolenData.Images[i].FilePath);
+                            bool isImageInOldMolen = oldMolenData != null && imageInOldMolen != null;
+                            newMolenData.Images[i].MolenDataId = newMolenData.Id;
+                            if (!isImageInOldMolen)
+                            {
+                                CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
+                                if (!File.Exists(Globals.WWWROOTPath + newMolenData.Images[i].FilePath) && Uri.IsWellFormedUriString(newMolenData.Images[i].ExternalUrl, UriKind.Absolute))
+                                {
+                                    File.WriteAllBytes(Globals.WWWROOTPath + newMolenData.Images[i].FilePath, await _client.GetByteArrayAsync(newMolenData.Images[i].ExternalUrl));
+                                }
+                            }
+                        }
+                        for (int i = 0; i < oldMolenData?.Images.Count; i++)
+                        {
+                            if (newMolenData.Images.Find(x => x.Id == oldMolenData.Images[i].Id) == null && File.Exists(Globals.WWWROOTPath + oldMolenData.Images[i].FilePath))
+                            {
+                                newMolenData.Images.Add(oldMolenData.Images[i]);
+                            }
+                        }
+
+                        if (newMolenData != null && oldMolenData != null && oldMolenData.AddedImages != null)
+                        {
+                            newMolenData.AddedImages = oldMolenData.AddedImages;
+                        }
+
+                        if (Directory.Exists(Globals.MolenAddedImagesFolder) && Directory.Exists(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr))
+                        {
+                            var allImages = Directory.GetFiles(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr, "*.jpg");
+                            foreach (var image in allImages)
+                            {
+                                string imageName = Path.GetFileNameWithoutExtension(image);
+                                string imagePath = CreateCleanPath.CreatePathWithoutWWWROOT(image);
+                                if (newMolenData != null && newMolenData.AddedImages.Find(x => x.Name == imageName && x.FilePath == imagePath) == null)
+                                {
+                                    var newAddedMolenImage = new AddedImage
+                                    {
+                                        FilePath = imagePath,
+                                        Name = imageName,
+                                        CanBeDeleted = true,
+                                        Description = "",
+                                        MolenDataId = newMolenData.Id
+                                    };
+                                    newMolenData.AddedImages.Add(newAddedMolenImage);
                                 }
                             }
                         }
                     }
-
-                    newMolenData.LastUpdated = DateTime.Now;
-                    for (int i = 0; i < newMolenData.Images.Count; i++)
-                    {
-                        var imageInOldMolen = oldMolenData?.Images.Find(x => x.Name == newMolenData.Images[i].Name && x.FilePath == newMolenData.Images[i].FilePath);
-                        bool isImageInOldMolen = oldMolenData != null && imageInOldMolen != null;
-                        newMolenData.Images[i].MolenDataId = newMolenData.Id;
-                        if (!isImageInOldMolen)
-                        {
-                            CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
-                            if (!File.Exists(Globals.WWWROOTPath + newMolenData.Images[i].FilePath) && Uri.IsWellFormedUriString(newMolenData.Images[i].ExternalUrl, UriKind.Absolute))
-                            {
-                                File.WriteAllBytes(Globals.WWWROOTPath + newMolenData.Images[i].FilePath, await _client.GetByteArrayAsync(newMolenData.Images[i].ExternalUrl));
-                            }
-                        }
-                    }
-                    for (int i = 0; i < oldMolenData?.Images.Count; i++)
-                    {
-                        if (newMolenData.Images.Find(x => x.Id == oldMolenData.Images[i].Id) == null && File.Exists(Globals.WWWROOTPath + oldMolenData.Images[i].FilePath))
-                        {
-                            newMolenData.Images.Add(oldMolenData.Images[i]);
-                        }
-                    }
-
-                    if (newMolenData != null && oldMolenData != null && oldMolenData.AddedImages != null)
-                    {
-                        newMolenData.AddedImages = oldMolenData.AddedImages;
-                    }
-
-                    if (Directory.Exists(Globals.MolenAddedImagesFolder) && Directory.Exists(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr))
-                    {
-                        var allImages = Directory.GetFiles(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr, "*.jpg");
-                        foreach (var image in allImages)
-                        {
-                            string imageName = Path.GetFileNameWithoutExtension(image);
-                            string imagePath = CreateCleanPath.CreatePathWithoutWWWROOT(image);
-                            if (newMolenData != null && newMolenData.AddedImages.Find(x => x.Name == imageName && x.FilePath == imagePath) == null)
-                            {
-                                var newAddedMolenImage = new AddedImage
-                                {
-                                    FilePath = imagePath,
-                                    Name = imageName,
-                                    CanBeDeleted = true,
-                                    Description = "",
-                                    MolenDataId = newMolenData.Id
-                                };
-                                newMolenData.AddedImages.Add(newAddedMolenImage);
-                            }
-                        }
-                    }
-                    if (newMolenData!= null)
+                }
+                if (newMolenData != null)
+                {
+                    if (newMolenData.MolenTBN == null)
                     {
                         newMolenData.MolenTBN = new MolenTBN()
                         {
                             Ten_Brugge_Nr = newMolenData.Ten_Brugge_Nr
                         };
                     }
-                    Console.WriteLine("newMolenData.MolenMakers: " + newMolenData.MolenMakers.Count);
-                    var options = new JsonSerializerOptions
+                    if (newMolenData.Toestand == null)
                     {
-                        ReferenceHandler = ReferenceHandler.IgnoreCycles
-                    };
-                    //Console.WriteLine(JsonSerializer.Serialize(newMolenData, options));
-                    //_dbContext.SaveChanges();
+                        if (newMolenData.Opvolger == null
+                            && newMolenData.VerplaatstNaar == null
+                            && (newMolenData.DisappearedYearInfos == null || !newMolenData.DisappearedYearInfos.Any())
+                            && (newMolenData.Images == null || newMolenData.Images.Any())
+                            && newMolenData.Latitude != 0.0
+                            && newMolenData.Longitude != 0.0)
+                        {
+                            newMolenData.Toestand = MolenToestand.Werkend;
+                        }
+                        else
+                        {
+                            newMolenData.Toestand = MolenToestand.Verdwenen;
+                        }
+                    }
+                }
+                if (newMolenData != null)
+                {
                     await _dBMolenDataService.AddOrUpdate(newMolenData);
+
                     return (newMolenData, data);
                 }
+
             }
 
             catch (HttpRequestException e)
@@ -935,8 +964,7 @@ namespace MolenApplicatie.Server.Services
                         else if (existingPath != null)
                         {
                             string pathWithoutRoot = CreateCleanPath.CreatePathWithoutWWWROOT(existingPath);
-                            var foundImagesInDB = _dbContext.MolenImages
-                                .FirstOrDefault(x => x.FilePath == pathWithoutRoot);
+                            var foundImagesInDB = _dbContext.MolenImages.FirstOrDefault(x => x.FilePath == pathWithoutRoot);
                             if (foundImagesInDB != null)
                             {
                                 return new MolenImage
@@ -1049,14 +1077,18 @@ namespace MolenApplicatie.Server.Services
         {
             List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
             //List<MolenData> currentData = await _dbContext.MolenData.ToListAsync();
-            List<MolenTBN> Data = await ReadAllMolenTBN();
+            //List<MolenTBN> Data = await ReadAllMolenTBN();
+            //await _dBMolenTBNService.AddOrUpdateRange(Data);
+            //await _dbContext.SaveChangesAsync();
+            List<MolenTBN> Data = _dbContext.MolenTBNs.ToList();
+
             //List<MolenTBN> Data = await _dbContext.MolenTBNs.ToListAsync();
             int count = 0;
             foreach (MolenTBN tbn in Data)
             {
-                //if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
                 count++;
-                Thread.Sleep(1500);
+                //if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
+                Thread.Sleep(10000);
                 Console.WriteLine("nr-" + count);
                 (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 //await _dbContext.MolenTBNs.AddAsync(tbn);
@@ -1070,6 +1102,7 @@ namespace MolenApplicatie.Server.Services
                     await _dbContext.SaveChangesAsync();
                 }
             }
+            //(MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber("02748");
 
             //File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
             //{
@@ -1108,7 +1141,7 @@ namespace MolenApplicatie.Server.Services
 
             while (countDivsAtNull <= 1)
             {
-                Thread.Sleep(1500);
+                //Thread.Sleep(1500);
                 HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?page=" + i);
                 string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -1144,8 +1177,8 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
                 i++;
-        }
-        Console.WriteLine(alleMolenTBNR.Count);
+            }
+            Console.WriteLine(alleMolenTBNR.Count);
             return alleMolenTBNR;
         }
 
