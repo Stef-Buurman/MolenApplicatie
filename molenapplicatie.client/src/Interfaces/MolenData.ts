@@ -1,6 +1,6 @@
-import { MolenImage } from "../Class/MolenImage";
-import { MolenType } from "../Class/MolenType";
-import { MolenMaker } from "../Class/MolenMaker";
+import { MolenImage } from "./MolenImage";
+import { MolenMaker } from "./MolenMaker";
+import { MolenTypeAssociation } from "./MolenTypeAssociation";
 
 export interface MolenData {
   id: number; 
@@ -72,6 +72,6 @@ export interface MolenData {
   lastUpdated?: Date; 
   images?: MolenImage[]; 
   addedImages?: MolenImage[]; 
-  modelTypes: MolenType[]; 
+  molenTypeAssociations: MolenTypeAssociation[]; 
   hasImage: boolean; 
 }
