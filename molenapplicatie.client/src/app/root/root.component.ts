@@ -51,7 +51,7 @@ export class RootComponent {
     else if (!selectedPlace) selectedPlace = this.selectedPlace;
     var zoom: number = 13;
     if (selectedPlace.population == 0) zoom = 15;
-    this.mapService.setView([selectedPlace.lat, selectedPlace.lon], zoom);
+    this.mapService.setView([selectedPlace.latitude, selectedPlace.longitude], zoom);
   }
 
   openInfoMenu() {
