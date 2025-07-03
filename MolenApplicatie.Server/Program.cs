@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
+builder.Services.AddTransient<PlaceTypeService>();
 builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<DBMolenAddedImageService>();
 builder.Services.AddTransient<DBMolenDissappearedYearsService>();
@@ -29,7 +30,7 @@ builder.Services.AddTransient<DBMolenMakerService>();
 builder.Services.AddTransient<DBMolenImageService>();
 builder.Services.AddTransient<DBMolenTBNService>();
 builder.Services.AddTransient<DBMolenTypeAssociationService>();
-builder.Services.AddTransient<HttpClient>();
+builder.Services.AddTransient<HttpClient>(); 
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
