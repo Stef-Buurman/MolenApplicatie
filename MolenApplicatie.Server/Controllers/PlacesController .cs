@@ -34,7 +34,7 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("get_places_by_input/{input}")]
         public async Task<IActionResult> GetPlacesByInput(string input)
         {
-            var locations = await _PlacesService.GetPlacesByType(input);
+            var locations = await _PlacesService.GetPlacesByName(input);
             return Ok(locations);
         }
     }
