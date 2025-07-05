@@ -7,6 +7,8 @@ using MolenApplicatie.Server.Services.Database;
 using MolenApplicatie.Server.Utils;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace MolenApplicatie.Server.Services
@@ -17,7 +19,7 @@ namespace MolenApplicatie.Server.Services
         private readonly HttpClient _client;
         private readonly MolenService _molenService;
         private readonly PlacesService _placesService;
-        private List<Dictionary<string, string>> strings = new List<Dictionary<string, string>>();
+        private Dictionary<string, List<string>> strings;
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
         private readonly DBMolenTBNService _dBMolenTBNService;
@@ -30,6 +32,16 @@ namespace MolenApplicatie.Server.Services
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
             _dBMolenTBNService = dBMolenTBNService;
+
+            string jsonString = File.ReadAllTextAsync("Json/AlleKeysMolens.json").Result;
+            if (!string.IsNullOrEmpty(jsonString))
+            {
+                strings = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(jsonString)!;
+            }
+            else
+            {
+                strings = new Dictionary<string, List<string>>();
+            }
         }
 
         public async Task<List<MolenData>?> AddMolensToMariaDb(List<MolenData> molens)
@@ -128,27 +140,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<(MolenData, Dictionary<string, object>)> GetMolenDataByTBNumber(string Ten_Brugge_Nr, string? url = null)
         {
             MolenData? oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
-            oldMolenData?.MolenTypeAssociations.ForEach(mak =>
-            {
-                mak.MolenData = null;
-                if (mak.MolenType != null) mak.MolenType.MolenTypeAssociations = null;
-            });
-            oldMolenData?.MolenMakers.ForEach(mak =>
-            {
-                mak.MolenData = null;
-            });
-            oldMolenData?.AddedImages.ForEach(mak =>
-            {
-                mak.MolenData = null;
-            });
-            oldMolenData?.Images.ForEach(mak =>
-            {
-                mak.MolenData = null;
-            });
-            oldMolenData?.DisappearedYearInfos.ForEach(mak =>
-            {
-                mak.MolenData = null;
-            });
+            oldMolenData = MolenService.RemoveCircularDependency(oldMolenData);
             try
             {
                 HttpResponseMessage response;
@@ -213,7 +205,15 @@ namespace MolenApplicatie.Server.Services
                             var dd2 = div.SelectSingleNode(".//dd");
                             if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
                             {
-                                if (strings.Find(x => x.ContainsKey(dt)) == null) strings.Add(new Dictionary<string, string> { { dt, Ten_Brugge_Nr } });
+                                if (!strings.ContainsKey(dt))
+                                {
+                                    strings.Add(dt, new List<string>() { Ten_Brugge_Nr });
+                                }
+                                else if (!strings[dt].Contains(Ten_Brugge_Nr))
+                                {
+                                    strings[dt].Add(Ten_Brugge_Nr);
+                                }
+
                                 switch (dt.ToLower())
                                 {
                                     case "geo positie":
@@ -671,18 +671,13 @@ namespace MolenApplicatie.Server.Services
                             {
                                 var dt = modelDiv.SelectSingleNode(".//dt")?.InnerText?.Trim();
                                 name = dt ?? "";
-                                Console.WriteLine(name);
                                 var dd = modelDiv.SelectSingleNode(".//dd")?.InnerText?.Trim();
-                                Console.WriteLine(dd);
                                 if (!string.IsNullOrEmpty(dt) && !string.IsNullOrEmpty(dd))
                                 {
                                     foreach (string type in dd.Split(','))
                                     {
                                         string trimmedType = type.Trim();
                                         var molenType = new MolenType() { Name = char.ToUpper(trimmedType[0]) + trimmedType.Substring(1) };
-                                        Console.WriteLine(dd);
-                                        Console.WriteLine(newMolenData.MolenTypeAssociations.Where(x => x.MolenType != null && x.MolenType.Name.ToLower() == molenType.Name.ToLower()).Count());
-                                        Console.WriteLine(molenType.Name);
                                         if (newMolenData.MolenTypeAssociations.Where(x => x.MolenType != null && x.MolenType.Name.ToLower() == molenType.Name.ToLower()).Count() == 0)
                                         {
                                             var y = new MolenTypeAssociation()
@@ -695,8 +690,10 @@ namespace MolenApplicatie.Server.Services
                                     }
                                 }
                             }
-                            if (data.ContainsKey(name)) data[name] = newMolenData.MolenTypeAssociations;
-                            else data.Add(name, newMolenData.MolenTypeAssociations);
+                            //var molentypeCopy = newMolenData.MolenTypeAssociations;
+                            //molentypeCopy.ForEach(mta => mta.MolenData = null);
+                            //if (data.ContainsKey(name)) data[name] = molentypeCopy;
+                            //else data.Add(name, molentypeCopy);
                         }
 
                         if (Image != null)
@@ -858,6 +855,12 @@ namespace MolenApplicatie.Server.Services
                         }
                     }
                 }
+
+                //var molenimagesCopy = newMolenData.Images;
+                //molenimagesCopy.ForEach(mta => mta.MolenData = null);
+                //if (data.ContainsKey("Images")) data["Images"] = molenimagesCopy;
+                //else data.Add("Images", molenimagesCopy);
+
                 if (newMolenData != null)
                 {
                     if (newMolenData.MolenTBN == null)
@@ -886,9 +889,9 @@ namespace MolenApplicatie.Server.Services
                 }
                 if (newMolenData != null)
                 {
-                    await _dBMolenDataService.AddOrUpdate(newMolenData);
-
-                    return (newMolenData, data);
+                    var addedMolen = await _dBMolenDataService.AddOrUpdate(newMolenData);
+                    //newMolenData = MolenService.RemoveCircularDependency(newMolenData);
+                    return (addedMolen, data);
                 }
 
             }
@@ -1017,29 +1020,6 @@ namespace MolenApplicatie.Server.Services
             return null;
         }
 
-        public async Task<List<MolenTBN>> AddMolenTBNToDB(List<MolenTBNOld> tBNsOld)
-        {
-            List<MolenTBN> alleMolenTBNR = await _dbContext.MolenTBNs.ToListAsync();
-            List<MolenTBN> molenList = new List<MolenTBN>();
-            foreach (var tbn in tBNsOld)
-            {
-                var molen = new MolenTBN()
-                {
-                    Ten_Brugge_Nr = tbn.Ten_Brugge_Nr
-                };
-                molenList.Add(molen);
-            }
-            foreach (var molentbn in molenList)
-            {
-                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == molentbn.Ten_Brugge_Nr).Count() == 0)
-                {
-                    await _dbContext.MolenTBNs.AddAsync(molentbn);
-                    alleMolenTBNR.Add(molentbn);
-                }
-            }
-            return alleMolenTBNR;
-        }
-
         public async Task<List<MolenTBN>> AddMolenTBNToDB()
         {
             List<MolenTBN> alleMolenTBNR = await _dbContext.MolenTBNs.ToListAsync();
@@ -1075,12 +1055,22 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<Dictionary<string, object>>> GetAllMolenData()
         {
-            List<Dictionary<string, object>> keyValuePairs = new List<Dictionary<string, object>>();
-            //List<MolenData> currentData = await _dbContext.MolenData.ToListAsync();
+            Dictionary<int, Dictionary<string, object>> keyValuePairs;
+            List<MolenData> currentData = await _dbContext.MolenData.ToListAsync();
+            Console.WriteLine(currentData.Count());
             //List<MolenTBN> Data = await ReadAllMolenTBN();
             //await _dBMolenTBNService.AddOrUpdateRange(Data);
             //await _dbContext.SaveChangesAsync();
             List<MolenTBN> Data = _dbContext.MolenTBNs.ToList();
+            string jsonString = await File.ReadAllTextAsync("Json/AlleMolenData.json");
+            if (!string.IsNullOrEmpty(jsonString))
+            {
+                keyValuePairs = JsonSerializer.Deserialize<Dictionary<int, Dictionary<string, object>>>(jsonString)!;
+            }
+            else
+            {
+                keyValuePairs = new Dictionary<int, Dictionary<string, object>>();
+            }
 
             //List<MolenTBN> Data = await _dbContext.MolenTBNs.ToListAsync();
             int count = 0;
@@ -1088,11 +1078,11 @@ namespace MolenApplicatie.Server.Services
             {
                 count++;
                 //if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
-                Thread.Sleep(10000);
+                Thread.Sleep(7500);
                 Console.WriteLine("nr-" + count);
+                Console.WriteLine("Ten_Brugge_Nr-" + tbn.Ten_Brugge_Nr);
                 (MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 //await _dbContext.MolenTBNs.AddAsync(tbn);
-                keyValuePairs.Add(molen.Item2);
                 //if (count == 1)
                 //{
                 //    break;
@@ -1100,36 +1090,36 @@ namespace MolenApplicatie.Server.Services
                 if (count % 1 == 0)
                 {
                     await _dbContext.SaveChangesAsync();
+                    File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }));
+                    if (molen.Item2 != null)
+                    {
+                        keyValuePairs[count] = molen.Item2;
+                    }
+                    File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }));
                 }
             }
             //(MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber("02748");
 
-            //File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
-            //{
-            //    WriteIndented = true
-            //}));
+            await _dbContext.SaveChangesAsync();
+            File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
 
-            //File.WriteAllText("Json/DaadwerkelijkAlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
-            //{
-            //    WriteIndented = true
-            //}));
-
-            //File.WriteAllText("Json/allverdwenenMolens.json", JsonSerializer.Serialize(allverdwenenMolens, new JsonSerializerOptions
-            //{
-            //    WriteIndented = true
-            //}));
+            File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
 
             await _dbContext.SaveChangesAsync();
 
-            return keyValuePairs;
-        }
-
-        public async Task<List<MolenTBN>> SaveAndReadMolenTBN(List<MolenTBNOld> tBNOlds)
-        {
-            List<MolenTBN> tbns = tBNOlds.Select(tbn => new MolenTBN { Ten_Brugge_Nr = tbn.Ten_Brugge_Nr }).ToList();
-            await _dbContext.MolenTBNs.AddRangeAsync(tbns);
-            await _dbContext.SaveChangesAsync();
-            return tbns;
+            return keyValuePairs.Values.ToList();
         }
 
         public async Task<List<MolenTBN>> ReadAllMolenTBN()
