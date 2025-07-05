@@ -3,7 +3,6 @@ using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
-using System.Linq;
 
 namespace MolenApplicatie.Server.Services
 {
@@ -20,6 +19,52 @@ namespace MolenApplicatie.Server.Services
         public MolenData GetMolenData(MolenData molen)
         {
             molen.HasImage = molen.AddedImages.Count > 0;
+            return molen;
+        }
+
+        public static MolenData? RemoveCircularDependency(MolenData? molen)
+        {
+            if (molen == null) return null;
+            if (molen.MolenTBN != null)
+            {
+                molen.MolenTBN.MolenData = null;
+            }
+            if (molen.MolenTypeAssociations != null)
+            {
+                molen.MolenTypeAssociations.ForEach(mak =>
+                {
+                    mak.MolenData = null;
+                    if (mak.MolenType != null) mak.MolenType.MolenTypeAssociations = null;
+                });
+            }
+            if (molen.MolenMakers != null)
+            {
+                molen.MolenMakers.ForEach(mak =>
+                {
+                    mak.MolenData = null;
+                });
+            }
+            if (molen.AddedImages != null)
+            {
+                molen.AddedImages.ForEach(mak =>
+                {
+                    mak.MolenData = null;
+                });
+            }
+            if (molen.Images != null)
+            {
+                molen.Images.ForEach(mak =>
+                {
+                    mak.MolenData = null;
+                });
+            }
+            if (molen.DisappearedYearInfos != null)
+            {
+                molen.DisappearedYearInfos.ForEach(mak =>
+                {
+                    mak.MolenData = null;
+                });
+            }
             return molen;
         }
 
