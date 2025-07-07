@@ -15,7 +15,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             return Exists(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year, out existing);
         }
-        public async Task<List<DisappearedYearInfo>> GetDissappearedYearsOfMolen(int MolenId)
+        public async Task<List<DisappearedYearInfo>> GetDissappearedYearsOfMolen(Guid MolenId)
         {
             var years = await _context.DisappearedYearInfos
                 .Where(e => e.MolenDataId == MolenId)

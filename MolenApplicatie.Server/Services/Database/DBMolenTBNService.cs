@@ -1,12 +1,10 @@
 ﻿using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MolenApplicatie.Server.Services.Database
 {
     public class DBMolenTBNService : DBDefaultService<MolenTBN>
-    { 
+    {
         public DBMolenTBNService(MolenDbContext context) : base(context)
         {}
         public override bool Exists(MolenTBN molenTBN, out MolenTBN? existing)

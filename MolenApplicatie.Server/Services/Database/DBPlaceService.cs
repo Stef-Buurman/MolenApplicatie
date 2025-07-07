@@ -40,7 +40,7 @@ namespace MolenApplicatie.Server.Services.Database
                 {
                     entity.Type = all_types.FirstOrDefault(t => entity.Type.Equals(t));
                 }
-                if (entity.Type != null && entity.Type.Id > 0)
+                if (entity.Type != null && entity.Type.Id != Guid.Empty)
                 {
                     entity.PlaceTypeId = entity.Type.Id;
                     entity.Type = null;
@@ -48,7 +48,7 @@ namespace MolenApplicatie.Server.Services.Database
                 var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
                 if (existingEntity != null)
                 {
-                    if (entity.Id == 0 && existingEntity.Id != 0)
+                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
 
                     existingEntity.Type = null;

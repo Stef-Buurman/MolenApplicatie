@@ -33,7 +33,7 @@ namespace MolenApplicatie.Server.Services.Database
             return await base.Add(molenImage);
         }
 
-        public async Task<List<MolenImage>> GetImagesOfMolen(int MolenId)
+        public async Task<List<MolenImage>> GetImagesOfMolen(Guid MolenId)
         {
             var images = await _context.MolenImages
                 .Where(e => e.MolenDataId == MolenId)

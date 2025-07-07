@@ -15,7 +15,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             return Exists(e => e.Name == molenMaker.Name && e.Year == molenMaker.Year, out existing);
         }
-        public async Task<List<MolenMaker>> GetMakersOfMolen(int MolenId)
+        public async Task<List<MolenMaker>> GetMakersOfMolen(Guid MolenId)
         {
             var makers = await _context.MolenMakers
                 .Where(e => e.MolenDataId == MolenId)
