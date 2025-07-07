@@ -11,7 +11,7 @@ using MolenApplicatie.Server.Data;
 namespace MolenApplicatie.Server.Migrations
 {
     [DbContext(typeof(MolenDbContext))]
-    [Migration("20250701224517_InitialCreate")]
+    [Migration("20250705225657_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,9 +24,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.AddedImage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("CanBeDeleted")
                         .HasColumnType("tinyint(1)");
@@ -41,8 +41,8 @@ namespace MolenApplicatie.Server.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenDataId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -57,12 +57,12 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.DisappearedYearInfo", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenDataId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Status_after")
                         .HasColumnType("longtext");
@@ -82,9 +82,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.LastSearchedForNewData", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<DateTime>("LastSearched")
                         .HasColumnType("datetime(6)");
@@ -96,9 +96,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenData", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Adres")
                         .HasColumnType("longtext");
@@ -178,8 +178,8 @@ namespace MolenApplicatie.Server.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("double");
 
-                    b.Property<int>("MolenTBNId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenTBNId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Molenaar")
                         .HasColumnType("longtext");
@@ -307,9 +307,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenImage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("CanBeDeleted")
                         .HasColumnType("tinyint(1)");
@@ -325,8 +325,8 @@ namespace MolenApplicatie.Server.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenDataId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -341,12 +341,12 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenMaker", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenDataId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -365,9 +365,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTBN", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Ten_Brugge_Nr")
                         .IsRequired()
@@ -380,9 +380,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenType", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -395,15 +395,15 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.MolenTypeAssociation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
-                    b.Property<int>("MolenDataId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenDataId")
+                        .HasColumnType("char(36)");
 
-                    b.Property<int>("MolenTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MolenTypeId")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
@@ -416,9 +416,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.Place", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Country")
                         .IsRequired()
@@ -434,8 +434,8 @@ namespace MolenApplicatie.Server.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("PlaceTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PlaceTypeId")
+                        .HasColumnType("char(36)");
 
                     b.Property<int>("Population")
                         .HasColumnType("int");
@@ -453,9 +453,9 @@ namespace MolenApplicatie.Server.Migrations
 
             modelBuilder.Entity("MolenApplicatie.Server.Models.MariaDB.PlaceType", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Group")
                         .IsRequired()
