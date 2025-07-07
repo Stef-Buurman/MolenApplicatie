@@ -5,12 +5,9 @@ namespace MolenApplicatie.Server.Services.Database
 {
     public class DBPlaceService : DBDefaultService<Place>
     {
-        private readonly MolenDbContext _context;
         private readonly DBPlaceTypeService _dBPlaceTypeService;
-        public DBPlaceService(MolenDbContext context, DBPlaceTypeService dBPlaceTypeService)
-            : base(context)
+        public DBPlaceService(MolenDbContext context, DBPlaceTypeService dBPlaceTypeService) : base(context)
         {
-            _context = context;
             _dBPlaceTypeService = dBPlaceTypeService;
         }
 

@@ -7,11 +7,9 @@ namespace MolenApplicatie.Server.Services.Database
 {
     public class DBMolenImageService : DBDefaultService<MolenImage>
     {
-        private readonly MolenDbContext _context;
         private readonly HttpClient _client;
         public DBMolenImageService(MolenDbContext context, HttpClient client) : base(context)
         {
-            _context = context;
             _client = client;
         }
         public override bool Exists(MolenImage molenImage, out MolenImage? existing)

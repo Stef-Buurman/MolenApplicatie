@@ -7,11 +7,8 @@ namespace MolenApplicatie.Server.Services.Database
 {
     public class DBMolenAddedImageService : DBDefaultService<AddedImage>
     {
-        private readonly MolenDbContext _context;
         public DBMolenAddedImageService(MolenDbContext context) : base(context)
-        {
-            _context = context;
-        }
+        {}
 
         public override bool Exists(AddedImage addedImage, out AddedImage? existing)
         {

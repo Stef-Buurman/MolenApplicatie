@@ -6,18 +6,16 @@ namespace MolenApplicatie.Server.Services.Database
 {
     public class DBMolenTypeAssociationService : DBDefaultService<MolenTypeAssociation>
     {
-        private readonly MolenDbContext _context;
         private readonly DBMolenTypeService _dBMolenTypeService;
         public DBMolenTypeAssociationService(MolenDbContext context, DBMolenTypeService dBMolenTypeService) : base(context)
         {
-            _context = context;
             _dBMolenTypeService = dBMolenTypeService;
         }
         public override bool Exists(MolenTypeAssociation molenTypeAssociation, out MolenTypeAssociation? existing)
         {
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);
         }
-        public async Task<List<MolenTypeAssociation>> GetMolenTypeAssociationsOfMolen(int MolenId)
+        public async Task<List<MolenTypeAssociation>> GetMolenTypeAssociationsOfMolen(Guid MolenId)
         {
             var molenTypeAssociations = await _context.MolenTypeAssociations
                 .Where(e => e.MolenDataId == MolenId)
@@ -58,6 +56,7 @@ namespace MolenApplicatie.Server.Services.Database
                 all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
             }
 
+            var all = await _cache.GetAllAsync();
             var entitiesToAdd = new List<MolenTypeAssociation>();
             var entitiesToUpdate = new List<MolenTypeAssociation>();
 
@@ -67,18 +66,25 @@ namespace MolenApplicatie.Server.Services.Database
                 {
                     entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
                 }
-                if (entity.MolenType != null && entity.MolenType.Id > 0)
+                if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
                 {
                     entity.MolenTypeId = entity.MolenType.Id;
                     entity.MolenType = null;
                 }
-                if (Exists(entity, out var existingEntity))
+                if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
                 {
-                    if (entity.Id == 0 && existingEntity.Id != 0)
+                    entity.MolenDataId = entity.MolenData.Id;
+                    entity.MolenData = null;
+                }
+                var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
+                if (existingEntity != null)
+                {
+                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
 
                     existingEntity.MolenType = null;
                     _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    //entitiesToUpdate.Add(existingEntity);
                 }
                 else
                 {
