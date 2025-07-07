@@ -8,7 +8,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
     public class PlaceType : DefaultModel, IEquatable<PlaceType>
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public required string Name { get; set; }
         public required string NameEn { get; set; }
         public required string NameMV { get; set; }

@@ -9,9 +9,9 @@ namespace MolenApplicatie.Server.Models.MariaDB
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public int MolenDataId { get; set; }
-        public int MolenTypeId { get; set; }
+        public Guid Id { get; set; }
+        public Guid MolenDataId { get; set; }
+        public Guid MolenTypeId { get; set; }
         public MolenData MolenData { get; set; } = null!;
         public MolenType MolenType { get; set; } = null!;
 

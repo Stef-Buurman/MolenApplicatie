@@ -9,14 +9,14 @@ namespace MolenApplicatie.Server.Models.MariaDB
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public required string FilePath { get; set; }
         public required string Name { get; set; }
         public bool CanBeDeleted { get; set; }
         public string? Description { get; set; }
         public required string ExternalUrl { get; set; }
         public MolenData MolenData { get; set; } = null!;
-        public int MolenDataId { get; set; }
+        public Guid MolenDataId { get; set; }
         public bool IsAddedImage = false;
 
         public bool Equals(MolenImage? other)

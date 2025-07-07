@@ -9,12 +9,12 @@ namespace MolenApplicatie.Server.Models.MariaDB
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string? Status_before { get; set; }
         public int Year { get; set; }
         public string? Status_after { get; set; }
         public MolenData MolenData { get; set; } = null!;
-        public int MolenDataId { get; set; }
+        public Guid MolenDataId { get; set; }
 
         public bool Equals(DisappearedYearInfo? other)
         {

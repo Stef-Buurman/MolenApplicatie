@@ -2,7 +2,7 @@
 {
     public class MolenLatLongReturn
     {
-        public int MolenID { get; set; }
+        public Guid MolenID { get; set; }
         public string MolenTBN { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }

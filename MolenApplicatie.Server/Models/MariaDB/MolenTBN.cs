@@ -9,7 +9,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public required string Ten_Brugge_Nr { get; set; }
         public virtual MolenData MolenData { get; set; } = null!;
 

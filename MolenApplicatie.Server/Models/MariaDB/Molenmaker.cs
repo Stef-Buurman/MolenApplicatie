@@ -9,11 +9,11 @@ namespace MolenApplicatie.Server.Models.MariaDB
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public required string Name { get; set; }
         public required string Year { get; set; }
         public MolenData MolenData { get; set; } = null!;
-        public int MolenDataId { get; set; }
+        public Guid MolenDataId { get; set; }
 
         public bool Equals(MolenMaker? other)
         {
