@@ -218,7 +218,7 @@ namespace MolenApplicatie.Server.Services
                 .Where(p => p.Name.ToLower().Contains(normalizedName))
                 .ToListAsync();
         }
-        public async Task<Place?> GetPlaceById(int id) => await _dbContext.Places
+        public async Task<Place?> GetPlaceById(Guid id) => await _dbContext.Places
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
 
