@@ -16,7 +16,7 @@ namespace MolenApplicatie.Server.Services
             _dbContext = dbContext;
         }
 
-        public MolenData GetMolenData(MolenData molen)
+        public static MolenData GetMolenData(MolenData molen)
         {
             molen.HasImage = molen.AddedImages.Count > 0;
             return molen;
@@ -96,7 +96,6 @@ namespace MolenApplicatie.Server.Services
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .ToList()
                 .Select(GetMolenData).ToList();
         }
 
@@ -133,9 +132,9 @@ namespace MolenApplicatie.Server.Services
         }
 
 
-        public async Task<List<MolenData>> GetAllDisappearedMolens(string provincie)
+        public List<MolenData> GetAllDisappearedMolens(string provincie)
         {
-            return await _dbContext.MolenData
+            return _dbContext.MolenData
                 .Where(m => m.Toestand != null && m.Toestand == MolenToestand.Verdwenen && m.Provincie != null && m.Provincie.ToLower() == provincie.ToLower())
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
@@ -144,7 +143,7 @@ namespace MolenApplicatie.Server.Services
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .Select(m => GetMolenData(m)).ToListAsync();
+                .Select(GetMolenData).ToList();
         }
 
         public List<MolenData> GetAllRemainderMolens()
@@ -172,6 +171,20 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<MolenType>> GetAllMolenTypes()
         {
             return await _dbContext.MolenTypes.ToListAsync();
+        }
+
+        public List<MolenData> GetMolensByTBN(List<string> tbns)
+        {
+            return _dbContext.MolenData
+                .Include(m => m.MolenTBN)
+                    .Where(m => tbns.Contains(m.MolenTBN.Ten_Brugge_Nr.ToLower()))
+                .Include(m => m.Images)
+                .Include(m => m.AddedImages)
+                .Include(m => m.MolenTypeAssociations)
+                    .ThenInclude(a => a.MolenType)
+                .Include(m => m.MolenMakers)
+                .Include(m => m.DisappearedYearInfos)
+                .Select(GetMolenData).ToList();
         }
 
         public async Task<MolenData?> GetMolenByTBN(string tbn)
@@ -211,7 +224,7 @@ namespace MolenApplicatie.Server.Services
             return molen.Toestand != MolenToestand.Verdwenen;
         }
 
-        public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(int id, string TBN, IFormFile file)
+        public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(Guid id, string TBN, IFormFile file)
         {
             var maxSavedFilesCount = 5;
             using (var memoryStream = new MemoryStream())
