@@ -45,7 +45,7 @@ namespace MolenApplicatie.Server.Services.Database
             return _cachedData;
         }
 
-        public async Task<TEntity?> GetByIdAsync(int id)
+        public async Task<TEntity?> GetByIdAsync(Guid id)
         {
             var allData = await GetAllAsync();
             return allData.FirstOrDefault(e => e.Id == id);
