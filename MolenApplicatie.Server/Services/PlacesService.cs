@@ -206,9 +206,14 @@ namespace MolenApplicatie.Server.Services
             return await AddPlacesToMariaDb(places);
         }
 
-        public async Task<Place?> GetPlaceByName(string name) => await _dbContext.Places
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+        public async Task<Place?> GetPlaceByName(string name)
+        {
+            _dBPlaceService._cache.Exists(p => p.Name.ToLower() == name.ToLower(), out var foundPlace);
+            if (foundPlace != null) return foundPlace;
+            return await _dbContext.Places
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+        }
 
         public async Task<List<Place>> GetPlacesByName(string name)
         {
