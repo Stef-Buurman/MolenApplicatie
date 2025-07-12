@@ -58,7 +58,6 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 return existingEntity!;
             }
-            _dbSet.Add(entity);
             _cachedData.Add(entity);
             return entity;
         }
@@ -75,7 +74,6 @@ namespace MolenApplicatie.Server.Services.Database
                 }
                 else
                 {
-                    _dbSet.Add(entity);
                     _cachedData.Add(entity);
                 }
             }
@@ -85,9 +83,22 @@ namespace MolenApplicatie.Server.Services.Database
         public TEntity Update(TEntity entity)
         {
             if (entity == null) return entity;
-            _cachedData.RemoveAll(e => e.Id == entity.Id);
+            Remove(entity);
             _cachedData.Add(entity);
             return entity;
+        }
+
+        public List<TEntity> UpdateRange(List<TEntity> entities)
+        {
+            if (entities == null || !entities.Any()) return entities;
+            var updatedEntities = new List<TEntity>();
+            foreach (var entity in entities)
+            {
+                Remove(entity);
+                _cachedData.Add(entity);
+                updatedEntities.Add(entity);
+            }
+            return updatedEntities;
         }
 
         public TEntity Remove(TEntity entity)
