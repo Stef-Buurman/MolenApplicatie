@@ -46,6 +46,7 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null) return entities;
 
             await _dbSet.AddRangeAsync(entities);
+            _cache.AddRange(entities);
 
             return entities;
         }
@@ -73,26 +74,36 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entities == null) return entities;
 
-            var allEntities = await _cache.GetAllAsync();
-            var entitiesToAdd = new List<TEntity>();
+            var entitiesToUpdate = new List<TEntity>();
 
             foreach (var entity in entities)
             {
-                if (Exists(entity, out TEntity? existingEntity) && entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+                if (Exists(entity, out TEntity? existingEntity))
                 {
-                    entity.Id = existingEntity.Id;
-                }
+                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+                    {
+                        entity.Id = existingEntity.Id;
+                    }
 
-                var trackedEntry = _context.ChangeTracker.Entries<TEntity>()
-                    .FirstOrDefault(e => e.Entity.Id == entity.Id);
+                    var tracked = _context.ChangeTracker.Entries<TEntity>()
+                        .FirstOrDefault(e => e.Entity.Id == entity.Id);
 
-                if (trackedEntry != null)
-                {
-                    trackedEntry.CurrentValues.SetValues(entity);
-                }
-                else if(existingEntity != null)
-                {
-                    entitiesToAdd.Add(entity);
+                    if (tracked != null)
+                    {
+                        tracked.CurrentValues.SetValues(entity);
+                    }
+                    else
+                    {
+                        var local = _context.Set<TEntity>().Local
+                            .FirstOrDefault(e => e.Id == entity.Id);
+
+                        if (local != null)
+                        {
+                            _context.Entry(local).State = EntityState.Detached;
+                        }
+
+                        entitiesToUpdate.Add(entity);
+                    }
                 }
                 else
                 {
@@ -100,10 +111,16 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
 
-            _dbSet.UpdateRange(entitiesToAdd);
+            foreach (var entity in entitiesToUpdate.DistinctBy(e => e.Id))
+            {
+                _context.Attach(entity);
+                _context.Entry(entity).State = EntityState.Modified;
+            }
+
+            _cache.UpdateRange(entitiesToUpdate);
+
             return entities;
         }
-
 
         public virtual async Task<TEntity> AddOrUpdate(TEntity entity)
         {
@@ -208,7 +225,7 @@ namespace MolenApplicatie.Server.Services.Database
                     predicate.Compile().Invoke(e.Entity)
                 )?.Entity;
             if (existing == null) existing = _dbSet.Local.SingleOrDefault(predicate.Compile());
-            if (existing == null) existing = _dbSet.SingleOrDefault(predicate);
+            if (existing == null) existing = _dbSet.AsNoTracking().SingleOrDefault(predicate);
             if (existing != null)
             {
                 _cache.Add(existing);
