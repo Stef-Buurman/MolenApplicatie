@@ -72,34 +72,38 @@ namespace MolenApplicatie.Server.Services.Database
         public virtual async Task<List<TEntity>> UpdateRange(List<TEntity> entities)
         {
             if (entities == null) return entities;
+
+            var allEntities = await _cache.GetAllAsync();
+            var entitiesToAdd = new List<TEntity>();
+
             foreach (var entity in entities)
             {
-                var trackedEntity = _context.ChangeTracker.Entries<TEntity>()
-                    .FirstOrDefault(e => e.Entity.Id == entity.Id)?.Entity;
-
-                if (trackedEntity != null)
+                if (Exists(entity, out TEntity? existingEntity) && entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                 {
-                    _context.Entry(trackedEntity).CurrentValues.SetValues(entity);
+                    entity.Id = existingEntity.Id;
+                }
+
+                var trackedEntry = _context.ChangeTracker.Entries<TEntity>()
+                    .FirstOrDefault(e => e.Entity.Id == entity.Id);
+
+                if (trackedEntry != null)
+                {
+                    trackedEntry.CurrentValues.SetValues(entity);
+                }
+                else if(existingEntity != null)
+                {
+                    entitiesToAdd.Add(entity);
                 }
                 else
                 {
-                    var existing = await _context.Set<TEntity>().FindAsync(entity.Id);
-
-                    if (existing != null)
-                    {
-                        _context.Entry(existing).CurrentValues.SetValues(entity);
-                    }
-                    else
-                    {
-                        await _context.AddAsync(entity);
-                    }
+                    await Add(entity);
                 }
             }
 
-            _dbSet.UpdateRange(entities);
-            await Task.CompletedTask;
+            _dbSet.UpdateRange(entitiesToAdd);
             return entities;
         }
+
 
         public virtual async Task<TEntity> AddOrUpdate(TEntity entity)
         {
@@ -123,20 +127,17 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null)
                 return entities;
 
-            //_cache.Invalidate();
             var all = await _cache.GetAllAsync();
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
 
             foreach (TEntity entity in entities)
             {
-                var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
-                if (existingEntity != null)
+                if (Exists(entity, out TEntity? existingEntity))
                 {
                     if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
-                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
-                    //entitiesToUpdate.Add(entity);
+                    entitiesToUpdate.Add(entity);
                 }
                 else if (entitiesToAdd.Contains(entity))
                 {
@@ -148,19 +149,26 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
             await AddRangeAsync(entitiesToAdd);
-            //await UpdateRange(entitiesToUpdate);
+            await UpdateRange(entitiesToUpdate);
 
             return entities;
         }
 
         public virtual async Task AddRangeAsync(List<TEntity> entities)
         {
-            if (entities == null) return;
+            if (entities == null || !entities.Any()) return;
 
             foreach (var entity in entities)
             {
-                entity.Id = Guid.Empty;
+                var tracked = _context.Set<TEntity>()
+                                      .Local
+                                      .FirstOrDefault(e => e.Id == entity.Id);
+                if (tracked != null)
+                {
+                    _context.Entry(tracked).State = EntityState.Detached;
+                }
             }
+
             await _dbSet.AddRangeAsync(entities);
             _cache.AddRange(entities);
         }
@@ -199,18 +207,8 @@ namespace MolenApplicatie.Server.Services.Database
                     (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Unchanged) &&
                     predicate.Compile().Invoke(e.Entity)
                 )?.Entity;
-            if (existing != null)
-            {
-                _cache.Add(existing);
-                return true;
-            }
-            existing = _dbSet.Local.SingleOrDefault(predicate.Compile());
-            if (existing != null)
-            {
-                _cache.Add(existing);
-                return true;
-            }
-            existing = _dbSet.SingleOrDefault(predicate);
+            if (existing == null) existing = _dbSet.Local.SingleOrDefault(predicate.Compile());
+            if (existing == null) existing = _dbSet.SingleOrDefault(predicate);
             if (existing != null)
             {
                 _cache.Add(existing);
