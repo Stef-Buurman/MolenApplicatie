@@ -37,7 +37,8 @@ builder.Services.Configure<FormOptions>(options =>
 });
 builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
 
-string connectionString = "server=localhost;user=root;database=molen_database;port=3306;password=DitIsEchtEenLastigWW";
+string connectionString = "server=localhost;user=root;password=DitIsEchtEenLastigWW;database=molen_database;port=3306";
+
 builder.Services.AddDbContext<MolenDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).LogTo(_ => { }, LogLevel.None)
 );
@@ -91,5 +92,18 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapFallbackToFile("/index.html");
+
+
+#if DEBUG
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetService<MolenDbContext>();
+    context!.Database.EnsureCreated();
+
+    if (!context.Database.CanConnect())
+        throw new FileLoadException("cannot connect to db!");
+}
+#endif
 
 app.Run();
