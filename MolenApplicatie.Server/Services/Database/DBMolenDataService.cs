@@ -155,7 +155,7 @@ namespace MolenApplicatie.Server.Services.Database
             await UpdateRange(toUpdate);
             await AddRangeAsync(toAdd);
 
-            return entities;
+            return toUpdate.Concat(toAdd).ToList();
         }
 
         private void DetachEntity(object entity)

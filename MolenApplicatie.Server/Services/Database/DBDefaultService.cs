@@ -151,7 +151,7 @@ namespace MolenApplicatie.Server.Services.Database
             await AddRangeAsync(entitiesToAdd);
             await UpdateRange(entitiesToUpdate);
 
-            return entities;
+            return entitiesToAdd.Concat(entitiesToUpdate).ToList();
         }
 
         public virtual async Task AddRangeAsync(List<TEntity> entities)

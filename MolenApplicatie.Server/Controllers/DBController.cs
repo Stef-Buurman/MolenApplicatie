@@ -55,6 +55,7 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("CallMolenResponses")]
         public async Task<IActionResult> CallMolenResponses()
         {
+            await _NewMolenDataService2_0.SaveAllMolenTBN();
             await _NewMolenDataService2_0.CallMolenResponses();
             return Ok();
         }

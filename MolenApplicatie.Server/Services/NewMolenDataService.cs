@@ -21,8 +21,9 @@ namespace MolenApplicatie.Server.Services
         private Dictionary<string, List<string>> strings;
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
+        private readonly DBMolenTBNService _dBMolenTBNService;
 
-        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext, DBMolenDataService dBMolenDataService)
+        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenTBNService dBMolenTBNService)
         {
             _client = new HttpClient();
             _molenService = molenService;
@@ -39,6 +40,8 @@ namespace MolenApplicatie.Server.Services
             {
                 strings = new Dictionary<string, List<string>>();
             }
+
+            _dBMolenTBNService = dBMolenTBNService;
         }
 
         public async Task<int> SaveMolenResponses()
@@ -1315,6 +1318,12 @@ namespace MolenApplicatie.Server.Services
             return keyValuePairs.Values.ToList();
         }
 
+        public async Task<List<MolenTBN>> SaveAllMolenTBN()
+        {
+            var allTbn = await ReadAllMolenTBN();
+            return await _dBMolenTBNService.AddOrUpdateRange(allTbn);
+        }
+
         public async Task<List<MolenTBN>> ReadAllMolenTBN()
         {
             List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
@@ -1324,7 +1333,6 @@ namespace MolenApplicatie.Server.Services
 
             while (countDivsAtNull <= 1)
             {
-                //Thread.Sleep(1500);
                 HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?page=" + i);
                 string responseBody = await response.Content.ReadAsStringAsync();
 
