@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Filters;
-using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 
 namespace MolenApplicatie.Server.Controllers
@@ -29,26 +28,8 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetAllDataForDB()
         {
             await _PlacesService2_0.ReadAllNetherlandsPlaces();
-            //await _NewMolenDataService2_0.ReadAllMolenTBN();
-            //await _NewMolenDataService2_0.GetAllMolenData();
-            return Ok();
-        }
-
-        [HttpGet("FillMariaDB")]
-        public async Task<IActionResult> FillMariaDB()
-        {
-            //List<MolenDataOld> molens = await _molenService.GetAllMolenData();
-            //await _NewMolenDataService.AddMolensToMariaDb(molens);
-            //List<PlaceOld> places = await _PlacesService.GetAllNetherlandsPlaces();
-            //await _PlacesService2_0.AddPlacesToMariaDb(places);
-            return Ok();
-        }
-
-        [HttpGet("FillMariaDBTBN")]
-        public async Task<IActionResult> FillMariaDBTBN()
-        {
-            //List<MolenTBNOld> molens = await _molenService.GetAllMolenTBN();
-            //await _NewMolenDataService2_0.SaveAndReadMolenTBN(molens);
+            await _NewMolenDataService2_0.ReadAllMolenTBN();
+            await _NewMolenDataService2_0.GetAllMolenData();
             return Ok();
         }
 
@@ -59,7 +40,7 @@ namespace MolenApplicatie.Server.Controllers
                 .Include(m => m.MolenTBN).Include(m => m.Images).Include(m => m.AddedImages)
                 .Include(m => m.MolenTypeAssociations).ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers).Include(m => m.DisappearedYearInfos)
-                .Select(m => _molenService2_0.GetMolenData(m))
+                .Select(m => MolenService.GetMolenData(m))
                 .ToListAsync();
             return Ok(molens2);
         }
@@ -67,8 +48,22 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("GetMolens2")]
         public async Task<IActionResult> GetMolens2()
         {
-            var molens = await _molenService2_0.GetAllMolenData();
+            var molens = _molenService2_0.GetAllMolenData();
             return Ok(molens.Take(1000));
+        }
+
+        [HttpGet("CallMolenResponses")]
+        public async Task<IActionResult> CallMolenResponses()
+        {
+            await _NewMolenDataService2_0.CallMolenResponses();
+            return Ok();
+        }
+
+        [HttpGet("SaveMolenResponses")]
+        public async Task<IActionResult> SaveMolenResponses()
+        {
+            await _NewMolenDataService2_0.SaveMolenResponses();
+            return Ok();
         }
     }
 }
