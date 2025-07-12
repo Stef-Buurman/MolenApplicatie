@@ -11,24 +11,27 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
             builder.HasAlternateKey(m => m.Ten_Brugge_Nr);
             builder.HasMany(m => m.AddedImages)
                 .WithOne(ai => ai.MolenData)
-                .HasForeignKey(ai => ai.MolenDataId);
+                .HasForeignKey(ai => ai.MolenDataId)
+                .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(m => m.Images)
                 .WithOne(mi => mi.MolenData)
-                .HasForeignKey(mi => mi.MolenDataId);
+                .HasForeignKey(mi => mi.MolenDataId)
+                .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(m => m.MolenTypeAssociations)
                 .WithOne(mta => mta.MolenData)
-                .HasForeignKey(mta => mta.MolenDataId);
+                .HasForeignKey(mta => mta.MolenDataId)
+                .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(m => m.MolenMakers)
                 .WithOne(md => md.MolenData)
-                .HasForeignKey(md => md.MolenDataId);
+                .HasForeignKey(md => md.MolenDataId)
+                .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(m => m.DisappearedYearInfos)
                 .WithOne(dyi => dyi.MolenData)
                 .HasForeignKey(dyi => dyi.MolenDataId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasOne(md => md.MolenTBN)
                 .WithOne(mtbn => mtbn.MolenData)
-                .HasForeignKey<MolenData>(mtbn => mtbn.MolenTBNId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey<MolenData>(mtbn => mtbn.MolenTBNId);
         }
     }
 }
