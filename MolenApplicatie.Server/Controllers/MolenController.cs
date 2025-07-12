@@ -21,29 +21,29 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("all/{provincie}")]
         public async Task<IActionResult> GetAllMolensByProvincie(string provincie)
         {
-            var molenData = await _MolenService.GetAllMolenDataByProvincie(provincie);
+            var molenData = _MolenService.GetAllMolenDataByProvincie(provincie);
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
-        //[FileUploadFilter]
+        [FileUploadFilter]
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllMolens()
+        public IActionResult GetAllMolens()
         {
-            var molenData = await _MolenService.GetAllMolenData();
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _MolenService.GetAllMolenData();
+            return Ok(molenData);
         }
 
         [HttpGet("active")]
         public async Task<IActionResult> GetAllActiveMolens()
         {
-            var molenData = await _MolenService.GetAllActiveMolenData();
+            var molenData = _MolenService.GetAllActiveMolenData();
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("existing")]
         public async Task<IActionResult> GetAllExistingMolens()
         {
-            var molenData = await _MolenService.GetAllExistingMolens();
+            var molenData = _MolenService.GetAllExistingMolens();
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
@@ -51,14 +51,14 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("disappeared/{provincie}")]
         public async Task<IActionResult> GetAllDisappearedMolens(string provincie)
         {
-            var molenData = await _MolenService.GetAllDisappearedMolens(provincie);
+            var molenData = _MolenService.GetAllDisappearedMolens(provincie);
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
         [HttpGet("remainder")]
         public async Task<IActionResult> GetAllRemainderMolens()
         {
-            var molenData = await _MolenService.GetAllRemainderMolens();
+            var molenData = _MolenService.GetAllRemainderMolens();
             return Ok(await _MolenService.MolensResponse(molenData));
         }
 
