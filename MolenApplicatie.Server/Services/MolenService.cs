@@ -2,6 +2,7 @@
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Services.Database;
 using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services
@@ -10,16 +11,25 @@ namespace MolenApplicatie.Server.Services
     {
         private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
         private readonly MolenDbContext _dbContext;
+        private readonly DBMolenDataService _dBMolenDataService;
 
-        public MolenService(MolenDbContext dbContext)
+        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService)
         {
             _dbContext = dbContext;
+            _dBMolenDataService = dBMolenDataService;
         }
 
         public static MolenData GetMolenData(MolenData molen)
         {
             molen.HasImage = molen.AddedImages.Count > 0;
             return molen;
+        }
+
+        public static List<MolenData>? RemoveCircularDependencyAll(List<MolenData>? molens)
+        {
+            if (molens == null) return null;
+            molens.ForEach(molen => RemoveCircularDependency(molen));
+            return molens;
         }
 
         public static MolenData? RemoveCircularDependency(MolenData? molen)
@@ -176,6 +186,7 @@ namespace MolenApplicatie.Server.Services
         public List<MolenData> GetMolensByTBN(List<string> tbns)
         {
             return _dbContext.MolenData
+                .AsNoTracking()
                 .Include(m => m.MolenTBN)
                     .Where(m => tbns.Contains(m.MolenTBN.Ten_Brugge_Nr.ToLower()))
                 .Include(m => m.Images)
@@ -189,7 +200,11 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenData?> GetMolenByTBN(string tbn)
         {
-            var molen = await _dbContext.MolenData
+            _dBMolenDataService._cache.Exists(p => p.Ten_Brugge_Nr.ToLower() == tbn.ToLower(), out var molen);
+
+            if (molen != null) return molen;
+
+            molen = await _dbContext.MolenData
                 .Include(m => m.MolenTBN)
                     .Where(m => m.MolenTBN.Ten_Brugge_Nr.ToLower() == tbn.ToLower())
                 .Include(m => m.Images)
