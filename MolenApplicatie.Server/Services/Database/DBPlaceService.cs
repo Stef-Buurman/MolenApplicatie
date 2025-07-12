@@ -50,6 +50,7 @@ namespace MolenApplicatie.Server.Services.Database
 
                     existingEntity.Type = null;
                     _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    _cache.Update(entity);
                 }
                 else
                 {

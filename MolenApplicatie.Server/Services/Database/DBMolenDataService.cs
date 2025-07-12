@@ -199,13 +199,15 @@ namespace MolenApplicatie.Server.Services.Database
 
                 _context.Entry(entity).State = EntityState.Modified;
 
-                if (entity.MolenTypeAssociations != null) {
+                if (entity.MolenTypeAssociations != null)
+                {
                     allTypeAssMolens[entity.Ten_Brugge_Nr] = entity.MolenTypeAssociations;
                     foreach (var obj in entity.MolenTypeAssociations)
                         DetachEntity(obj);
                 }
 
-                if (entity.Images != null) {
+                if (entity.Images != null)
+                {
                     allImagesMolens[entity.Ten_Brugge_Nr] = entity.Images;
                     foreach (var obj in entity.Images)
                         DetachEntity(obj);
@@ -321,6 +323,7 @@ namespace MolenApplicatie.Server.Services.Database
             await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYears);
 
             _dbSet.UpdateRange(entities);
+            _cache.UpdateRange(entities);
 
             return entities;
         }
@@ -392,7 +395,7 @@ namespace MolenApplicatie.Server.Services.Database
                 foreach (var entity in all)
                 {
                     var foreignKey = getForeignKey(entity.Key);
-                    if (foreignKey.HasValue) 
+                    if (foreignKey.HasValue)
                     {
                         foreach (var item in entity.Value)
                         {
@@ -409,31 +412,36 @@ namespace MolenApplicatie.Server.Services.Database
 
             Attach(allTypeAssMolens,
                     getMolenIdByTBN,
-                    (x, id) => {
+                    (x, id) =>
+                    {
                         (x as MolenTypeAssociation)!.MolenDataId = id;
                         (x as MolenTypeAssociation)!.MolenData = null;
                     });
             Attach(allImagesMolens,
                     getMolenIdByTBN,
-                    (x, id) => {
+                    (x, id) =>
+                    {
                         (x as MolenImage)!.MolenDataId = id;
                         (x as MolenImage)!.MolenData = null;
                     });
             Attach(allMakersMolens,
                     getMolenIdByTBN,
-                    (x, id) => {
+                    (x, id) =>
+                    {
                         (x as MolenMaker)!.MolenDataId = id;
                         (x as MolenMaker)!.MolenData = null;
                     });
             Attach(allAddedImagesMolens,
                     getMolenIdByTBN,
-                    (x, id) => {
+                    (x, id) =>
+                    {
                         (x as AddedImage)!.MolenDataId = id;
                         (x as AddedImage)!.MolenData = null;
                     });
             Attach(allDisappearedYearsMolens,
                     getMolenIdByTBN,
-                    (x, id) => {
+                    (x, id) =>
+                    {
                         (x as DisappearedYearInfo)!.MolenDataId = id;
                         (x as DisappearedYearInfo)!.MolenData = null;
                     }
@@ -460,9 +468,9 @@ namespace MolenApplicatie.Server.Services.Database
                 .Where(x => x != null)
                 .ToList();
 
-             await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAssToAdd);
-             await _dBMolenImageService.AddOrUpdateRange(allImagesToAdd);
-             await _dBMolenMakerService.AddOrUpdateRange(allMakersToAdd);
+            await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAssToAdd);
+            await _dBMolenImageService.AddOrUpdateRange(allImagesToAdd);
+            await _dBMolenMakerService.AddOrUpdateRange(allMakersToAdd);
             await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImagesToAdd);
             await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYearsToAdd);
         }

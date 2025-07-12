@@ -88,12 +88,12 @@ namespace MolenApplicatie.Server.Services.Database
                 }
                 else
                 {
-                    //entity.Id = Guid.Empty;
                     entitiesToAdd.Add(entity);
                 }
             }
 
             await AddRangeAsync(entitiesToAdd);
+            await UpdateRange(entitiesToUpdate);
 
             return entities;
         }
