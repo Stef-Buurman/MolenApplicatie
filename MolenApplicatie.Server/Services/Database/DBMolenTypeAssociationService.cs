@@ -76,18 +76,19 @@ namespace MolenApplicatie.Server.Services.Database
                     entity.MolenDataId = entity.MolenData.Id;
                     entity.MolenData = null;
                 }
-                var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
-                if (existingEntity != null)
+                if (Exists(entity, out MolenTypeAssociation? existingEntity))
                 {
                     if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
-
-                    existingEntity.MolenType = null;
-                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
-                    //entitiesToUpdate.Add(existingEntity);
+                    entitiesToUpdate.Add(entity);
+                }
+                else if (entitiesToAdd.Contains(entity))
+                {
+                    continue;
                 }
                 else
                 {
+                    //entity.Id = Guid.Empty;
                     entitiesToAdd.Add(entity);
                 }
             }
