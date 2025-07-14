@@ -11,10 +11,24 @@ namespace MolenApplicatie.Server.Services.Database
         {
             _dBMolenTypeService = dBMolenTypeService;
         }
+
         public override bool Exists(MolenTypeAssociation molenTypeAssociation, out MolenTypeAssociation? existing)
         {
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);
         }
+
+        public override bool ExistsRange(List<MolenTypeAssociation> entities, out List<MolenTypeAssociation> matchingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities)
+        {
+            return ExistsRange(
+                entities,
+                e => new { e.MolenDataId, e.MolenTypeId },
+                y => e => e.MolenDataId == y.MolenDataId && e.MolenTypeId == y.MolenTypeId,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities
+            );
+        }
+
         public async Task<List<MolenTypeAssociation>> GetMolenTypeAssociationsOfMolen(Guid MolenId)
         {
             var molenTypeAssociations = await _context.MolenTypeAssociations
@@ -45,52 +59,210 @@ namespace MolenApplicatie.Server.Services.Database
             return await base.Update(molenTypeAssociation);
         }
 
+        //public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities)
+        //{
+        //    if (entities == null)
+        //        return entities;
+
+        //    var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
+        //    if (all_types.Count > 0)
+        //    {
+        //        Console.WriteLine("Adding or updating molen types for molen type associations");
+        //        all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
+        //        Console.WriteLine("Adding or updating molen types for molen type associations");
+        //    }
+        //    Console.WriteLine($"Found {all_types.Count} distinct molen types to process.");
+        //    var all = await _cache.GetAllAsync();
+        //    var entitiesToAdd = new List<MolenTypeAssociation>();
+        //    var entitiesToUpdate = new List<MolenTypeAssociation>();
+
+        //    Console.WriteLine($"Processing {entities.Count} MolenTypeAssociations for add or update.");
+
+        //    foreach (MolenTypeAssociation entity in entities)
+        //    {
+        //        if (entity.MolenType != null)
+        //        {
+        //            entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
+        //        }
+        //        if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
+        //        {
+        //            entity.MolenTypeId = entity.MolenType.Id;
+        //            entity.MolenType = null;
+        //        }
+        //        if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
+        //        {
+        //            entity.MolenDataId = entity.MolenData.Id;
+        //            entity.MolenData = null;
+        //        }
+        //        Console.WriteLine($"Processing MolenTypeAssociation: {entity.Id}, MolenDataId: {entity.MolenDataId}, MolenTypeId: {entity.MolenTypeId}");
+        //        if (Exists(entity, out MolenTypeAssociation? existingEntity))
+        //        {
+        //            Console.WriteLine($"Found existing MolenTypeAssociation: {existingEntity.Id}");
+        //            if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+        //                entity.Id = existingEntity.Id;
+        //            Console.WriteLine($"Updating MolenTypeAssociation: {entity.Id}");
+        //            entitiesToUpdate.Add(entity);
+        //            Console.WriteLine($"Updated MolenTypeAssociation: {entity.Id}");
+        //        }
+        //        else if (entitiesToAdd.Contains(entity))
+        //        {
+        //            continue;
+        //        }
+        //        else
+        //        {
+        //            entitiesToAdd.Add(entity);
+        //        }
+        //    }
+
+        //    await AddRangeAsync(entitiesToAdd);
+        //    await UpdateRange(entitiesToUpdate);
+
+        //    return entities;
+        //}
+        //public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities)
+        //{
+        //    if (entities == null || entities.Count == 0)
+        //        return entities;
+
+        //    var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
+        //    if (all_types.Count > 0)
+        //    {
+        //        Console.WriteLine("Adding or updating molen types for molen type associations");
+        //        all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
+        //        Console.WriteLine("Done adding or updating molen types");
+        //    }
+
+        //    Console.WriteLine($"Found {all_types.Count} distinct molen types to process.");
+        //    var all = await _cache.GetAllAsync();
+
+        //    var entitiesToAdd = new List<MolenTypeAssociation>();
+        //    var entitiesToUpdate = new List<MolenTypeAssociation>();
+
+        //    Console.WriteLine($"Processing {entities.Count} MolenTypeAssociations for add or update.");
+
+        //    // Preprocessing: replace references with existing type IDs
+        //    foreach (var entity in entities)
+        //    {
+        //        if (entity.MolenType != null)
+        //        {
+        //            entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
+        //        }
+
+        //        if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
+        //        {
+        //            entity.MolenTypeId = entity.MolenType.Id;
+        //            entity.MolenType = null;
+        //        }
+
+        //        if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
+        //        {
+        //            entity.MolenDataId = entity.MolenData.Id;
+        //            entity.MolenData = null;
+        //        }
+        //    }
+
+        //    if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities))
+        //    {
+        //        foreach (var entity in entities)
+        //        {
+        //            var existingEntity = existingEntities
+        //                .FirstOrDefault(e => e.Equals(entity));
+
+        //            if (existingEntity != null)
+        //            {
+        //                if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+        //                    entity.Id = existingEntity.Id;
+
+        //                entitiesToUpdate.Add(entity);
+        //            }
+        //            else
+        //            {
+        //                entitiesToAdd.Add(entity);
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        entitiesToAdd.AddRange(entities);
+        //    }
+
+
+        //    await AddRangeAsync(entitiesToAdd);
+        //    await UpdateRange(entitiesToUpdate);
+
+        //    return entities;
+        //}
+
         public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities)
         {
-            if (entities == null)
+            if (entities == null || entities.Count == 0)
                 return entities;
 
             var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
             if (all_types.Count > 0)
             {
+                Console.WriteLine("Adding or updating molen types for molen type associations");
                 all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
+                Console.WriteLine("Done adding or updating molen types");
             }
 
+            Console.WriteLine($"Found {all_types.Count} distinct molen types to process.");
             var all = await _cache.GetAllAsync();
+
             var entitiesToAdd = new List<MolenTypeAssociation>();
             var entitiesToUpdate = new List<MolenTypeAssociation>();
 
-            foreach (MolenTypeAssociation entity in entities)
+            Console.WriteLine($"Processing {entities.Count} MolenTypeAssociations for add or update.");
+
+            // Preprocessing: replace references with existing type IDs
+            foreach (var entity in entities)
             {
                 if (entity.MolenType != null)
                 {
                     entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
                 }
+
                 if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
                 {
                     entity.MolenTypeId = entity.MolenType.Id;
                     entity.MolenType = null;
                 }
+
                 if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
                 {
                     entity.MolenDataId = entity.MolenData.Id;
                     entity.MolenData = null;
                 }
-                if (Exists(entity, out MolenTypeAssociation? existingEntity))
-                {
-                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
-                        entity.Id = existingEntity.Id;
-                    entitiesToUpdate.Add(entity);
-                }
-                else if (entitiesToAdd.Contains(entity))
-                {
-                    continue;
-                }
-                else
-                {
-                    entitiesToAdd.Add(entity);
-                }
             }
+
+            if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities))
+            {
+                //foreach (var entity in entities)
+                //{
+                //    var existingEntity = existingEntities
+                //        .FirstOrDefault(e => e.Equals(entity));
+
+                //    if (existingEntity != null)
+                //    {
+                //        if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+                //            entity.Id = existingEntity.Id;
+
+                //        entitiesToUpdate.Add(entity);
+                //    }
+                //    else
+                //    {
+                //        entitiesToAdd.Add(entity);
+                //    }
+                //}
+
+                entitiesToAdd.AddRange(newEntities);
+                entitiesToUpdate.AddRange(updatedEntities);
+            }
+            else
+            {
+                entitiesToAdd.AddRange(entities);
+            }
+
 
             await AddRangeAsync(entitiesToAdd);
             await UpdateRange(entitiesToUpdate);

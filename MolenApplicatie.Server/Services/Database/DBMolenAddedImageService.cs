@@ -14,6 +14,17 @@ namespace MolenApplicatie.Server.Services.Database
         {
             return Exists(e => e.FilePath == addedImage.FilePath, out existing);
         }
+        public override bool ExistsRange(List<AddedImage> entities, out List<AddedImage> matchingEntities, out List<AddedImage> newEntities, out List<AddedImage> updatedEntities)
+        {
+            return ExistsRange(
+                entities,
+                e => e.FilePath,
+                y => e => e.FilePath == y.FilePath,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities
+            );
+        }
 
         public override async Task<AddedImage> Add(AddedImage addedImage)
         {

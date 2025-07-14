@@ -16,6 +16,18 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => place.Name == e.Name && place.Province == e.Province && place.Latitude == e.Latitude && place.Longitude == e.Longitude, out existing);
         }
 
+        public override bool ExistsRange(List<Place> entities, out List<Place> matchingEntities, out List<Place> newEntities, out List<Place> updatedEntities)
+        {
+            return ExistsRange(
+                entities,
+                e => new { e.Name, e.Province, e.Latitude, e.Longitude },
+                y => e => e.Name == y.Name && e.Province == y.Province && e.Latitude == y.Latitude && e.Longitude == y.Longitude,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities
+            );
+        }
+
         public override async Task<List<Place>> AddOrUpdateRange(List<Place> entities)
         {
             if (entities == null)

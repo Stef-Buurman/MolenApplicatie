@@ -12,7 +12,6 @@ namespace MolenApplicatie.Server.Services.Database
         private readonly DBMolenMakerService _dBMolenMakerService;
         private readonly DBMolenTBNService _dBMolenTBNService;
         private readonly DBMolenTypeAssociationService _dBMolenTypeAssociationService;
-
         public DBMolenDataService(MolenDbContext context,
             DBMolenAddedImageService dBMolenAddedImageService,
             DBMolenDissappearedYearsService dBMolenDissappearedYearsService,
@@ -32,6 +31,18 @@ namespace MolenApplicatie.Server.Services.Database
         public override bool Exists(MolenData molenData, out MolenData? existing)
         {
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
+        }
+
+        public override bool ExistsRange(List<MolenData> entities, out List<MolenData> matchingEntities, out List<MolenData> newEntities, out List<MolenData> updatedEntities)
+        {
+            return ExistsRange(
+                entities,
+                e => e.Ten_Brugge_Nr,
+                y => e => e.Ten_Brugge_Nr == y.Ten_Brugge_Nr,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities
+            );
         }
 
         public override async Task<MolenData> Add(MolenData molenData)
@@ -199,40 +210,40 @@ namespace MolenApplicatie.Server.Services.Database
 
                 _context.Entry(entity).State = EntityState.Modified;
 
-                if (entity.MolenTypeAssociations != null)
-                {
-                    allTypeAssMolens[entity.Ten_Brugge_Nr] = entity.MolenTypeAssociations;
-                    foreach (var obj in entity.MolenTypeAssociations)
-                        DetachEntity(obj);
-                }
+                //if (entity.MolenTypeAssociations != null)
+                //{
+                //    allTypeAssMolens[entity.Ten_Brugge_Nr] = entity.MolenTypeAssociations;
+                //    foreach (var obj in entity.MolenTypeAssociations.ToList())
+                //        DetachEntity(obj);
+                //}
 
-                if (entity.Images != null)
-                {
-                    allImagesMolens[entity.Ten_Brugge_Nr] = entity.Images;
-                    foreach (var obj in entity.Images)
-                        DetachEntity(obj);
-                }
+                //if (entity.Images != null)
+                //{
+                //    allImagesMolens[entity.Ten_Brugge_Nr] = entity.Images;
+                //    foreach (var obj in entity.Images.ToList())
+                //        DetachEntity(obj);
+                //}
 
-                if (entity.MolenMakers != null)
-                {
-                    allMakersMolens[entity.Ten_Brugge_Nr] = entity.MolenMakers;
-                    foreach (var obj in entity.MolenMakers)
-                        DetachEntity(obj);
-                }
+                //if (entity.MolenMakers != null)
+                //{
+                //    allMakersMolens[entity.Ten_Brugge_Nr] = entity.MolenMakers;
+                //    foreach (var obj in entity.MolenMakers.ToList())
+                //        DetachEntity(obj);
+                //}
 
-                if (entity.AddedImages != null)
-                {
-                    allAddedImagesMolens[entity.Ten_Brugge_Nr] = entity.AddedImages;
-                    foreach (var obj in entity.AddedImages)
-                        DetachEntity(obj);
-                }
+                //if (entity.AddedImages != null)
+                //{
+                //    allAddedImagesMolens[entity.Ten_Brugge_Nr] = entity.AddedImages;
+                //    foreach (var obj in entity.AddedImages.ToList())
+                //        DetachEntity(obj);
+                //}
 
-                if (entity.DisappearedYearInfos != null)
-                {
-                    allDisappearedYearsMolens[entity.Ten_Brugge_Nr] = entity.DisappearedYearInfos;
-                    foreach (var obj in entity.DisappearedYearInfos)
-                        DetachEntity(obj);
-                }
+                //if (entity.DisappearedYearInfos != null)
+                //{
+                //    allDisappearedYearsMolens[entity.Ten_Brugge_Nr] = entity.DisappearedYearInfos;
+                //    foreach (var obj in entity.DisappearedYearInfos.ToList())
+                //        DetachEntity(obj);
+                //}
 
                 entity.MolenTypeAssociations = null;
                 entity.Images = null;

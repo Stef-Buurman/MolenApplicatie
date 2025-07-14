@@ -12,9 +12,22 @@ namespace MolenApplicatie.Server.Services.Database
         {
             _client = client;
         }
+
         public override bool Exists(MolenImage molenImage, out MolenImage? existing)
         {
             return Exists(e => e.FilePath == molenImage.FilePath, out existing);
+        }
+
+        public override bool ExistsRange(List<MolenImage> entities, out List<MolenImage> matchingEntities, out List<MolenImage> newEntities, out List<MolenImage> updatedEntities)
+        {
+            return ExistsRange(
+                entities,
+                e => e.FilePath,
+                y => e => e.FilePath == y.FilePath,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities
+            );
         }
 
         public override async Task<MolenImage> Add(MolenImage molenImage)
