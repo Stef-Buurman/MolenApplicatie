@@ -141,30 +141,24 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities)
         {
-            if (entities == null)
+            if (entities == null || entities.Count == 0)
                 return entities;
 
             var all = await _cache.GetAllAsync();
+
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
 
-            foreach (TEntity entity in entities)
+            if (ExistsRange(entities, out List<TEntity> existingEntities, out List<TEntity> newEntities, out List<TEntity> updatedEntities))
             {
-                if (Exists(entity, out TEntity? existingEntity))
-                {
-                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
-                        entity.Id = existingEntity.Id;
-                    entitiesToUpdate.Add(entity);
-                }
-                else if (entitiesToAdd.Contains(entity))
-                {
-                    continue;
-                }
-                else
-                {
-                    entitiesToAdd.Add(entity);
-                }
+                entitiesToUpdate.AddRange(updatedEntities);
+                entitiesToAdd.AddRange(newEntities);
             }
+            else
+            {
+                entitiesToAdd.AddRange(entities);
+            }
+
             await AddRangeAsync(entitiesToAdd);
             await UpdateRange(entitiesToUpdate);
 
@@ -213,6 +207,10 @@ namespace MolenApplicatie.Server.Services.Database
         }
 
         public abstract bool Exists(TEntity entity, out TEntity? existing);
+        public abstract bool ExistsRange(List<TEntity> entities,
+            out List<TEntity> matchingEntities,
+            out List<TEntity> newEntities,
+            out List<TEntity> updatedEntities);
 
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
@@ -232,6 +230,78 @@ namespace MolenApplicatie.Server.Services.Database
                 return true;
             }
             return false;
+        }
+
+        public virtual bool ExistsRange(
+            List<TEntity> entities,
+            Func<TEntity, object> matchKeySelector,
+            Func<TEntity, Expression<Func<TEntity, bool>>> predicateFactory,
+            out List<TEntity> matchingEntities,
+            out List<TEntity> newEntities,
+            out List<TEntity> updatedEntities)
+        {
+            matchingEntities = new List<TEntity>();
+            newEntities = new List<TEntity>();
+            updatedEntities = new List<TEntity>();
+
+            if (entities == null || entities.Count == 0)
+                return false;
+
+            var keyToEntityMap = new Dictionary<object, TEntity>();
+            var alreadyMatched = new HashSet<object>();
+
+            foreach (var source in _cache.GetAllAsync().Result
+                .Concat(_context.ChangeTracker.Entries<TEntity>()
+                    .Where(e => e.State != EntityState.Deleted)
+                    .Select(e => e.Entity))
+                .Concat(_dbSet.Local))
+            {
+                var key = matchKeySelector(source);
+                if (!keyToEntityMap.ContainsKey(key))
+                    keyToEntityMap[key] = source;
+            }
+
+            var keysToQueryFromDb = new List<(object key, TEntity entity, Expression<Func<TEntity, bool>> predicate)>();
+
+            foreach (var entity in entities)
+            {
+                var key = matchKeySelector(entity);
+
+                if (keyToEntityMap.TryGetValue(key, out var match))
+                {
+                    matchingEntities.Add(match);
+                    if (match.Id != Guid.Empty)
+                    {
+                        entity.Id = match.Id;
+                        updatedEntities.Add(entity);
+                    }
+                }
+                else
+                {
+                    keysToQueryFromDb.Add((key, entity, predicateFactory(entity)));
+                }
+            }
+
+            foreach (var (key, entity, predicate) in keysToQueryFromDb)
+            {
+                var match = _dbSet.AsNoTracking().FirstOrDefault(predicate);
+                if (match != null)
+                {
+                    matchingEntities.Add(match);
+                    if (match.Id != Guid.Empty)
+                    {
+                        entity.Id = match.Id;
+                        updatedEntities.Add(entity);
+                    }
+                    _cache.Add(match);
+                }
+                else
+                {
+                    newEntities.Add(entity);
+                }
+            }
+
+            return matchingEntities.Count > 0;
         }
     }
 }
