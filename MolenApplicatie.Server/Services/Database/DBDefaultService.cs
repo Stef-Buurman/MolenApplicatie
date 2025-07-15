@@ -149,7 +149,7 @@ namespace MolenApplicatie.Server.Services.Database
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
 
-            if (ExistsRange(entities, out List<TEntity> existingEntities, out List<TEntity> newEntities, out List<TEntity> updatedEntities))
+            if (ExistsRange(entities, out List<TEntity> existingEntities, out List<TEntity> newEntities, out List<TEntity> updatedEntities, false))
             {
                 entitiesToUpdate.AddRange(updatedEntities);
                 entitiesToAdd.AddRange(newEntities);
@@ -210,7 +210,8 @@ namespace MolenApplicatie.Server.Services.Database
         public abstract bool ExistsRange(List<TEntity> entities,
             out List<TEntity> matchingEntities,
             out List<TEntity> newEntities,
-            out List<TEntity> updatedEntities);
+            out List<TEntity> updatedEntities,
+            bool searchDB = true);
 
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
@@ -238,7 +239,8 @@ namespace MolenApplicatie.Server.Services.Database
             Func<TEntity, Expression<Func<TEntity, bool>>> predicateFactory,
             out List<TEntity> matchingEntities,
             out List<TEntity> newEntities,
-            out List<TEntity> updatedEntities)
+            out List<TEntity> updatedEntities,
+            bool searchDB = true)
         {
             matchingEntities = new List<TEntity>();
             newEntities = new List<TEntity>();
@@ -278,26 +280,29 @@ namespace MolenApplicatie.Server.Services.Database
                 }
                 else
                 {
+                    newEntities.Add(entity);
                     keysToQueryFromDb.Add((key, entity, predicateFactory(entity)));
                 }
             }
-
-            foreach (var (key, entity, predicate) in keysToQueryFromDb)
+            if (searchDB)
             {
-                var match = _dbSet.AsNoTracking().FirstOrDefault(predicate);
-                if (match != null)
+                foreach (var (key, entity, predicate) in keysToQueryFromDb)
                 {
-                    matchingEntities.Add(match);
-                    if (match.Id != Guid.Empty)
+                    var match = _dbSet.AsNoTracking().FirstOrDefault(predicate);
+                    if (match != null)
                     {
-                        entity.Id = match.Id;
-                        updatedEntities.Add(entity);
+                        matchingEntities.Add(match);
+                        if (match.Id != Guid.Empty)
+                        {
+                            entity.Id = match.Id;
+                            updatedEntities.Add(entity);
+                        }
+                        _cache.Add(match);
                     }
-                    _cache.Add(match);
-                }
-                else
-                {
-                    newEntities.Add(entity);
+                    else
+                    {
+                        newEntities.Add(entity);
+                    }
                 }
             }
 
