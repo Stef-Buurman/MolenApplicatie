@@ -28,6 +28,18 @@ namespace MolenApplicatie.Server.Services.Database
             _dBMolenTypeAssociationService = dBMolenTypeAssociationService;
         }
 
+        public override async Task<List<MolenData>> GetAllAsync()
+        {
+            return await _dbSet.Include(e => e.MolenTBN)
+                .Include(e => e.MolenTypeAssociations)
+                    .ThenInclude(e => e.MolenType)
+                .Include(e => e.Images)
+                .Include(e => e.MolenMakers)
+                .Include(e => e.AddedImages)
+                .Include(e => e.DisappearedYearInfos)
+                .ToListAsync();
+        }
+
         public override bool Exists(MolenData molenData, out MolenData? existing)
         {
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);

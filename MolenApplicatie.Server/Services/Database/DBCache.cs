@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Interfaces;
 using System.Linq.Expressions;
 
@@ -7,17 +6,17 @@ namespace MolenApplicatie.Server.Services.Database
 {
     public class DBCache<TEntity> where TEntity : class, DefaultModel
     {
-        private readonly MolenDbContext _context;
         private readonly DbSet<TEntity> _dbSet;
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private List<TEntity> _cachedData = new List<TEntity>();
         private DateTime _lastRefreshTime = DateTime.MinValue;
         private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
+        private readonly Func<Task<List<TEntity>>> _getAllAsync;
 
-        public DBCache(MolenDbContext context)
+        public DBCache(DbSet<TEntity> dbSet, Func<Task<List<TEntity>>> getAllAsync)
         {
-            _context = context;
-            _dbSet = _context.Set<TEntity>();
+            _dbSet = dbSet;
+            _getAllAsync = getAllAsync;
             GetAllAsync().Wait();
         }
 
@@ -33,7 +32,7 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 if ((DateTime.UtcNow - _lastRefreshTime) >= _cacheDuration || !_cachedData.Any())
                 {
-                    _cachedData = await _dbSet.AsNoTracking().ToListAsync();
+                    _cachedData = await _getAllAsync();
                     _lastRefreshTime = DateTime.UtcNow;
                 }
             }

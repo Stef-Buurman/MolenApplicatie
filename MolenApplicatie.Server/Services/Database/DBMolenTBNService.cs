@@ -1,4 +1,5 @@
-﻿using MolenApplicatie.Server.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -6,6 +7,13 @@ namespace MolenApplicatie.Server.Services.Database
     {
         public DBMolenTBNService(MolenDbContext context) : base(context)
         { }
+
+        public override async Task<List<MolenTBN>> GetAllAsync()
+        {
+            return await _dbSet.Include(e => e.MolenData)
+                               .ToListAsync();
+        }
+
         public override bool Exists(MolenTBN molenTBN, out MolenTBN? existing)
         {
             return Exists(e => e.Ten_Brugge_Nr == molenTBN.Ten_Brugge_Nr, out existing);

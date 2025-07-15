@@ -13,13 +13,13 @@ namespace MolenApplicatie.Server.Services.Database
         public DBDefaultService(MolenDbContext context)
         {
             _context = context;
-            _cache = new DBCache<TEntity>(context);
             _dbSet = _context.Set<TEntity>();
+            _cache = new DBCache<TEntity>(_dbSet, GetAllAsync);
         }
 
-        public virtual List<TEntity> GetAll()
+        public virtual async Task<List<TEntity>> GetAllAsync()
         {
-            return _dbSet.ToList();
+            return await _dbSet.ToListAsync();
         }
 
         public virtual async Task<TEntity?> GetById(Guid id)

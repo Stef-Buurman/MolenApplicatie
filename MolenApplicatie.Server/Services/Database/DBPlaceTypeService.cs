@@ -1,4 +1,5 @@
-﻿using MolenApplicatie.Server.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -6,6 +7,11 @@ namespace MolenApplicatie.Server.Services.Database
     public class DBPlaceTypeService : DBDefaultService<PlaceType>
     {
         public DBPlaceTypeService(MolenDbContext context) : base(context) { }
+
+        public override async Task<List<PlaceType>> GetAllAsync()
+        {
+            return await _dbSet.ToListAsync();
+        }
 
         public override bool Exists(PlaceType type, out PlaceType? existing)
         {

@@ -12,6 +12,13 @@ namespace MolenApplicatie.Server.Services.Database
             _dBMolenTypeService = dBMolenTypeService;
         }
 
+        public override async Task<List<MolenTypeAssociation>> GetAllAsync()
+        {
+            return await _dbSet.Include(e => e.MolenType)
+                               .Include(e => e.MolenData)
+                               .ToListAsync();
+        }
+
         public override bool Exists(MolenTypeAssociation molenTypeAssociation, out MolenTypeAssociation? existing)
         {
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);

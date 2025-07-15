@@ -13,6 +13,12 @@ namespace MolenApplicatie.Server.Services.Database
             _client = client;
         }
 
+        public override async Task<List<MolenImage>> GetAllAsync()
+        {
+            return await _dbSet.Include(e => e.MolenData)
+                               .ToListAsync();
+        }
+
         public override bool Exists(MolenImage molenImage, out MolenImage? existing)
         {
             return Exists(e => e.FilePath == molenImage.FilePath, out existing);
