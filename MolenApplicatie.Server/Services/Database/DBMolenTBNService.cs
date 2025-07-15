@@ -10,8 +10,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<List<MolenTBN>> GetAllAsync()
         {
-            return await _dbSet.Include(e => e.MolenData)
-                               .ToListAsync();
+            return await _dbSet.ToListAsync();
         }
 
         public override bool Exists(MolenTBN molenTBN, out MolenTBN? existing)

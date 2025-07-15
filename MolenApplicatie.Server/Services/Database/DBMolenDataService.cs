@@ -182,20 +182,14 @@ namespace MolenApplicatie.Server.Services.Database
             return toUpdate.Concat(toAdd).ToList();
         }
 
-        private void DetachEntity(object entity)
-        {
-            var entry = _context.Entry(entity);
-            if (entry != null)
-                entry.State = EntityState.Detached;
-        }
-
         public virtual async Task<List<MolenData>> UpdateRange(List<MolenData> entities)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
 
-            var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
+            var entitiesCopy = entities.ToList();
 
+            var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
             allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs);
 
             var allTypeAssMolens = new Dictionary<string, List<MolenTypeAssociation>>();
@@ -203,6 +197,8 @@ namespace MolenApplicatie.Server.Services.Database
             var allMakersMolens = new Dictionary<string, List<MolenMaker>>();
             var allAddedImagesMolens = new Dictionary<string, List<AddedImage>>();
             var allDisappearedYearsMolens = new Dictionary<string, List<DisappearedYearInfo>>();
+
+            var trackedEntities = _context.ChangeTracker.Entries<MolenData>().ToDictionary(e => e.Entity.Id);
 
             foreach (var entity in entities)
             {
@@ -213,50 +209,12 @@ namespace MolenApplicatie.Server.Services.Database
                 }
                 entity.MolenTBN = null;
 
-                var trackedEntity = _context.ChangeTracker.Entries<MolenData>()
-                    .FirstOrDefault(e => e.Entity.Id == entity.Id);
-
-                if (trackedEntity != null)
+                if (trackedEntities.TryGetValue(entity.Id, out var trackedEntity))
                 {
                     trackedEntity.State = EntityState.Detached;
                 }
 
                 _context.Entry(entity).State = EntityState.Modified;
-
-                //if (entity.MolenTypeAssociations != null)
-                //{
-                //    allTypeAssMolens[entity.Ten_Brugge_Nr] = entity.MolenTypeAssociations;
-                //    foreach (var obj in entity.MolenTypeAssociations.ToList())
-                //        DetachEntity(obj);
-                //}
-
-                //if (entity.Images != null)
-                //{
-                //    allImagesMolens[entity.Ten_Brugge_Nr] = entity.Images;
-                //    foreach (var obj in entity.Images.ToList())
-                //        DetachEntity(obj);
-                //}
-
-                //if (entity.MolenMakers != null)
-                //{
-                //    allMakersMolens[entity.Ten_Brugge_Nr] = entity.MolenMakers;
-                //    foreach (var obj in entity.MolenMakers.ToList())
-                //        DetachEntity(obj);
-                //}
-
-                //if (entity.AddedImages != null)
-                //{
-                //    allAddedImagesMolens[entity.Ten_Brugge_Nr] = entity.AddedImages;
-                //    foreach (var obj in entity.AddedImages.ToList())
-                //        DetachEntity(obj);
-                //}
-
-                //if (entity.DisappearedYearInfos != null)
-                //{
-                //    allDisappearedYearsMolens[entity.Ten_Brugge_Nr] = entity.DisappearedYearInfos;
-                //    foreach (var obj in entity.DisappearedYearInfos.ToList())
-                //        DetachEntity(obj);
-                //}
 
                 entity.MolenTypeAssociations = null;
                 entity.Images = null;
@@ -339,7 +297,6 @@ namespace MolenApplicatie.Server.Services.Database
             var allMakers = allMakersMolens.SelectMany(x => x.Value).ToList();
             var allAddedImages = allAddedImagesMolens.SelectMany(x => x.Value).ToList();
             var allDisappearedYears = allDisappearedYearsMolens.SelectMany(x => x.Value).ToList();
-
             await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAss);
             await _dBMolenImageService.AddOrUpdateRange(allImages);
             await _dBMolenMakerService.AddOrUpdateRange(allMakers);
@@ -348,6 +305,8 @@ namespace MolenApplicatie.Server.Services.Database
 
             _dbSet.UpdateRange(entities);
             _cache.UpdateRange(entities);
+
+            await CheckToDeleteProperties(entitiesCopy);
 
             return entities;
         }
@@ -499,121 +458,74 @@ namespace MolenApplicatie.Server.Services.Database
             await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYearsToAdd);
         }
 
-        public async Task CheckToDeleteProperties(MolenData molenData)
+        public async Task CheckToDeleteProperties(List<MolenData> molens)
         {
-            if (molenData == null)
+            foreach (var molenData in molens)
             {
-                return;
+                if (molenData == null)
+                    return;
+
+                await CheckAndDeleteOrphanedItems(
+                    await _dBMolenAddedImageService.GetImagesOfMolen(molenData.Id),
+                    molenData.AddedImages,
+                    x => x.FilePath,
+                    _dBMolenAddedImageService.Delete
+                );
+
+                await CheckAndDeleteOrphanedItems(
+                    await _dBMolenImageService.GetImagesOfMolen(molenData.Id),
+                    molenData.Images,
+                    x => x.FilePath,
+                    _dBMolenImageService.Delete
+                );
+
+                await CheckAndDeleteOrphanedItems(
+                    await _dBMolenMakerService.GetMakersOfMolen(molenData.Id),
+                    molenData.MolenMakers,
+                    x => x.Name,
+                    _dBMolenMakerService.Delete
+                );
+
+                await CheckAndDeleteOrphanedItems(
+                    await _dBMolenTypeAssociationService.GetMolenTypeAssociationsOfMolen(molenData.Id),
+                    molenData.MolenTypeAssociations,
+                    x => x.MolenTypeId.ToString(),
+                    _dBMolenTypeAssociationService.Delete
+                );
+
+                await CheckAndDeleteOrphanedItems(
+                    await _dBMolenDissappearedYearsService.GetDissappearedYearsOfMolen(molenData.Id),
+                    molenData.DisappearedYearInfos,
+                    x => x.Year.ToString(),
+                    _dBMolenDissappearedYearsService.Delete
+                );
             }
+        }
 
-            List<AddedImage> foundAddedImages = _dBMolenAddedImageService.GetImagesOfMolen(molenData.Id).Result;
-            var duplicateFoundAddedImages = foundAddedImages.GroupBy(x => x.FilePath)
+        private async Task CheckAndDeleteOrphanedItems<T>(
+            List<T> dbItems,
+            List<T>? currentItems,
+            Func<T, string> keySelector,
+            Func<T, Task> deleteFunc)
+        {
+            var currentKeys = new HashSet<string>(currentItems?.Select(keySelector) ?? Enumerable.Empty<string>());
+
+            var duplicateKeys = dbItems
+                .GroupBy(keySelector)
                 .Where(g => g.Count() > 1)
-                .Select(g => g.First())
-                .ToList();
-            foreach (var image in foundAddedImages)
-            {
-                if (molenData.AddedImages == null || molenData.AddedImages.Find(img => img.FilePath == image.FilePath) == null)
-                {
-                    await _dBMolenAddedImageService.Delete(image);
-                }
-                else
-                {
-                    var duplicate = duplicateFoundAddedImages.Find(dupe => dupe.FilePath == image.FilePath);
-                    if (duplicate != null)
-                    {
-                        await _dBMolenAddedImageService.Delete(image);
-                        duplicateFoundAddedImages.Remove(duplicate);
-                    }
-                }
-            }
+                .Select(g => g.Key)
+                .ToHashSet();
 
-            List<MolenImage> FoundImages = _dBMolenImageService.GetImagesOfMolen(molenData.Id).Result;
-            var duplicateFoundImages = FoundImages.GroupBy(x => x.FilePath)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.First())
-                .ToList();
-            foreach (var image in FoundImages)
+            foreach (var item in dbItems)
             {
-                if (molenData.Images == null || molenData.Images.Find(img => img.FilePath == image.FilePath) == null)
-                {
-                    await _dBMolenImageService.Delete(image);
-                }
-                else
-                {
-                    var duplicate = duplicateFoundImages.Find(dupe => dupe.FilePath == image.FilePath);
-                    if (duplicate != null)
-                    {
-                        await _dBMolenImageService.Delete(image);
-                        duplicateFoundImages.Remove(duplicate);
-                    }
-                }
-            }
+                var key = keySelector(item);
+                var isNotInCurrent = !currentKeys.Contains(key);
+                var isDuplicate = duplicateKeys.Contains(key);
 
-            List<MolenMaker> FoundMakers = _dBMolenMakerService.GetMakersOfMolen(molenData.Id).Result;
-            var duplicateFoundMakers = FoundMakers.GroupBy(x => x.Name)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.First())
-                .ToList();
-            foreach (var maker in FoundMakers)
-            {
-                if (molenData.MolenMakers == null || molenData.MolenMakers.Find(mk => mk.Name == maker.Name) == null)
+                if (isNotInCurrent || isDuplicate)
                 {
-                    await _dBMolenMakerService.Delete(maker);
-                }
-                else
-                {
-                    var duplicate = duplicateFoundMakers.Find(dupe => dupe.Name == maker.Name);
-                    if (duplicate != null)
-                    {
-                        await _dBMolenMakerService.Delete(maker);
-                        duplicateFoundMakers.Remove(duplicate);
-                    }
-                }
-            }
-
-            List<MolenTypeAssociation> FoundAssociations = _dBMolenTypeAssociationService.GetMolenTypeAssociationsOfMolen(molenData.Id).Result;
-            var duplicateFoundAssociations = FoundAssociations.GroupBy(x => x.MolenTypeId)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.First())
-                .ToList();
-
-            foreach (var association in FoundAssociations)
-            {
-                if (molenData.MolenTypeAssociations == null || molenData.MolenTypeAssociations.Find(asoc => asoc.MolenTypeId == association.MolenTypeId) == null)
-                {
-                    await _dBMolenTypeAssociationService.Delete(association);
-                }
-                else
-                {
-                    var duplicate = duplicateFoundAssociations.Find(dupe => dupe.MolenTypeId == association.MolenTypeId);
-                    if (duplicate != null)
-                    {
-                        await _dBMolenTypeAssociationService.Delete(association);
-                        duplicateFoundAssociations.Remove(duplicate);
-                    }
-                }
-            }
-
-            List<DisappearedYearInfo> FoundDissappearedYears = _dBMolenDissappearedYearsService.GetDissappearedYearsOfMolen(molenData.Id).Result;
-            var duplicateFoundDissappearedYears = FoundDissappearedYears.GroupBy(x => x.Year)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.First())
-                .ToList();
-            foreach (var year in FoundDissappearedYears)
-            {
-                if (molenData.DisappearedYearInfos == null || molenData.DisappearedYearInfos.Find(yr => yr.Year == year.Year) == null)
-                {
-                    await _dBMolenDissappearedYearsService.Delete(year);
-                }
-                else
-                {
-                    var duplicate = duplicateFoundDissappearedYears.Find(dupe => dupe.Year == year.Year);
-                    if (duplicate != null)
-                    {
-                        await _dBMolenDissappearedYearsService.Delete(year);
-                        duplicateFoundDissappearedYears.Remove(duplicate);
-                    }
+                    await deleteFunc(item);
+                    duplicateKeys.Remove(key);
                 }
             }
         }

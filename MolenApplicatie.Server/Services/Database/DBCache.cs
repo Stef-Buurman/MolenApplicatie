@@ -4,6 +4,12 @@ using System.Linq.Expressions;
 
 namespace MolenApplicatie.Server.Services.Database
 {
+    public static class CacheData<TEntity>
+    {
+        public static Dictionary<string, DateTime> Times = new Dictionary<string, DateTime>();
+        public static Dictionary<string, List<TEntity>> Data = new Dictionary<string, List<TEntity>>();
+    }
+
     public class DBCache<TEntity> where TEntity : class, DefaultModel
     {
         private readonly DbSet<TEntity> _dbSet;
@@ -12,12 +18,21 @@ namespace MolenApplicatie.Server.Services.Database
         private DateTime _lastRefreshTime = DateTime.MinValue;
         private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
         private readonly Func<Task<List<TEntity>>> _getAllAsync;
+        private readonly string _cacheKey;
 
         public DBCache(DbSet<TEntity> dbSet, Func<Task<List<TEntity>>> getAllAsync)
         {
             _dbSet = dbSet;
             _getAllAsync = getAllAsync;
-            GetAllAsync().Wait();
+            _cacheKey = typeof(TEntity).Name;
+
+            if (CacheData<TEntity>.Data.TryGetValue(_cacheKey, out var globalData))
+            {
+                _cachedData = globalData.Cast<TEntity>().ToList();
+                _lastRefreshTime = CacheData<TEntity>.Times.TryGetValue(_cacheKey, out var timestamp)
+                    ? timestamp
+                    : DateTime.MinValue;
+            }
         }
 
         public async Task<List<TEntity>> GetAllAsync()
@@ -34,6 +49,8 @@ namespace MolenApplicatie.Server.Services.Database
                 {
                     _cachedData = await _getAllAsync();
                     _lastRefreshTime = DateTime.UtcNow;
+                    CacheData<TEntity>.Data[_cacheKey] = _cachedData.ToList();
+                    CacheData<TEntity>.Times[_cacheKey] = _lastRefreshTime;
                 }
             }
             finally
@@ -116,6 +133,7 @@ namespace MolenApplicatie.Server.Services.Database
         public void Invalidate()
         {
             _lastRefreshTime = DateTime.MinValue;
+            CacheData<TEntity>.Times[_cacheKey] = _lastRefreshTime;
         }
     }
 }

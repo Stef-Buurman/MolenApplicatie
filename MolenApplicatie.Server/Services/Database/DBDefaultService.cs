@@ -169,14 +169,18 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entities == null || !entities.Any()) return;
 
+            var localEntities = _context.Set<TEntity>()
+                                        .Local
+                                        .ToDictionary(e => e.Id);
+
             foreach (var entity in entities)
             {
-                var tracked = _context.Set<TEntity>()
-                                      .Local
-                                      .FirstOrDefault(e => e.Id == entity.Id);
-                if (tracked != null)
+                if (localEntities.TryGetValue(entity.Id, out var trackedEntity))
                 {
-                    _context.Entry(tracked).State = EntityState.Detached;
+                    if (!ReferenceEquals(trackedEntity, entity))
+                    {
+                        _context.Entry(trackedEntity).State = EntityState.Detached;
+                    }
                 }
             }
 
