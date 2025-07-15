@@ -13,7 +13,7 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year, out existing);
         }
 
-        public override bool ExistsRange(List<DisappearedYearInfo> entities, out List<DisappearedYearInfo> matchingEntities, out List<DisappearedYearInfo> newEntities, out List<DisappearedYearInfo> updatedEntities)
+        public override bool ExistsRange(List<DisappearedYearInfo> entities, out List<DisappearedYearInfo> matchingEntities, out List<DisappearedYearInfo> newEntities, out List<DisappearedYearInfo> updatedEntities, bool searchDB = true)
         {
             return ExistsRange(
                 entities,
@@ -21,7 +21,8 @@ namespace MolenApplicatie.Server.Services.Database
                 y => e => e.MolenDataId == y.MolenDataId && e.Year == y.Year,
                 out matchingEntities,
                 out newEntities,
-                out updatedEntities
+                out updatedEntities,
+                searchDB
             );
         }
 

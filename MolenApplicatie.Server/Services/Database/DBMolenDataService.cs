@@ -33,7 +33,7 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
         }
 
-        public override bool ExistsRange(List<MolenData> entities, out List<MolenData> matchingEntities, out List<MolenData> newEntities, out List<MolenData> updatedEntities)
+        public override bool ExistsRange(List<MolenData> entities, out List<MolenData> matchingEntities, out List<MolenData> newEntities, out List<MolenData> updatedEntities, bool searchDB = true)
         {
             return ExistsRange(
                 entities,
@@ -41,7 +41,8 @@ namespace MolenApplicatie.Server.Services.Database
                 y => e => e.Ten_Brugge_Nr == y.Ten_Brugge_Nr,
                 out matchingEntities,
                 out newEntities,
-                out updatedEntities
+                out updatedEntities,
+                searchDB
             );
         }
 

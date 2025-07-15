@@ -16,7 +16,7 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => place.Name == e.Name && place.Province == e.Province && place.Latitude == e.Latitude && place.Longitude == e.Longitude, out existing);
         }
 
-        public override bool ExistsRange(List<Place> entities, out List<Place> matchingEntities, out List<Place> newEntities, out List<Place> updatedEntities)
+        public override bool ExistsRange(List<Place> entities, out List<Place> matchingEntities, out List<Place> newEntities, out List<Place> updatedEntities, bool searchDB = true)
         {
             return ExistsRange(
                 entities,
@@ -24,7 +24,8 @@ namespace MolenApplicatie.Server.Services.Database
                 y => e => e.Name == y.Name && e.Province == y.Province && e.Latitude == y.Latitude && e.Longitude == y.Longitude,
                 out matchingEntities,
                 out newEntities,
-                out updatedEntities
+                out updatedEntities,
+                searchDB
             );
         }
 

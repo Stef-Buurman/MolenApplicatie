@@ -14,7 +14,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             return Exists(e => e.FilePath == addedImage.FilePath, out existing);
         }
-        public override bool ExistsRange(List<AddedImage> entities, out List<AddedImage> matchingEntities, out List<AddedImage> newEntities, out List<AddedImage> updatedEntities)
+        public override bool ExistsRange(List<AddedImage> entities, out List<AddedImage> matchingEntities, out List<AddedImage> newEntities, out List<AddedImage> updatedEntities, bool searchDB = true)
         {
             return ExistsRange(
                 entities,
@@ -22,7 +22,8 @@ namespace MolenApplicatie.Server.Services.Database
                 y => e => e.FilePath == y.FilePath,
                 out matchingEntities,
                 out newEntities,
-                out updatedEntities
+                out updatedEntities,
+                searchDB
             );
         }
 

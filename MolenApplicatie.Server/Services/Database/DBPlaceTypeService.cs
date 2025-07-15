@@ -12,7 +12,7 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Name == type.Name && e.Group == type.Group, out existing);
         }
 
-        public override bool ExistsRange(List<PlaceType> entities, out List<PlaceType> matchingEntities, out List<PlaceType> newEntities, out List<PlaceType> updatedEntities)
+        public override bool ExistsRange(List<PlaceType> entities, out List<PlaceType> matchingEntities, out List<PlaceType> newEntities, out List<PlaceType> updatedEntities, bool searchDB = true)
         {
             return ExistsRange(
                 entities,
@@ -20,7 +20,8 @@ namespace MolenApplicatie.Server.Services.Database
                 y => e => e.Name == y.Name && e.Group == y.Group,
                 out matchingEntities,
                 out newEntities,
-                out updatedEntities
+                out updatedEntities,
+                searchDB
             );
         }
     }
