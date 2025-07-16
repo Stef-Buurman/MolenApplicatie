@@ -2,6 +2,7 @@
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
+using System.Linq;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -46,6 +47,17 @@ namespace MolenApplicatie.Server.Services.Database
                 .ToListAsync();
             return images;
         }
+
+        public async Task<Dictionary<Guid, List<AddedImage>>> GetImagesOfMolens(List<Guid> molens)
+        {
+            var images = await _context.AddedImages
+                .Where(e => molens.Contains(e.MolenDataId))
+                .GroupBy(e => e.MolenDataId)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
+
+            return images;
+        }
+
 
         public override async Task Delete(AddedImage image)
         {

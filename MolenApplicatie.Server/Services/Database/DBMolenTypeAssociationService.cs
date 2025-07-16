@@ -45,6 +45,15 @@ namespace MolenApplicatie.Server.Services.Database
             return molenTypeAssociations;
         }
 
+        public async Task<Dictionary<Guid, List<MolenTypeAssociation>>> GetMolenTypeAssociationsOfMolens(List<Guid> molens)
+        {
+            var molenTypeAssociations = await _context.MolenTypeAssociations
+                .Where(e => molens.Contains(e.MolenDataId))
+                .GroupBy(e => e.MolenDataId)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
+            return molenTypeAssociations;
+        }
+
         public override async Task<MolenTypeAssociation> Add(MolenTypeAssociation molenTypeAssociation)
         {
             if (molenTypeAssociation == null) return molenTypeAssociation;

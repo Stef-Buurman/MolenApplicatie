@@ -7,7 +7,7 @@ namespace MolenApplicatie.Server.Services.Database
     public class DBMolenDissappearedYearsService : DBDefaultService<DisappearedYearInfo>
     {
         public DBMolenDissappearedYearsService(MolenDbContext context) : base(context)
-        {}
+        { }
 
         public override async Task<List<DisappearedYearInfo>> GetAllAsync()
         {
@@ -38,6 +38,15 @@ namespace MolenApplicatie.Server.Services.Database
             var years = await _context.DisappearedYearInfos
                 .Where(e => e.MolenDataId == MolenId)
                 .ToListAsync();
+            return years;
+        }
+
+        public async Task<Dictionary<Guid, List<DisappearedYearInfo>>> GetDissappearedYearsOfMolens(List<Guid> molens)
+        {
+            var years = await _context.DisappearedYearInfos
+                .Where(e => molens.Contains(e.MolenDataId))
+                .GroupBy(e => e.MolenDataId)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
             return years;
         }
     }

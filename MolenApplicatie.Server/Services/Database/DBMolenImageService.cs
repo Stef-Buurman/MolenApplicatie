@@ -59,6 +59,15 @@ namespace MolenApplicatie.Server.Services.Database
             return images;
         }
 
+        public async Task<Dictionary<Guid, List<MolenImage>>> GetImagesOfMolens(List<Guid> molens)
+        {
+            var images = await _context.MolenImages
+                .Where(e => molens.Contains(e.MolenDataId))
+                .GroupBy(e => e.MolenDataId)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
+            return images;
+        }
+
         public override async Task Delete(MolenImage image)
         {
             MolenImage? imageToDelete = await GetById(image.Id);
