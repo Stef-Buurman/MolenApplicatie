@@ -46,14 +46,43 @@ namespace MolenApplicatie.Server.Services
             _dBMolenImageService = dBMolenImageService;
         }
 
+        public async Task test()
+        {
+            string jsonString = await File.ReadAllTextAsync("Json/AlleMolenData.json");
+            List<MolenData> molens = JsonSerializer.Deserialize<List<MolenData>>(jsonString)!;
+            var startTime = DateTime.Now;
+            Console.WriteLine("Saving progress...");
+            await _dBMolenDataService.AddOrUpdateRange(molens);
+            var midTime = DateTime.Now;
+            //var changes = await _dbContext.SaveChangesAsync();
+            var endTime = DateTime.Now;
+
+            Console.WriteLine($"Saved {molens.Count} molens in {midTime - startTime} seconds. Total time: {endTime - startTime} seconds.");
+        }
+
+        public async Task test2()
+        {
+            var data = await _dBMolenDataService.GetAllAsync();
+            File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(MolenService.RemoveCircularDependencyAll(data), new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+        }
+
         public async Task<int> SaveMolenResponses()
         {
             _dbContext.ChangeTracker.Clear();
             List<string> fileNames = Directory.GetFiles("Json/Responses").ToList();
 
             List<MolenData> allNewMolenData = new List<MolenData>();
+            List<MolenData> TotalMolenData = new List<MolenData>();
             List<string> allMolenTBN = fileNames.Select(Path.GetFileNameWithoutExtension).ToList();
             List<MolenData> allOldMolenData = _molenService.GetMolensByTBN(allMolenTBN);
+            var allOldMolenDataWithTBN = await _dBMolenDataService.GetAllAsync();
+            Console.WriteLine("Found " + allOldMolenDataWithTBN.Count + " molens in database with TBN.");
+            var molenDict = allOldMolenDataWithTBN.ToDictionary(e => e.Ten_Brugge_Nr);
+
+            TotalMolenData.AddRange(allOldMolenDataWithTBN);
 
             int count = 0;
             int addedCount = 0;
@@ -61,15 +90,15 @@ namespace MolenApplicatie.Server.Services
             {
                 count++;
 
-                //if (count <= 10000) continue;
-                if (addedCount == 2500) break;
+                //if (count <= 16000) continue;
+                //if (addedCount == 2500) break;
 
                 string tbn = Path.GetFileNameWithoutExtension(fileName);
                 if (string.IsNullOrEmpty(tbn)) continue;
 
-                if (_dbContext.MolenData.FirstOrDefault(x => x.Ten_Brugge_Nr == tbn) != null)
+                if (molenDict.TryGetValue(tbn, out MolenData? existingMolenData) && existingMolenData != null)
                 {
-                    Console.WriteLine("Skipping file: " + fileName);
+                    Console.WriteLine("Skipping molen: " + tbn + " (already exists in database)");
                     continue;
                 }
 
@@ -131,45 +160,17 @@ namespace MolenApplicatie.Server.Services
                 newMolenData = MolenService.RemoveCircularDependency(newMolenData);
                 allNewMolenData.Add(newMolenData);
                 addedCount++;
-                //File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(allNewMolenData, new JsonSerializerOptions
-                //{
-                //    WriteIndented = true
-                //}));
                 Console.WriteLine("Processed molen: " + tbn + " (" + count + "/" + fileNames.Count + ")");
 
-                if(count % 500 == 0)
+                if (count % 500 == 0)
                 {
+                    var startTime = DateTime.Now;
                     Console.WriteLine("Saving progress...");
                     await _dBMolenDataService.AddOrUpdateRange(allNewMolenData);
+                    var midTime = DateTime.Now;
                     await _dbContext.SaveChangesAsync();
                     allNewMolenData.Clear();
-
-                    //var startTime = DateTime.Now;
-                    //var typeAss = allNewMolenData.SelectMany(m => m.MolenTypeAssociations).ToList();
-
-                    //x.ExistsRange(typeAss, e => new { e.MolenTypeId, e.MolenDataId }, out List<MolenTypeAssociation>? existingAssociations, out var g, out var t);
-                    //var endTime = DateTime.Now;
-
-                    //var startTime2 = DateTime.Now;
-                    //typeAss.ForEach(e => x.Exists(e, out var y));
-                    //var endTime2 = DateTime.Now;
-
-
-                    //var startTime3 = DateTime.Now;
-                    //var tbns = allNewMolenData.Select(m => m.MolenTBN).ToList();
-
-                    //_dBMolenTBNService.ExistsRange(tbns, _dBMolenTBNService.matchKeySelector(), y => e => e.Ten_Brugge_Nr == y.Ten_Brugge_Nr, out var existingAssociations2, out var g2, out var t2);
-                    //var endTime3 = DateTime.Now;
-
-                    //var startTime23 = DateTime.Now;
-                    //tbns.ForEach(e => _dBMolenTBNService.Exists(e, out var y));
-                    //var endTime23 = DateTime.Now;
-
-
-                    //Console.WriteLine($"Processed {typeAss.Count} MolenTypeAssociations in {endTime - startTime} seconds.");
-                    //Console.WriteLine($"Processed {typeAss.Count} MolenTypeAssociations individualy in {endTime2 - startTime2} seconds.");
-                    //Console.WriteLine($"Processed {tbns.Count} tbn in {endTime3 - startTime3} seconds.");
-                    //Console.WriteLine($"Processed {tbns.Count} tbn individualy in {endTime23 - startTime23} seconds.");
+                    var endTime = DateTime.Now;
                 }
             }
 
@@ -1164,8 +1165,7 @@ namespace MolenApplicatie.Server.Services
                     }
                 }
 
-                if (!string.IsNullOrEmpty(nogWaarneembareImageSrc) && Uri.IsWellFormedUriString(nogWaarneembareImageSrc, UriKind.Absolute) &&
-                    (oldMolenData == null || (oldMolenData != null && !_dBMolenImageService.Exists(e => e.MolenDataId == oldMolenData.Id && e.ExternalUrl == nogWaarneembareImageSrc, out foundMolenImg))))
+                if (!string.IsNullOrEmpty(nogWaarneembareImageSrc) && Uri.IsWellFormedUriString(nogWaarneembareImageSrc, UriKind.Absolute))
                 {
                     try
                     {
