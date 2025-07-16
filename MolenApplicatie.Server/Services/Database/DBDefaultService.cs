@@ -41,16 +41,6 @@ namespace MolenApplicatie.Server.Services.Database
             return addedEntityEntry.Entity;
         }
 
-        public virtual async Task<List<TEntity>> AddRange(List<TEntity> entities)
-        {
-            if (entities == null) return entities;
-
-            await _dbSet.AddRangeAsync(entities);
-            _cache.AddRange(entities);
-
-            return entities;
-        }
-
         public virtual async Task<TEntity> Update(TEntity entity)
         {
             if (entity == null) return entity;
@@ -76,6 +66,12 @@ namespace MolenApplicatie.Server.Services.Database
 
             var entitiesToUpdate = new List<TEntity>();
 
+            var changeTrackerEntities = _context.ChangeTracker.Entries<TEntity>()
+                            .ToDictionary(e => e.Entity.Id);
+
+            var localEntities = _context.Set<TEntity>().Local
+                            .ToDictionary(e => e.Id);
+
             foreach (var entity in entities)
             {
                 if (Exists(entity, out TEntity? existingEntity))
@@ -85,21 +81,15 @@ namespace MolenApplicatie.Server.Services.Database
                         entity.Id = existingEntity.Id;
                     }
 
-                    var tracked = _context.ChangeTracker.Entries<TEntity>()
-                        .FirstOrDefault(e => e.Entity.Id == entity.Id);
-
-                    if (tracked != null)
+                    if (changeTrackerEntities.TryGetValue(entity.Id, out var trackedEntity))
                     {
-                        tracked.CurrentValues.SetValues(entity);
+                        trackedEntity.CurrentValues.SetValues(entity);
                     }
                     else
                     {
-                        var local = _context.Set<TEntity>().Local
-                            .FirstOrDefault(e => e.Id == entity.Id);
-
-                        if (local != null)
+                        if (localEntities.TryGetValue(entity.Id, out var localEntity))
                         {
-                            _context.Entry(local).State = EntityState.Detached;
+                            _context.Entry(localEntity).State = EntityState.Detached;
                         }
 
                         entitiesToUpdate.Add(entity);
@@ -110,7 +100,7 @@ namespace MolenApplicatie.Server.Services.Database
                     await Add(entity);
                 }
             }
-
+            
             foreach (var entity in entitiesToUpdate.DistinctBy(e => e.Id))
             {
                 _context.Attach(entity);
@@ -169,8 +159,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entities == null || !entities.Any()) return;
 
-            var localEntities = _context.Set<TEntity>()
-                                        .Local
+            var localEntities = _context.Set<TEntity>().Local
                                         .ToDictionary(e => e.Id);
 
             foreach (var entity in entities)
