@@ -20,17 +20,18 @@ builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
 builder.Services.AddTransient<PlaceTypeService>();
 builder.Services.AddTransient<MolenService>();
-builder.Services.AddTransient<DBMolenAddedImageService>();
-builder.Services.AddTransient<DBMolenDissappearedYearsService>();
-builder.Services.AddTransient<DBPlaceService>();
-builder.Services.AddTransient<DBPlaceTypeService>();
-builder.Services.AddTransient<DBMolenTypeService>();
-builder.Services.AddTransient<DBMolenDataService>();
-builder.Services.AddTransient<DBMolenMakerService>();
-builder.Services.AddTransient<DBMolenImageService>();
-builder.Services.AddTransient<DBMolenTBNService>();
-builder.Services.AddTransient<DBMolenTypeAssociationService>();
-builder.Services.AddTransient<HttpClient>(); 
+
+builder.Services.AddScoped<DBMolenAddedImageService>();
+builder.Services.AddScoped<DBMolenDissappearedYearsService>();
+builder.Services.AddScoped<DBPlaceService>();
+builder.Services.AddScoped<DBPlaceTypeService>();
+builder.Services.AddScoped<DBMolenTypeService>();
+builder.Services.AddScoped<DBMolenDataService>();
+builder.Services.AddScoped<DBMolenMakerService>();
+builder.Services.AddScoped<DBMolenImageService>();
+builder.Services.AddScoped<DBMolenTBNService>();
+builder.Services.AddScoped<DBMolenTypeAssociationService>();
+builder.Services.AddTransient<HttpClient>();
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
@@ -40,7 +41,9 @@ builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("
 string connectionString = "server=localhost;user=root;password=DitIsEchtEenLastigWW;database=molen_database;port=3306";
 
 builder.Services.AddDbContext<MolenDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).LogTo(_ => { }, LogLevel.None)
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+           .EnableSensitiveDataLogging() // Enable sensitive data logging here
+           .LogTo(_ => { }, LogLevel.None)
 );
 
 builder.Services.AddControllers()
