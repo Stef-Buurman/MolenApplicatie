@@ -75,6 +75,46 @@ namespace MolenApplicatie.Server.Services
             "V"
         };
 
+        public async Task test()
+        {
+            string jsonString = await File.ReadAllTextAsync("Json/AllePlace.json");
+            List<Place> places = JsonSerializer.Deserialize<List<Place>>(jsonString)!;
+            var startTime = DateTime.Now;
+            Console.WriteLine("Saving progress...");
+            await _dBPlaceService.AddOrUpdateRange(places);
+            var midTime = DateTime.Now;
+            //var changes = await _dbContext.SaveChangesAsync();
+            var endTime = DateTime.Now;
+
+            Console.WriteLine($"Saved {places.Count} molens in {midTime - startTime} seconds. Total time: {endTime - startTime} seconds.");
+        }
+
+        public async Task test2()
+        {
+            var data = await _dBPlaceService.GetAllAsync();
+            File.WriteAllText("Json/AllePlace.json", JsonSerializer.Serialize(RemoveCircularDependencyAll(data), new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+        }
+
+        public static List<Place>? RemoveCircularDependencyAll(List<Place>? places)
+        {
+            if (places == null) return null;
+            places.ForEach(molen => RemoveCircularDependency(molen));
+            return places;
+        }
+
+        public static Place? RemoveCircularDependency(Place? place)
+        {
+            if (place == null) return null;
+            if (place.Type != null)
+            {
+                place.Type.Places = null;
+            }
+            return place;
+        }
+
         public async Task<List<Place>> ReadAllNetherlandsPlaces()
         {
             int maxRows = 1000;
@@ -107,8 +147,6 @@ namespace MolenApplicatie.Server.Services
                 totalResults = -1;
                 while (startRow <= 5000 || totalResults == -1)
                 {
-                    Console.WriteLine($"Fetching places, startRow: {startRow}");
-                    Console.WriteLine($"totalResults: {totalResults}");
                     var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass=P&continentCode=&username=weetikveel12321&startRow={startRow}&lang=local");
                     response.EnsureSuccessStatusCode();
                     if (!response.IsSuccessStatusCode)
@@ -122,13 +160,9 @@ namespace MolenApplicatie.Server.Services
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                    Console.WriteLine(placesResponse != null);
-                    Console.WriteLine(placesResponse.Geonames != null);
-                    File.WriteAllText("Json/asdadasdas.json", jsonResponse);
                     if (placesResponse != null)
                     {
                         if (placesResponse.Geonames == null) break;
-                        Console.WriteLine($"Total results count: {placesResponse.TotalResultsCount}");
                         if (totalResults == -1) totalResults = placesResponse.TotalResultsCount;
 
                         List<Place> placesFound = placesResponse.Geonames
@@ -151,8 +185,6 @@ namespace MolenApplicatie.Server.Services
                 }
             }
 
-            Console.WriteLine($"Total places found: {places.Count}");
-
             foreach (var province in provincies)
             {
                 foreach (var featureClass in featureClasses)
@@ -160,11 +192,8 @@ namespace MolenApplicatie.Server.Services
                     startRow = 0;
                     int totalResultsProvince = -1;
 
-                    Console.WriteLine($"Fetching places for province: {province}, startRow: {startRow}");
                     while (startRow <= 5000 || (totalResultsProvince == -1 || startRow <= totalResultsProvince))
                     {
-                        Console.WriteLine($"Feature Class: {featureClass}");
-                        Console.WriteLine($"Fetching places for province: {province}, totalResultsProvince: {totalResultsProvince}, startRow: {startRow}");
                         var response = await _client.GetAsync($"http://api.geonames.org/searchJSON?country=NL&maxRows={maxRows}&featureClass={featureClass}&continentCode=&username=weetikveel12321&startRow={startRow}&q={province}&lang=local");
                         response.EnsureSuccessStatusCode();
                         if (!response.IsSuccessStatusCode)
