@@ -35,9 +35,11 @@ namespace MolenApplicatie.Server.Services.Database
             }
         }
 
+        private bool IsValidCache() => (DateTime.UtcNow - _lastRefreshTime) < _cacheDuration && _cachedData.Any();
+
         public async Task<List<TEntity>> GetAllAsync()
         {
-            if ((DateTime.UtcNow - _lastRefreshTime) < _cacheDuration && _cachedData.Any())
+            if (IsValidCache())
             {
                 return _cachedData;
             }
@@ -61,10 +63,10 @@ namespace MolenApplicatie.Server.Services.Database
             return _cachedData;
         }
 
-        public async Task<TEntity?> GetByIdAsync(Guid id)
+        public TEntity? GetByIdAsync(Guid id)
         {
-            var allData = await GetAllAsync();
-            return allData.FirstOrDefault(e => e.Id == id);
+            if (!IsValidCache()) return null;
+            return _cachedData.FirstOrDefault(e => e.Id == id);
         }
 
         public TEntity Add(TEntity entity)
@@ -126,6 +128,8 @@ namespace MolenApplicatie.Server.Services.Database
 
         public bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
+            existing = null;
+            if (!IsValidCache()) return false;
             existing = _cachedData.FirstOrDefault(predicate.Compile());
             return existing != null;
         }
