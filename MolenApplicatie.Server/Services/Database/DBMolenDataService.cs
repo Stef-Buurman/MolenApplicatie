@@ -70,6 +70,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<MolenData> Add(MolenData molenData, CancellationToken token = default)
         {
+            token.ThrowIfCancellationRequested();
             var TypeAss = molenData.MolenTypeAssociations.ToList();
             var images = molenData.Images.ToList();
             var makers = molenData.MolenMakers.ToList();
@@ -104,6 +105,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<MolenData> Update(MolenData molenData, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
+            token.ThrowIfCancellationRequested();
             var TypeAss = molenData.MolenTypeAssociations.ToList();
             var images = molenData.Images.ToList();
             var makers = molenData.MolenMakers.ToList();
@@ -219,6 +221,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                token.ThrowIfCancellationRequested();
                 var matchedTBN = allTBNs.FirstOrDefault(t => t.Equals(entity.MolenTBN));
                 if (matchedTBN != null)
                 {
@@ -246,6 +249,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             void Attach<T>(Dictionary<Guid, List<T>> all, Action<T, Guid> setForeignKey)
             {
+                token.ThrowIfCancellationRequested();
                 foreach (var entity in all)
                 {
                     foreach (var item in entity.Value)
