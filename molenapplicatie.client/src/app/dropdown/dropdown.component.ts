@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
-import { Place } from '../../Interfaces/Place';
+import { Place } from '../../Interfaces/Models/Place';
 import { HttpClient } from '@angular/common/http';
 import { Toasts } from '../../Utils/Toasts';
 

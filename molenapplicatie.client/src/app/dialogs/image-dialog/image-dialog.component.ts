@@ -6,7 +6,7 @@ import { ConfirmationDialogData } from '../../../Interfaces/ConfirmationDialogDa
 import { Toasts } from '../../../Utils/Toasts';
 import { DialogReturnType } from '../../../Interfaces/DialogReturnType';
 import { HttpClient } from '@angular/common/http';
-import { MolenImage } from '../../../Interfaces/MolenImage';
+import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 
 @Component({
   selector: 'app-image-dialog',

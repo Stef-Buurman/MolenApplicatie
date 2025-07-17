@@ -1,14 +1,14 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
-import { MolenData } from '../../../Interfaces/MolenData';
+import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MolenImage } from '../../../Interfaces/MolenImage';
+import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 
 @Component({
   selector: 'app-molen-dialog',

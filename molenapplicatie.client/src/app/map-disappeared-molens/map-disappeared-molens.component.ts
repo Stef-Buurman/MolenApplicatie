@@ -5,7 +5,7 @@ import { MolenService } from '../../Services/MolenService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MolenData } from '../../Interfaces/MolenData';
+import { MolenData } from '../../Interfaces/Models/MolenData';
 
 @Component({
   selector: 'app-map-disappeared-molens',

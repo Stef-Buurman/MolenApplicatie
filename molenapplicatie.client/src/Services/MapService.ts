@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
-import { MolenData } from '../Interfaces/MolenData';
+import { MolenData } from '../Interfaces/Models/MolenData';
 import { MapInformation } from '../Class/MapInformation';
 
 @Injectable({
