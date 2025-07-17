@@ -1,6 +1,4 @@
-import { MolenData } from "./MolenData";
-
-export interface MolensResponseType {
+export interface MolensResponseType<T> {
   activeMolensWithImage: number;
   remainderMolensWithImage: number;
   totalMolensWithImage: number;
@@ -9,7 +7,7 @@ export interface MolensResponseType {
   totalCountDisappearedMolens: CountDisappearedMolens[];
   totalCountExistingMolens: number;
   totalCountMolens: number;
-  molens: MolenData[];
+  molens: T[];
 }
 
 export interface CountDisappearedMolens {
