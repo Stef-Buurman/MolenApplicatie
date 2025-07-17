@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
 using System.Linq;
@@ -21,7 +22,13 @@ namespace MolenApplicatie.Server.Services.Database
         {
             return Exists(e => e.FilePath == addedImage.FilePath, out existing);
         }
-        public override bool ExistsRange(List<AddedImage> entities, out List<AddedImage> matchingEntities, out List<AddedImage> newEntities, out List<AddedImage> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<AddedImage> entities, 
+            out List<AddedImage> matchingEntities, 
+            out List<AddedImage> newEntities, 
+            out List<AddedImage> updatedEntities, 
+            bool searchDB = true, 
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -30,11 +37,13 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
-        public override async Task<AddedImage> Add(AddedImage addedImage)
+        public override async Task<AddedImage> Add(AddedImage addedImage, CancellationToken token = default)
         {
             if (!File.Exists(Globals.WWWROOTPath + addedImage.FilePath)) return addedImage;
             return await base.Add(addedImage);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -24,7 +25,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);
         }
 
-        public override bool ExistsRange(List<MolenTypeAssociation> entities, out List<MolenTypeAssociation> matchingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<MolenTypeAssociation> entities, 
+            out List<MolenTypeAssociation> matchingEntities, 
+            out List<MolenTypeAssociation> newEntities, 
+            out List<MolenTypeAssociation> updatedEntities, 
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -33,7 +40,9 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
@@ -54,7 +63,7 @@ namespace MolenApplicatie.Server.Services.Database
             return molenTypeAssociations;
         }
 
-        public override async Task<MolenTypeAssociation> Add(MolenTypeAssociation molenTypeAssociation)
+        public override async Task<MolenTypeAssociation> Add(MolenTypeAssociation molenTypeAssociation, CancellationToken token = default)
         {
             if (molenTypeAssociation == null) return molenTypeAssociation;
             molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
@@ -65,7 +74,7 @@ namespace MolenApplicatie.Server.Services.Database
             return await base.Add(molenTypeAssociation);
         }
 
-        public override async Task<MolenTypeAssociation> Update(MolenTypeAssociation molenTypeAssociation)
+        public override async Task<MolenTypeAssociation> Update(MolenTypeAssociation molenTypeAssociation, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (molenTypeAssociation == null) return molenTypeAssociation;
             molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
@@ -73,9 +82,9 @@ namespace MolenApplicatie.Server.Services.Database
             molenTypeAssociation.MolenType = await _dBMolenTypeService.AddOrUpdate(molenTypeAssociation.MolenType);
             molenTypeAssociation.MolenTypeId = molenTypeAssociation.MolenType.Id;
             molenTypeAssociation.MolenType = null;
-            return await base.Update(molenTypeAssociation);
+            return await base.Update(molenTypeAssociation, token, strat);
         }
-        public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities)
+        public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
@@ -83,7 +92,7 @@ namespace MolenApplicatie.Server.Services.Database
             var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
             if (all_types.Count > 0)
             {
-                all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types);
+                all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types, token, strat);
             }
 
             var all = await _cache.GetAllAsync();
@@ -111,7 +120,7 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
 
-            if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities, false))
+            if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities, false, token, strat))
             {
                 entitiesToAdd.AddRange(newEntities);
                 entitiesToUpdate.AddRange(updatedEntities);
@@ -122,8 +131,8 @@ namespace MolenApplicatie.Server.Services.Database
             }
 
 
-            await AddRangeAsync(entitiesToAdd);
-            await UpdateRange(entitiesToUpdate);
+            await AddRangeAsync(entitiesToAdd, token);
+            await UpdateRange(entitiesToUpdate, token, strat);
 
             return entities;
         }

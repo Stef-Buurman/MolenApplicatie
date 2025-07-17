@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -23,7 +25,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => place.Name == e.Name && place.Province == e.Province && place.Latitude == e.Latitude && place.Longitude == e.Longitude, out existing);
         }
 
-        public override bool ExistsRange(List<Place> entities, out List<Place> matchingEntities, out List<Place> newEntities, out List<Place> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<Place> entities, 
+            out List<Place> matchingEntities, 
+            out List<Place> newEntities, 
+            out List<Place> updatedEntities, 
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -32,11 +40,13 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
-        public override async Task<List<Place>> AddOrUpdateRange(List<Place> entities)
+        public override async Task<List<Place>> AddOrUpdateRange(List<Place> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null)
                 return entities;
@@ -44,7 +54,7 @@ namespace MolenApplicatie.Server.Services.Database
             var all_types = entities.Select(e => e.Type).Where(t => t != null).Distinct().ToList();
             if (all_types.Count > 0)
             {
-                all_types = await _dBPlaceTypeService.AddOrUpdateRange(all_types);
+                all_types = await _dBPlaceTypeService.AddOrUpdateRange(all_types, token, strat);
             }
 
             var all = await _cache.GetAllAsync();
@@ -65,8 +75,14 @@ namespace MolenApplicatie.Server.Services.Database
                 var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
                 if (existingEntity != null)
                 {
+                    if (strat == UpdateStrategy.Ignore)
+                        continue;
+
                     if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
+
+                    if (strat == UpdateStrategy.Patch)
+                        PatchUtil.Patch(entity, existingEntity);
 
                     existingEntity.Type = null;
                     _context.Entry(existingEntity).CurrentValues.SetValues(entity);
@@ -78,24 +94,29 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
 
-            await AddRangeAsync(entitiesToAdd);
+            await AddRangeAsync(entitiesToAdd, token);
 
             return entities;
         }
 
-        public override async Task<Place> AddOrUpdate(Place place)
+        public override async Task<Place> AddOrUpdate(Place place, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (place == null) return null;
-            Place? existingEntity = await GetById(place.Id);
-            if (existingEntity != null)
+            if (Exists(place, out Place? existingEntity))
             {
-                place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type);
+                if (strat == UpdateStrategy.Ignore)
+                    return existingEntity;
+
+                if (strat == UpdateStrategy.Patch)
+                    PatchUtil.Patch(place, existingEntity);
+
+                place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type, token, strat);
                 _context.Entry(existingEntity).CurrentValues.SetValues(place);
                 return existingEntity;
             }
-            return await Add(place);
+            return await Add(place, token);
         }
-        public override async Task<Place> Add(Place place)
+        public override async Task<Place> Add(Place place, CancellationToken token = default)
         {
             if (place == null) return null;
             if (Exists(place, out Place? existingEntity))
@@ -104,17 +125,16 @@ namespace MolenApplicatie.Server.Services.Database
             }
             if (place.Type != null)
             {
-                place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type);
+                place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type, token);
             }
-            return await base.Add(place);
+            return await base.Add(place, token);
         }
 
-        public override async Task<Place> Update(Place place)
+        public override async Task<Place> Update(Place place, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (place == null) return null;
-            Place? existingEntity = await GetById(place.Id);
-            place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type);
-            return await base.Update(place);
+            place.Type = await _dBPlaceTypeService.AddOrUpdate(place.Type, token, strat);
+            return await base.Update(place, token, strat);
         }
     }
 }

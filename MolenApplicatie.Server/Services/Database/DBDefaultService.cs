@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Interfaces;
+using MolenApplicatie.Server.Utils;
 using System.Linq.Expressions;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -27,7 +29,7 @@ namespace MolenApplicatie.Server.Services.Database
             return await _dbSet.FindAsync(id);
         }
 
-        public virtual async Task<TEntity> Add(TEntity entity)
+        public virtual async Task<TEntity> Add(TEntity entity, CancellationToken token = default)
         {
             if (entity == null) return entity;
 
@@ -35,15 +37,18 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 return existingEntity!;
             }
+            token.ThrowIfCancellationRequested();
             entity.Id = Guid.Empty;
-            var addedEntityEntry = await _dbSet.AddAsync(entity);
+            var addedEntityEntry = await _dbSet.AddAsync(entity, token);
             _cache.Add(addedEntityEntry.Entity);
             return addedEntityEntry.Entity;
         }
 
-        public virtual async Task<TEntity> Update(TEntity entity)
+        public virtual async Task<TEntity> Update(TEntity entity, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entity == null) return entity;
+
+            token.ThrowIfCancellationRequested();
 
             var existingEntry = _context.ChangeTracker
                 .Entries<TEntity>()
@@ -60,7 +65,7 @@ namespace MolenApplicatie.Server.Services.Database
             return entity;
         }
 
-        public virtual async Task<List<TEntity>> UpdateRange(List<TEntity> entities)
+        public virtual async Task<List<TEntity>> UpdateRange(List<TEntity> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null) return entities;
 
@@ -74,6 +79,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                token.ThrowIfCancellationRequested();
                 if (Exists(entity, out TEntity? existingEntity))
                 {
                     if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
@@ -100,9 +106,10 @@ namespace MolenApplicatie.Server.Services.Database
                     await Add(entity);
                 }
             }
-            
+
             foreach (var entity in entitiesToUpdate.DistinctBy(e => e.Id))
             {
+                token.ThrowIfCancellationRequested();
                 _context.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
             }
@@ -112,34 +119,45 @@ namespace MolenApplicatie.Server.Services.Database
             return entities;
         }
 
-        public virtual async Task<TEntity> AddOrUpdate(TEntity entity)
+        public virtual async Task<TEntity> AddOrUpdate(TEntity entity, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
-            if (entity == null)
-                return entity;
+            if (entity == null) return entity;
+
+            token.ThrowIfCancellationRequested();
 
             if (Exists(entity, out TEntity? existingEntity))
             {
+                if (strat == UpdateStrategy.Ignore) return existingEntity;
+
                 if (entity.Id == Guid.Empty && existingEntity != null && existingEntity.Id != Guid.Empty)
+                {
                     entity.Id = existingEntity.Id;
-                return await Update(entity);
+                }
+
+                if (strat == UpdateStrategy.Patch)
+                {
+                    PatchUtil.Patch(entity, existingEntity);
+                }
+
+                return await Update(entity, token, strat);
             }
             else
             {
-                return await Add(entity);
+                return await Add(entity, token);
             }
         }
 
-        public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities)
+        public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
 
             var all = await _cache.GetAllAsync();
-
+            token.ThrowIfCancellationRequested();
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
 
-            if (ExistsRange(entities, out List<TEntity> existingEntities, out List<TEntity> newEntities, out List<TEntity> updatedEntities, false))
+            if (ExistsRange(entities, out List<TEntity> existingEntities, out List<TEntity> newEntities, out List<TEntity> updatedEntities, false, token, strat))
             {
                 entitiesToUpdate.AddRange(updatedEntities);
                 entitiesToAdd.AddRange(newEntities);
@@ -149,13 +167,13 @@ namespace MolenApplicatie.Server.Services.Database
                 entitiesToAdd.AddRange(entities);
             }
 
-            await AddRangeAsync(entitiesToAdd);
-            await UpdateRange(entitiesToUpdate);
+            await AddRangeAsync(entitiesToAdd, token);
+            await UpdateRange(entitiesToUpdate, token, strat);
 
             return entitiesToAdd.Concat(entitiesToUpdate).ToList();
         }
 
-        public virtual async Task AddRangeAsync(List<TEntity> entities)
+        public virtual async Task AddRangeAsync(List<TEntity> entities, CancellationToken token = default)
         {
             if (entities == null || !entities.Any()) return;
 
@@ -164,6 +182,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                token.ThrowIfCancellationRequested();
                 if (localEntities.TryGetValue(entity.Id, out var trackedEntity))
                 {
                     if (!ReferenceEquals(trackedEntity, entity))
@@ -173,7 +192,7 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
 
-            await _dbSet.AddRangeAsync(entities);
+            await _dbSet.AddRangeAsync(entities, token);
             _cache.AddRange(entities);
         }
 
@@ -181,8 +200,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             if (entity == null) return;
 
-            TEntity? existingEntity = await GetById(entity.Id);
-            if (existingEntity != null)
+            if (Exists(entity, out TEntity? existingEntity))
             {
                 _dbSet.Remove(existingEntity);
                 _cache.Remove(existingEntity);
@@ -204,7 +222,9 @@ namespace MolenApplicatie.Server.Services.Database
             out List<TEntity> matchingEntities,
             out List<TEntity> newEntities,
             out List<TEntity> updatedEntities,
-            bool searchDB = true);
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch);
 
         public virtual bool Exists(Expression<Func<TEntity, bool>> predicate, out TEntity? existing)
         {
@@ -233,14 +253,15 @@ namespace MolenApplicatie.Server.Services.Database
             out List<TEntity> matchingEntities,
             out List<TEntity> newEntities,
             out List<TEntity> updatedEntities,
-            bool searchDB = true)
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             matchingEntities = new List<TEntity>();
             newEntities = new List<TEntity>();
             updatedEntities = new List<TEntity>();
-
-            if (entities == null || entities.Count == 0)
-                return false;
+            var newEntitiesByKey = new Dictionary<object, TEntity>();
+            if (entities == null || entities.Count == 0) return false;
 
             var keyToEntityMap = new Dictionary<object, TEntity>();
             var alreadyMatched = new HashSet<object>();
@@ -251,6 +272,7 @@ namespace MolenApplicatie.Server.Services.Database
                     .Select(e => e.Entity))
                 .Concat(_dbSet.Local))
             {
+                token.ThrowIfCancellationRequested();
                 var key = matchKeySelector(source);
                 if (!keyToEntityMap.ContainsKey(key))
                     keyToEntityMap[key] = source;
@@ -260,6 +282,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                token.ThrowIfCancellationRequested();
                 var key = matchKeySelector(entity);
 
                 if (keyToEntityMap.TryGetValue(key, out var match))
@@ -268,12 +291,15 @@ namespace MolenApplicatie.Server.Services.Database
                     if (match.Id != Guid.Empty)
                     {
                         entity.Id = match.Id;
+                        if (strat == UpdateStrategy.Ignore) continue;
+                        if (strat == UpdateStrategy.Patch) PatchUtil.Patch(entity, match);
+
                         updatedEntities.Add(entity);
                     }
                 }
                 else
                 {
-                    newEntities.Add(entity);
+                    newEntitiesByKey[key] = entity;
                     keysToQueryFromDb.Add((key, entity, predicateFactory(entity)));
                 }
             }
@@ -281,6 +307,7 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 foreach (var (key, entity, predicate) in keysToQueryFromDb)
                 {
+                    token.ThrowIfCancellationRequested();
                     var match = _dbSet.AsNoTracking().FirstOrDefault(predicate);
                     if (match != null)
                     {
@@ -288,16 +315,28 @@ namespace MolenApplicatie.Server.Services.Database
                         if (match.Id != Guid.Empty)
                         {
                             entity.Id = match.Id;
+                            if (strat == UpdateStrategy.Ignore) continue;
+                            if (strat == UpdateStrategy.Patch) PatchUtil.Patch(entity, match);
+
                             updatedEntities.Add(entity);
                         }
                         _cache.Add(match);
+                        if (newEntitiesByKey.TryGetValue(key, out var currMatch))
+                        {
+                            newEntitiesByKey.Remove(key);
+                        }
                     }
                     else
                     {
-                        newEntities.Add(entity);
+                        if (!newEntitiesByKey.ContainsKey(key))
+                        {
+                            newEntitiesByKey[key] = entity;
+                        }
                     }
                 }
             }
+
+            newEntities = newEntitiesByKey.Values.ToList();
 
             return matchingEntities.Count > 0;
         }

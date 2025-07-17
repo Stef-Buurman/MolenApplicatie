@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -18,7 +19,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Ten_Brugge_Nr == molenTBN.Ten_Brugge_Nr, out existing);
         }
 
-        public override bool ExistsRange(List<MolenTBN> entities, out List<MolenTBN> matchingEntities, out List<MolenTBN> newEntities, out List<MolenTBN> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<MolenTBN> entities, 
+            out List<MolenTBN> matchingEntities, 
+            out List<MolenTBN> newEntities, 
+            out List<MolenTBN> updatedEntities, 
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -27,7 +34,9 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
     }

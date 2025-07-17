@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Utils;
 
@@ -24,7 +25,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.FilePath == molenImage.FilePath, out existing);
         }
 
-        public override bool ExistsRange(List<MolenImage> entities, out List<MolenImage> matchingEntities, out List<MolenImage> newEntities, out List<MolenImage> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<MolenImage> entities, 
+            out List<MolenImage> matchingEntities, 
+            out List<MolenImage> newEntities, 
+            out List<MolenImage> updatedEntities, 
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -33,11 +40,13 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
-        public override async Task<MolenImage> Add(MolenImage molenImage)
+        public override async Task<MolenImage> Add(MolenImage molenImage, CancellationToken token = default)
         {
             bool DoesFileExist = File.Exists(Globals.WWWROOTPath + molenImage.FilePath);
             if (!DoesFileExist && Uri.IsWellFormedUriString(molenImage.ExternalUrl, UriKind.Absolute))
@@ -48,7 +57,7 @@ namespace MolenApplicatie.Server.Services.Database
                 File.WriteAllBytes(Globals.WWWROOTPath + molenImage.FilePath, await _client.GetByteArrayAsync(molenImage.ExternalUrl));
             }
             else if (!DoesFileExist) return molenImage;
-            return await base.Add(molenImage);
+            return await base.Add(molenImage, token);
         }
 
         public async Task<List<MolenImage>> GetImagesOfMolen(Guid MolenId)

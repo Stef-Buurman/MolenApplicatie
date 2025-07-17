@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -45,7 +47,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
         }
 
-        public override bool ExistsRange(List<MolenData> entities, out List<MolenData> matchingEntities, out List<MolenData> newEntities, out List<MolenData> updatedEntities, bool searchDB = true)
+        public override bool ExistsRange(List<MolenData> entities, 
+            out List<MolenData> matchingEntities, 
+            out List<MolenData> newEntities, 
+            out List<MolenData> updatedEntities, 
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -54,11 +62,13 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
-        public override async Task<MolenData> Add(MolenData molenData)
+        public override async Task<MolenData> Add(MolenData molenData, CancellationToken token = default)
         {
             var TypeAss = molenData.MolenTypeAssociations.ToList();
             var images = molenData.Images.ToList();
@@ -66,12 +76,12 @@ namespace MolenApplicatie.Server.Services.Database
             var addedImages = molenData.AddedImages.ToList();
             var dissappearedYears = molenData.DisappearedYearInfos.ToList();
             var tbn = molenData.MolenTBN;
-            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages);
-            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears);
-            images = await _dBMolenImageService.AddOrUpdateRange(images);
-            makers = await _dBMolenMakerService.AddOrUpdateRange(makers);
-            tbn = await _dBMolenTBNService.AddOrUpdate(tbn);
-            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss);
+            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages, token);
+            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears, token);
+            images = await _dBMolenImageService.AddOrUpdateRange(images, token);
+            makers = await _dBMolenMakerService.AddOrUpdateRange(makers, token);
+            tbn = await _dBMolenTBNService.AddOrUpdate(tbn, token);
+            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss, token);
 
             molenData.AddedImages.Clear();
             molenData.DisappearedYearInfos.Clear();
@@ -80,7 +90,7 @@ namespace MolenApplicatie.Server.Services.Database
             molenData.MolenTypeAssociations.Clear();
             molenData.MolenTBN = null!;
 
-            await base.Add(molenData);
+            await base.Add(molenData, token);
 
             molenData.AddedImages = addedImages;
             molenData.DisappearedYearInfos = dissappearedYears;
@@ -92,7 +102,7 @@ namespace MolenApplicatie.Server.Services.Database
             return molenData;
         }
 
-        public override async Task<MolenData> Update(MolenData molenData)
+        public override async Task<MolenData> Update(MolenData molenData, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             var TypeAss = molenData.MolenTypeAssociations.ToList();
             var images = molenData.Images.ToList();
@@ -108,10 +118,10 @@ namespace MolenApplicatie.Server.Services.Database
             molenData.MolenTypeAssociations.Clear();
             molenData.MolenTBN = null!;
 
-            tbn = await _dBMolenTBNService.AddOrUpdate(tbn);
+            tbn = await _dBMolenTBNService.AddOrUpdate(tbn, token, strat);
             molenData.MolenTBNId = tbn.Id;
 
-            molenData = await base.Update(molenData);
+            molenData = await base.Update(molenData, token, strat);
 
             images.ForEach(mak =>
             {
@@ -137,11 +147,11 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 mak.MolenData = molenData;
             });
-            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss);
-            images = await _dBMolenImageService.AddOrUpdateRange(images);
-            makers = await _dBMolenMakerService.AddOrUpdateRange(makers);
-            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages);
-            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears);
+            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss, token, strat);
+            images = await _dBMolenImageService.AddOrUpdateRange(images, token, strat);
+            makers = await _dBMolenMakerService.AddOrUpdateRange(makers, token, strat);
+            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages, token, strat);
+            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears, token, strat);
             molenData.AddedImages = addedImages;
             molenData.DisappearedYearInfos = dissappearedYears;
             molenData.Images = images;
@@ -151,7 +161,7 @@ namespace MolenApplicatie.Server.Services.Database
             return molenData;
         }
 
-        public override async Task<List<MolenData>> AddOrUpdateRange(List<MolenData> entities)
+        public override async Task<List<MolenData>> AddOrUpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
@@ -162,11 +172,18 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                token.ThrowIfCancellationRequested();
                 var existingEntity = existing.FirstOrDefault(e => e.Equals(entity));
                 if (existingEntity != null)
                 {
+                    if (strat == UpdateStrategy.Ignore)
+                        continue;
+
                     if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
                         entity.Id = existingEntity.Id;
+
+                    if (strat == UpdateStrategy.Patch)
+                        PatchUtil.Patch(entity, existingEntity);
 
                     toUpdate.Add(entity);
                 }
@@ -176,13 +193,13 @@ namespace MolenApplicatie.Server.Services.Database
                 }
             }
 
-            await UpdateRange(toUpdate);
-            await AddRangeAsync(toAdd);
+            await UpdateRange(toUpdate, token, strat);
+            await AddRangeAsync(toAdd, token);
 
             return toUpdate.Concat(toAdd).ToList();
         }
 
-        public virtual async Task<List<MolenData>> UpdateRange(List<MolenData> entities)
+        public override async Task<List<MolenData>> UpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
@@ -190,7 +207,7 @@ namespace MolenApplicatie.Server.Services.Database
             var entitiesCopy = entities.ToList();
 
             var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
-            allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs);
+            allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs, token, strat);
 
             var allTypeAssMolens = new Dictionary<Guid, List<MolenTypeAssociation>>();
             var allImagesMolens = new Dictionary<Guid, List<MolenImage>>();
@@ -307,7 +324,7 @@ namespace MolenApplicatie.Server.Services.Database
         }
 
 
-        public override async Task AddRangeAsync(List<MolenData> entities)
+        public override async Task AddRangeAsync(List<MolenData> entities, CancellationToken token = default)
         {
             if (entities == null || entities.Count() == 0) return;
             var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
@@ -319,7 +336,7 @@ namespace MolenApplicatie.Server.Services.Database
             Dictionary<string, List<AddedImage>> allAddedImagesMolens = new Dictionary<string, List<AddedImage>>();
             Dictionary<string, List<DisappearedYearInfo>> allDisappearedYearsMolens = new Dictionary<string, List<DisappearedYearInfo>>();
 
-            allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs);
+            allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs, token);
             List<MolenData> entitiesToAdd = new List<MolenData>();
 
             foreach (var entity in entities)
@@ -365,7 +382,7 @@ namespace MolenApplicatie.Server.Services.Database
                 entity.DisappearedYearInfos = null;
                 entitiesToAdd.Add(entity);
             }
-            await _dbSet.AddRangeAsync(entitiesToAdd);
+            await _dbSet.AddRangeAsync(entitiesToAdd, token);
             _cache.AddRange(entitiesToAdd);
 
             void Attach<T>(Dictionary<string, List<T>> all, Func<string, Guid?> getForeignKey, Action<T, Guid> setForeignKey)
@@ -446,11 +463,11 @@ namespace MolenApplicatie.Server.Services.Database
                 .Where(x => x != null)
                 .ToList();
 
-            await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAssToAdd);
-            await _dBMolenImageService.AddOrUpdateRange(allImagesToAdd);
-            await _dBMolenMakerService.AddOrUpdateRange(allMakersToAdd);
-            await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImagesToAdd);
-            await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYearsToAdd);
+            await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAssToAdd, token);
+            await _dBMolenImageService.AddOrUpdateRange(allImagesToAdd, token);
+            await _dBMolenMakerService.AddOrUpdateRange(allMakersToAdd, token);
+            await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImagesToAdd, token);
+            await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYearsToAdd, token);
         }
 
         public async Task CheckToDeleteProperties(List<MolenData> molens)

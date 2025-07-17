@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
 
 namespace MolenApplicatie.Server.Services.Database
@@ -20,7 +21,13 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Name == molenMaker.Name && e.Year == molenMaker.Year && e.MolenDataId == molenMaker.MolenDataId, out existing);
         }
 
-        public override bool ExistsRange(List<MolenMaker> entities, out List<MolenMaker> matchingEntities, out List<MolenMaker> newEntities, out List<MolenMaker> updatedEntities, bool searchDB)
+        public override bool ExistsRange(List<MolenMaker> entities, 
+            out List<MolenMaker> matchingEntities, 
+            out List<MolenMaker> newEntities, 
+            out List<MolenMaker> updatedEntities, 
+            bool searchDB,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
         {
             return ExistsRange(
                 entities,
@@ -29,7 +36,9 @@ namespace MolenApplicatie.Server.Services.Database
                 out matchingEntities,
                 out newEntities,
                 out updatedEntities,
-                searchDB
+                searchDB,
+                token,
+                strat
             );
         }
 
