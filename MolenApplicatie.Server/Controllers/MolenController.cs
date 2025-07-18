@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MolenApplicatie.Server.Filters;
+using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services;
 
@@ -33,6 +34,17 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(molenData);
         }
 
+        [HttpGet("mapdata")]
+        public async Task<IActionResult> GetAllMolenMapData(
+            [FromQuery] string? MolenType,
+            [FromQuery] string? Provincie,
+            [FromQuery] string? MolenState,
+            [FromQuery] string Type = "molens")
+        {
+            var molenData = _MolenService.GetMapData(MolenType, Provincie, MolenState);
+            return Ok(await _MolenService.MolensResponse(molenData));
+        }
+
         [HttpGet("active")]
         public async Task<IActionResult> GetAllActiveMolens()
         {
@@ -60,13 +72,6 @@ namespace MolenApplicatie.Server.Controllers
         {
             var molenData = _MolenService.GetAllRemainderMolens();
             return Ok(await _MolenService.MolensResponse(molenData));
-        }
-
-        [HttpGet("all_molen_locations")]
-        public async Task<IActionResult> GetAllMolenLocations()
-        {
-            var locations = await _MolenService.GetAllMolenLatLon();
-            return Ok(locations);
         }
 
         [HttpGet("provincies")]

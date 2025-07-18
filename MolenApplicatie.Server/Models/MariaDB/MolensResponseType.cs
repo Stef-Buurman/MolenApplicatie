@@ -1,6 +1,6 @@
 ﻿namespace MolenApplicatie.Server.Models.MariaDB
 {
-    public class MolensResponseType
+    public class MolensResponseType<T>
     {
         public int ActiveMolensWithImage { get; set; }
         public int RemainderMolensWithImage { get; set; }
@@ -10,7 +10,7 @@
         public List<CountDisappearedMolens> TotalCountDisappearedMolens { get; set; }
         public int TotalCountExistingMolens { get; set; }
         public int TotalCountMolens { get; set; }
-        public List<MolenData> Molens { get; set; }
+        public List<T> Molens { get; set; }
     }
 
     public class CountDisappearedMolens
