@@ -81,7 +81,7 @@ namespace MolenApplicatie.Server.Services
             List<Place> places = JsonSerializer.Deserialize<List<Place>>(jsonString)!;
             var startTime = DateTime.Now;
             Console.WriteLine("Saving progress...");
-            await _dBPlaceService.AddOrUpdateRange(places);
+            await _dBPlaceService.AddOrUpdateRange(places, default, Enums.UpdateStrategy.Ignore);
             var midTime = DateTime.Now;
             //var changes = await _dbContext.SaveChangesAsync();
             var endTime = DateTime.Now;
