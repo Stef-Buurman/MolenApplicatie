@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
@@ -8,17 +8,17 @@ import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { MolenData } from '../../Interfaces/Models/MolenData';
 import { Place } from '../../Interfaces/Models/Place';
 import { ErrorService } from '../../Services/ErrorService';
-import { MapService } from '../../Services/MapService';
-import { MolenService } from '../../Services/MolenService';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
 import { FilterMapComponent } from '../dialogs/filter-map/filter-map.component';
-
+import { FilterFormValues } from '../../Interfaces/Filters/Filter';
+import { MapService2_0 } from '../../Services/MapService2-0';
+import { MolenService2_0 } from '../../Services/MolenService2_0';
 
 @Component({
-  selector: 'app-root',
+  selector: 'layout',
   templateUrl: './root.component.html',
-  styleUrl: './root.component.scss'
+  styleUrl: './root.component.scss',
 })
 export class RootComponent {
   visible: boolean = false;
@@ -28,30 +28,37 @@ export class RootComponent {
   private NewMolensLastExecutionTime: number | null = null;
   private UpdateLastExecutionTime: number | null = null;
   private readonly cooldownTime = 10 * 60 * 1000;
+  private currentFilters: FilterFormValues[] = [];
 
   get error(): boolean {
     return this.errors.HasError;
   }
 
   get getMolenWithImageAmount(): number | undefined {
-    return this.molenService.getActiveMolenWithImageAmount();
+    return this.molenService.molensWithImageAmount;
   }
 
-  constructor(private route: ActivatedRoute,
+  @Input() onFilterChange!: (filters: FilterFormValues[]) => void;
+
+  constructor(
+    private route: ActivatedRoute,
     private toasts: Toasts,
     private http: HttpClient,
     private dialog: MatDialog,
     private errors: ErrorService,
-    private molenService: MolenService,
-    private router: Router,
-    private mapService: MapService) { }
+    private molenService: MolenService2_0,
+    private mapService: MapService2_0
+  ) {}
 
   onPlaceChange(selectedPlace: Place) {
     if (!selectedPlace && this.selectedPlace) return;
     else if (!selectedPlace) selectedPlace = this.selectedPlace;
     var zoom: number = 13;
     if (selectedPlace.population == 0) zoom = 15;
-    this.mapService.setView([selectedPlace.latitude, selectedPlace.longitude], zoom);
+    this.mapService.setView(
+      [selectedPlace.latitude, selectedPlace.longitude],
+      zoom
+    );
   }
 
   openInfoMenu() {
@@ -60,7 +67,19 @@ export class RootComponent {
 
   filterMap() {
     const dialogRef = this.dialog.open(FilterMapComponent, {
-      panelClass: 'filter-map'
+      panelClass: 'filter-map',
+      data: {
+        filters: this.currentFilters,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe({
+      next: (result: FilterFormValues[] | undefined) => {
+        if (result) {
+          this.onFilterChange(result);
+          this.currentFilters = result;
+        }
+      },
     });
   }
 
@@ -69,65 +88,79 @@ export class RootComponent {
       data: {
         title: 'Molens updaten',
         message: 'Weet je zeker dat je de oudste molens wilt updaten?',
-        api_key_usage: true
-      } as ConfirmationDialogData
+        api_key_usage: true,
+      } as ConfirmationDialogData,
     });
 
     dialogRef.afterClosed().subscribe({
       next: (result: DialogReturnType) => {
         var previousLastExcecutionTime = this.UpdateLastExecutionTime;
         if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
-
           const headers = new HttpHeaders({
-            'Authorization': result.api_key,
+            Authorization: result.api_key,
           });
 
           const currentTime = Date.now();
-          if (this.UpdateLastExecutionTime && currentTime - this.UpdateLastExecutionTime < this.cooldownTime) {
-            this.toasts.showWarning("Dit kan eens elke 30 minuten!");
+          if (
+            this.UpdateLastExecutionTime &&
+            currentTime - this.UpdateLastExecutionTime < this.cooldownTime
+          ) {
+            this.toasts.showWarning('Dit kan eens elke 30 minuten!');
             return;
           }
 
           var isDone: boolean = false;
 
-          this.toasts.showInfo("Molens worden geupdate... (Dit kan even duren)");
+          this.toasts.showInfo(
+            'Molens worden geupdate... (Dit kan even duren)'
+          );
 
-          this.http.get<MolenData[]>('/api/update_oldest_molens', { headers }).subscribe({
-            next: (result) => {
-              this.toasts.showSuccess("Er zijn " + result.length + " molens geupdate.");
-            },
-            error: (error) => {
-              isDone = true;
-              if (error.status == 401) {
-                this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
-              }
-              else if (error) {
-                this.toasts.showError(error.error);
-              }
+          this.http
+            .get<MolenData[]>('/api/update_oldest_molens', { headers })
+            .subscribe({
+              next: (result) => {
+                this.toasts.showSuccess(
+                  'Er zijn ' + result.length + ' molens geupdate.'
+                );
+              },
+              error: (error) => {
+                isDone = true;
+                if (error.status == 401) {
+                  this.toasts.showError(
+                    'Je hebt een verkeerde api_key ingevuld!'
+                  );
+                } else if (error) {
+                  this.toasts.showError(error.error);
+                }
 
-              this.UpdateLastExecutionTime = previousLastExcecutionTime;
-            },
-            complete: () => {
-              isDone = true;
-            }
-          });
+                this.UpdateLastExecutionTime = previousLastExcecutionTime;
+              },
+              complete: () => {
+                isDone = true;
+              },
+            });
 
           setTimeout(() => {
             if (!isDone) {
-              this.toasts.showInfo("Jaja, ik ben nog bezig voor je.");
+              this.toasts.showInfo('Jaja, ik ben nog bezig voor je.');
             }
           }, 15000);
 
           this.UpdateLastExecutionTime = currentTime;
+        } else if (
+          result.status == DialogReturnStatus.Confirmed &&
+          !result.api_key
+        ) {
+          this.toasts.showWarning(
+            'Er is geen api key ingevuld, er is niets gebeurt!'
+          );
+        } else if (result.status == DialogReturnStatus.Error) {
+          this.toasts.showError(
+            'Er is iets fout gegaan met het updaten van de molens!'
+          );
         }
-        else if (result.status == DialogReturnStatus.Confirmed && !result.api_key) {
-          this.toasts.showWarning("Er is geen api key ingevuld, er is niets gebeurt!");
-        }
-        else if (result.status == DialogReturnStatus.Error) {
-          this.toasts.showError("Er is iets fout gegaan met het updaten van de molens!");
-        }
-      }
-    })
+      },
+    });
   }
 
   searchForNewMolens() {
@@ -135,73 +168,90 @@ export class RootComponent {
       data: {
         title: 'Nieuwe molens',
         message: 'Weet je zeker dat je voor nieuwe molens wilt zoeken?',
-        api_key_usage: true
-      } as ConfirmationDialogData
+        api_key_usage: true,
+      } as ConfirmationDialogData,
     });
 
     dialogRef.afterClosed().subscribe({
       next: (result: DialogReturnType) => {
         var previousLastExcecutionTime = this.UpdateLastExecutionTime;
         if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
-
           const headers = new HttpHeaders({
-            'Authorization': result.api_key,
+            Authorization: result.api_key,
           });
 
           const currentTime = Date.now();
-          if (this.NewMolensLastExecutionTime && currentTime - this.NewMolensLastExecutionTime < this.cooldownTime) {
-            this.toasts.showWarning("Dit kan eens elke 60 minuten!");
+          if (
+            this.NewMolensLastExecutionTime &&
+            currentTime - this.NewMolensLastExecutionTime < this.cooldownTime
+          ) {
+            this.toasts.showWarning('Dit kan eens elke 60 minuten!');
             return;
           }
 
           var isDone: boolean = false;
 
-          this.toasts.showInfo("Nieuwe molens worden gezocht... (Dit kan even duren)");
+          this.toasts.showInfo(
+            'Nieuwe molens worden gezocht... (Dit kan even duren)'
+          );
 
-          this.http.get<MolenData[]>('/api/search_for_new_molens', { headers }).subscribe({
-            next: (result: MolenData[]) => {
-              if (result.length == 0) {
-                this.toasts.showInfo("Er zijn geen nieuwe molens gevonden!");
-              }
-              else if (result.length == 1) {
-                this.toasts.showSuccess("Er is " + result.length + " nieuwe molen gevonden!");
-                this.mapService.setView([result[0].latitude, result[0].longitude], 13);
-              }
-              else {
-                this.toasts.showSuccess("Er zijn " + result.length + " nieuwe molens gevonden!");
-              }
-            },
-            error: (error) => {
-              isDone = true;
-              if (error.status == 401) {
-                this.toasts.showError("Je hebt een verkeerde api_key ingevuld!");
-              }
-              else if (error) {
-                this.toasts.showError(error.error);
-              }
+          this.http
+            .get<MolenData[]>('/api/search_for_new_molens', { headers })
+            .subscribe({
+              next: (result: MolenData[]) => {
+                if (result.length == 0) {
+                  this.toasts.showInfo('Er zijn geen nieuwe molens gevonden!');
+                } else if (result.length == 1) {
+                  this.toasts.showSuccess(
+                    'Er is ' + result.length + ' nieuwe molen gevonden!'
+                  );
+                  this.mapService.setView(
+                    [result[0].latitude, result[0].longitude],
+                    13
+                  );
+                } else {
+                  this.toasts.showSuccess(
+                    'Er zijn ' + result.length + ' nieuwe molens gevonden!'
+                  );
+                }
+              },
+              error: (error) => {
+                isDone = true;
+                if (error.status == 401) {
+                  this.toasts.showError(
+                    'Je hebt een verkeerde api_key ingevuld!'
+                  );
+                } else if (error) {
+                  this.toasts.showError(error.error);
+                }
 
-              this.UpdateLastExecutionTime = currentTime;
-            },
-            complete: () => {
-              isDone = true;
-            }
-          });
+                this.UpdateLastExecutionTime = currentTime;
+              },
+              complete: () => {
+                isDone = true;
+              },
+            });
 
           setTimeout(() => {
             if (!isDone) {
-              this.toasts.showInfo("Jaja, ik ben nog bezig voor je.");
+              this.toasts.showInfo('Jaja, ik ben nog bezig voor je.');
             }
           }, 15000);
 
           this.NewMolensLastExecutionTime = currentTime;
+        } else if (
+          result.status == DialogReturnStatus.Confirmed &&
+          !result.api_key
+        ) {
+          this.toasts.showWarning(
+            'Er is geen api key ingevuld, er is niets gebeurt!'
+          );
+        } else if (result.status == DialogReturnStatus.Error) {
+          this.toasts.showError(
+            'Er is iets fout gegaan met het updaten van de molens!'
+          );
         }
-        else if (result.status == DialogReturnStatus.Confirmed && !result.api_key) {
-          this.toasts.showWarning("Er is geen api key ingevuld, er is niets gebeurt!");
-        }
-        else if (result.status == DialogReturnStatus.Error) {
-          this.toasts.showError("Er is iets fout gegaan met het updaten van de molens!");
-        }
-      }
-    })
+      },
+    });
   }
 }

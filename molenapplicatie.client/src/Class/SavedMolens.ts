@@ -1,4 +1,4 @@
-import { MolenData } from "../Interfaces/MolenData";
+import { MolenData } from "../Interfaces/Models/MolenData";
 
 export class SavedMolens {
   LastUpdatedTimestamp: number;
