@@ -9,48 +9,60 @@
     </div>
   </div>
 </section>
+
 <div class="filter-container">
-  <input type="radio"
-         name="options"
-         id="active"
-         [value]="'active'"
-         [(ngModel)]="selectedOption" />
-  <label for="active">
-    Actieve molens
-  </label>
+  <label for="toestand-select">Toestand</label>
+  <select
+    id="toestand-select"
+    class="provincie-dropdown"
+    [(ngModel)]="selectedFilter.toestand"
+  >
+    <option value="">Alle toestanden</option>
+    <option
+      *ngFor="let toestand of molenFilters.toestanden"
+      [value]="toestand.name.toLowerCase()"
+    >
+      {{ toestand.name }} <span class="count">({{ toestand.count }})</span>
+    </option>
+  </select>
+
+  <label for="provincie-select">Provincie</label>
+  <select
+    id="provincie-select"
+    class="provincie-dropdown"
+    [(ngModel)]="selectedFilter.provincie"
+  >
+    <option value="">Alle provincies</option>
+    <option
+      *ngFor="let prov of molenFilters.provincies"
+      [value]="prov.name.toLowerCase()"
+    >
+      {{ prov.name }} <span class="count">({{ prov.count }})</span>
+    </option>
+  </select>
+
+  <label for="type-select">Type</label>
+  <select
+    id="type-select"
+    class="provincie-dropdown"
+    [(ngModel)]="selectedFilter.type"
+  >
+    <option value="">Alle types</option>
+    <option
+      *ngFor="let type of molenFilters.types"
+      [value]="type.name.toLowerCase()"
+    >
+      {{ type.name }} <span class="count">({{ type.count }})</span>
+    </option>
+  </select>
+
   <br />
-  <input type="radio"
-         name="options"
-         id="remainder"
-         [value]="'remainder'"
-         [(ngModel)]="selectedOption" />
-  <label for="remainder">
-    Overblijfselen
-  </label>
-  <br />
-  <input type="radio"
-         name="options"
-         id="existing"
-         [value]="'existing'"
-         [(ngModel)]="selectedOption" />
-  <label for="existing">
-    Alle bestaande molens
-  </label>
-  <br />
-  <input type="radio"
-         name="options"
-         id="disappeared"
-         [value]="'disappeared'"
-         [(ngModel)]="selectedOption" />
-  <label for="disappeared">
-    Verdwenen
-  </label>
-  <div *ngIf="selectedOption == 'disappeared'">
-    <select class="provincie-dropdown" [(ngModel)]="provincie">
-      <option value="">Kies een provincie</option>
-      <option *ngFor="let prov of provincies" [value]="prov.toLowerCase()">{{ prov }}</option>
-    </select>
-  </div>
-  <br />
-  <button class="default-button filter-button {{selectedOption == 'disappeared' ? '' : 'add-margin-to-btn'}}" (click)="filterMap()">Filter</button>
+  <button
+    class="default-button filter-button {{
+      selectedFilter.toestand == 'verdwenen' ? '' : 'add-margin-to-btn'
+    }}"
+    (click)="filterMap()"
+  >
+    Filter
+  </button>
 </div>

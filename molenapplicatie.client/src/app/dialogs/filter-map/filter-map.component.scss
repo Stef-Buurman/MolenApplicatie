@@ -39,7 +39,6 @@
   width: 200px;
 }
 
-
 .provincie-dropdown {
   appearance: none;
   background-color: #ffffff;
@@ -68,6 +67,20 @@
   background-color: #ffffff;
   color: #333;
 }
+
+.provincie-dropdown .count {
+  font-size: 0.8em;
+  color: #666;
+  margin-left: 5px;
+}
+
+.filter-container label {
+  display: block;
+  font-weight: bold;
+  margin: 15px auto 5px;
+  text-align: left;
+}
+
 
 .add-margin-to-btn {
   margin-top: 60px;
