@@ -52,7 +52,7 @@ namespace MolenApplicatie.Server.Services
             List<MolenData> molens = JsonSerializer.Deserialize<List<MolenData>>(jsonString)!;
             var startTime = DateTime.Now;
             Console.WriteLine("Saving progress...");
-            await _dBMolenDataService.AddOrUpdateRange(molens);
+            await _dBMolenDataService.AddOrUpdateRange(molens, default, Enums.UpdateStrategy.Ignore);
             var midTime = DateTime.Now;
             //var changes = await _dbContext.SaveChangesAsync();
             var endTime = DateTime.Now;
