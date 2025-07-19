@@ -6,6 +6,7 @@
         public static readonly string Verdwenen = "Verdwenen";
         public static readonly string Restant = "Restant";
         public static readonly string InAanbouw = "In aanbouw";
+        public static readonly string Bestaande = "Bestaande";
 
         public static string? From(string? input)
         {
@@ -20,6 +21,7 @@
                 "restant" => Restant,
                 "in aanbouw" => InAanbouw,
                 "inaanbouw" => InAanbouw,
+                "bestaande" => Bestaande,
                 _ => null
             };
         }

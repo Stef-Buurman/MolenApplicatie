@@ -81,6 +81,12 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(provincies);
         }
 
+        [HttpGet("filters")]
+        public async Task<IActionResult> GetMolenFilters()
+        {
+            return Ok(await _MolenService.GetMolenFilters());
+        }
+
         [HttpGet("{tbNumber}")]
         public async Task<IActionResult> GetMolenDataByTBNumber(string tbNumber)
         {

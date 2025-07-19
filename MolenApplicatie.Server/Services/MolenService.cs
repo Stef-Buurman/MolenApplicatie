@@ -96,12 +96,36 @@ namespace MolenApplicatie.Server.Services
             }
             else
             {
-                MolenState ??= MolenToestand.Werkend;
+                MolenState = null;
+            }
+
+            if (MolenState == null)
+            {
+                MolenState = MolenToestand.Werkend;
             }
 
             if (!string.IsNullOrWhiteSpace(MolenState))
             {
-                mapData = mapData.Where(m => m.Toestand != null && m.Toestand.ToLower() == MolenState.ToLower());
+                if (MolenToestand.Equals(MolenState, MolenToestand.Bestaande))
+                {
+                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand != MolenToestand.Verdwenen);
+                }
+                else if (MolenToestand.Equals(MolenState, MolenToestand.Verdwenen))
+                {
+                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand == MolenToestand.Verdwenen);
+                    if (!string.IsNullOrWhiteSpace(Provincie) && _dbContext.MolenData.Any(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower()))
+                    {
+                        mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower());
+                    }
+                    else
+                    {
+                        mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == "zuid-holland");
+                    }
+                }
+                else
+                {
+                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand.ToLower() == MolenState.ToLower());
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(MolenType))
@@ -130,15 +154,60 @@ namespace MolenApplicatie.Server.Services
             }).ToList();
         }
 
-        public async Task<List<string>> GetAllMolenProvincies()
+        public async Task<List<ValueName>> GetAllMolenProvincies()
         {
             var provincies = await _dbContext.MolenData
-                    .Select(m => m.Provincie)
-                    .Distinct().ToListAsync();
-            return provincies
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Select(p => p!)
-                .ToList();
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Provincie))
+                    .GroupBy(m => m.Provincie)
+                    .Select(g => new ValueName
+                    {
+                        Name = g.Key ?? string.Empty,
+                        Count = g.Count()
+                    })
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
+            return provincies.ToList();
+        }
+
+        public async Task<List<ValueName>> GetAllMolenTypes()
+        {
+            var types = await _dbContext.MolenData
+                    .SelectMany(m => m.MolenTypeAssociations.Select(mt => mt.MolenType.Name))
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .GroupBy(t => t)
+                    .Select(g => new ValueName
+                    {
+                        Name = g.Key,
+                        Count = g.Count()
+                    })
+                    .OrderBy(t => t.Name)
+                    .ToListAsync();
+            return types.ToList();
+        }
+
+        public async Task<List<ValueName>> GetAllMolenConditions()
+        {
+            var conditions = await _dbContext.MolenData
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Toestand))
+                    .GroupBy(m => m.Toestand)
+                    .Select(g => new ValueName
+                    {
+                        Name = g.Key ?? string.Empty,
+                        Count = g.Count()
+                    })
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+            return conditions.ToList();
+        }
+
+        public async Task<MolenFilters> GetMolenFilters()
+        {
+            return new MolenFilters
+            {
+                Provincies = await GetAllMolenProvincies(),
+                Toestanden = await GetAllMolenConditions(),
+                Types = await GetAllMolenTypes()
+            };
         }
 
         public List<MolenData> GetAllMolenDataByProvincie(string provincie)
@@ -359,19 +428,19 @@ namespace MolenApplicatie.Server.Services
 
         private async Task<List<CountDisappearedMolens>> GetCountOfDisappearedMolens()
         {
-            List<string> provincies = await GetAllMolenProvincies();
+            List<ValueName> provincies = await GetAllMolenProvincies();
             List<CountDisappearedMolens> disappearedMolens = new List<CountDisappearedMolens>();
-            foreach (string provincie in provincies)
+            foreach (ValueName provincie in provincies)
             {
                 int count = await _dbContext.MolenData
                     .Where(m => m.Toestand == MolenToestand.Verdwenen &&
                                 m.Provincie != null &&
-                                EF.Functions.Like(m.Provincie.ToLower(), provincie.ToLower()))
+                                EF.Functions.Like(m.Provincie.ToLower(), provincie.Name.ToLower()))
                     .CountAsync();
 
                 disappearedMolens.Add(new CountDisappearedMolens
                 {
-                    Provincie = provincie,
+                    Provincie = provincie.Name,
                     Count = count
                 });
             }
