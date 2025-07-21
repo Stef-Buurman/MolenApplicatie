@@ -25,10 +25,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);
         }
 
-        public override bool ExistsRange(List<MolenTypeAssociation> entities, 
-            out List<MolenTypeAssociation> matchingEntities, 
-            out List<MolenTypeAssociation> newEntities, 
-            out List<MolenTypeAssociation> updatedEntities, 
+        public override bool ExistsRange(List<MolenTypeAssociation> entities,
+            out List<MolenTypeAssociation> matchingEntities,
+            out List<MolenTypeAssociation> newEntities,
+            out List<MolenTypeAssociation> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)
@@ -110,14 +110,14 @@ namespace MolenApplicatie.Server.Services.Database
                 if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
                 {
                     entity.MolenTypeId = entity.MolenType.Id;
-                    entity.MolenType = null;
                 }
+                entity.MolenType = null;
 
                 if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
                 {
                     entity.MolenDataId = entity.MolenData.Id;
-                    entity.MolenData = null;
                 }
+                entity.MolenData = null;
             }
 
             if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities, false, token, strat))

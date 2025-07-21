@@ -2,7 +2,6 @@
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Enums;
 using MolenApplicatie.Server.Models.MariaDB;
-using MolenApplicatie.Server.Utils;
 
 namespace MolenApplicatie.Server.Services.Database
 {
@@ -47,10 +46,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Ten_Brugge_Nr == molenData.Ten_Brugge_Nr, out existing);
         }
 
-        public override bool ExistsRange(List<MolenData> entities, 
-            out List<MolenData> matchingEntities, 
-            out List<MolenData> newEntities, 
-            out List<MolenData> updatedEntities, 
+        public override bool ExistsRange(List<MolenData> entities,
+            out List<MolenData> matchingEntities,
+            out List<MolenData> newEntities,
+            out List<MolenData> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)
@@ -163,43 +162,6 @@ namespace MolenApplicatie.Server.Services.Database
             return molenData;
         }
 
-        public override async Task<List<MolenData>> AddOrUpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
-        {
-            if (entities == null || entities.Count == 0)
-                return entities;
-
-            var existing = await _cache.GetAllAsync();
-            var toAdd = new List<MolenData>();
-            var toUpdate = new List<MolenData>();
-
-            foreach (var entity in entities)
-            {
-                token.ThrowIfCancellationRequested();
-                var existingEntity = existing.FirstOrDefault(e => e.Equals(entity));
-                if (existingEntity != null)
-                {
-                    if (strat == UpdateStrategy.Ignore)
-                        continue;
-
-                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
-                        entity.Id = existingEntity.Id;
-
-                    if (strat == UpdateStrategy.Patch)
-                        PatchUtil.Patch(entity, existingEntity);
-
-                    toUpdate.Add(entity);
-                }
-                else
-                {
-                    toAdd.Add(entity);
-                }
-            }
-
-            await UpdateRange(toUpdate, token, strat);
-            await AddRangeAsync(toAdd, token);
-
-            return toUpdate.Concat(toAdd).ToList();
-        }
 
         public override async Task<List<MolenData>> UpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
@@ -217,7 +179,7 @@ namespace MolenApplicatie.Server.Services.Database
             var allAddedImagesMolens = new Dictionary<Guid, List<AddedImage>>();
             var allDisappearedYearsMolens = new Dictionary<Guid, List<DisappearedYearInfo>>();
 
-            var trackedEntities = _context.ChangeTracker.Entries<MolenData>().ToDictionary(e => e.Entity.Ten_Brugge_Nr);
+            var trackedEntities = _context.ChangeTracker.Entries<MolenData>().ToDictionary(e => e.Entity.Id);
 
             foreach (var entity in entities)
             {
@@ -233,12 +195,6 @@ namespace MolenApplicatie.Server.Services.Database
                 allMakersMolens[entity.Id] = entity.MolenMakers?.ToList() ?? new();
                 allAddedImagesMolens[entity.Id] = entity.AddedImages?.ToList() ?? new();
                 allDisappearedYearsMolens[entity.Id] = entity.DisappearedYearInfos?.ToList() ?? new();
-                if (trackedEntities.TryGetValue(entity.Ten_Brugge_Nr, out var trackedEntity))
-                {
-                    trackedEntity.State = EntityState.Detached;
-                }
-
-                _context.Entry(entity).State = EntityState.Modified;
 
                 entity.MolenTypeAssociations = null;
                 entity.Images = null;
@@ -314,11 +270,25 @@ namespace MolenApplicatie.Server.Services.Database
             var allMakers = allMakersMolens.SelectMany(x => x.Value).ToList();
             var allAddedImages = allAddedImagesMolens.SelectMany(x => x.Value).ToList();
             var allDisappearedYears = allDisappearedYearsMolens.SelectMany(x => x.Value).ToList();
-            await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAss);
-            await _dBMolenImageService.AddOrUpdateRange(allImages);
-            await _dBMolenMakerService.AddOrUpdateRange(allMakers);
-            await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImages);
-            await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYears);
+            await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAss, token, strat);
+            await _dBMolenImageService.AddOrUpdateRange(allImages, token, strat);
+            await _dBMolenMakerService.AddOrUpdateRange(allMakers, token, strat);
+            await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImages, token, strat);
+            await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYears, token, strat);
+            foreach (var entity in entities.DistinctBy(e => e.Id))
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (trackedEntities.TryGetValue(entity.Id, out var trackedEntity))
+                {
+                    trackedEntity.State = EntityState.Detached;
+                }
+
+                _context.Attach(entity);
+                _context.Entry(entity).State = EntityState.Modified;
+            }
+
+
             _dbSet.UpdateRange(entities);
             _cache.UpdateRange(entities);
 
@@ -326,7 +296,6 @@ namespace MolenApplicatie.Server.Services.Database
 
             return entities;
         }
-
 
         public override async Task AddRangeAsync(List<MolenData> entities, CancellationToken token = default)
         {
