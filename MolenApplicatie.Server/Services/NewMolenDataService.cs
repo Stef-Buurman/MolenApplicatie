@@ -73,13 +73,16 @@ namespace MolenApplicatie.Server.Services
         {
             _dbContext.ChangeTracker.Clear();
             List<string> fileNames = Directory.GetFiles("Json/Responses").ToList();
-
+            // List<string> fileNames = new List<string>()
+            // {
+            //     "Json/Responses/03526-b.json"
+            // };
             List<MolenData> allNewMolenData = new List<MolenData>();
             List<MolenData> TotalMolenData = new List<MolenData>();
             List<string> allMolenTBN = fileNames.Select(Path.GetFileNameWithoutExtension).ToList();
+            // List<string> allMolenTBN = new List<string>(){"03526-b"};
             List<MolenData> allOldMolenData = _molenService.GetMolensByTBN(allMolenTBN);
             var allOldMolenDataWithTBN = await _dBMolenDataService.GetAllAsync();
-            Console.WriteLine("Found " + allOldMolenDataWithTBN.Count + " molens in database with TBN.");
             var molenDict = allOldMolenDataWithTBN.ToDictionary(e => e.Ten_Brugge_Nr);
 
             TotalMolenData.AddRange(allOldMolenDataWithTBN);
@@ -173,7 +176,6 @@ namespace MolenApplicatie.Server.Services
                     var endTime = DateTime.Now;
                 }
             }
-
             await _dBMolenDataService.AddOrUpdateRange(allNewMolenData);
             return _dbContext.SaveChanges();
         }
@@ -513,7 +515,7 @@ namespace MolenApplicatie.Server.Services
                                 {
                                     Regex regexSingleYear = new Regex(@"\b\d{4}\b");
                                     Match matchSingleYear = regexSingleYear.Match(dd);
-                                    Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-–]\s*(\d{4})\b");
+                                    Regex regexMultiYear = new Regex(@"\b(\d{4})\s*[-ï¿½]\s*(\d{4})\b");
                                     Match matchMultiYear = regexMultiYear.Match(dd);
 
                                     if (matchMultiYear.Success)
@@ -1080,34 +1082,34 @@ namespace MolenApplicatie.Server.Services
 
                     image.MolenDataId = newMolenData.Id;
 
-                    if (!isImageInOldMolen)
+                    // if (!isImageInOldMolen)
+                    // {
+                    CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
+
+                    string fullFilePath = Globals.WWWROOTPath + image.FilePath;
+                    if (!File.Exists(fullFilePath) && Uri.IsWellFormedUriString(image.ExternalUrl, UriKind.Absolute))
                     {
-                        CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
-
-                        string fullFilePath = Globals.WWWROOTPath + image.FilePath;
-                        if (!File.Exists(fullFilePath) && Uri.IsWellFormedUriString(image.ExternalUrl, UriKind.Absolute))
+                        try
                         {
-                            try
-                            {
-                                using var request = new HttpRequestMessage(HttpMethod.Head, image.ExternalUrl);
-                                using var response = await _client.SendAsync(request);
+                            using var request = new HttpRequestMessage(HttpMethod.Head, image.ExternalUrl);
+                            using var response = await _client.SendAsync(request);
 
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    var imageBytes = await _client.GetByteArrayAsync(image.ExternalUrl);
-                                    File.WriteAllBytes(fullFilePath, imageBytes);
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"Image URL is not reachable: {image.ExternalUrl} (Status code: {response.StatusCode})");
-                                }
-                            }
-                            catch (Exception ex)
+                            if (response.IsSuccessStatusCode)
                             {
-                                Console.WriteLine($"Error checking or downloading image from URL: {image.ExternalUrl}. Exception: {ex.Message}");
+                                var imageBytes = await _client.GetByteArrayAsync(image.ExternalUrl);
+                                File.WriteAllBytes(fullFilePath, imageBytes);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Image URL is not reachable: {image.ExternalUrl} (Status code: {response.StatusCode})");
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error checking or downloading image from URL: {image.ExternalUrl}. Exception: {ex.Message}");
+                        }
                     }
+                    // }
                 }
 
                 for (int i = 0; i < oldMolenData?.Images.Count; i++)
@@ -1170,6 +1172,11 @@ namespace MolenApplicatie.Server.Services
                     try
                     {
                         var imageResponse = await _client.GetAsync(nogWaarneembareImageSrc);
+                        if (!imageResponse.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine($"Failed to download image from URL: {nogWaarneembareImageSrc} (Status code: {imageResponse.StatusCode})");
+                            return null;
+                        }
                         byte[] nogWaarneembaarImage = await imageResponse.Content.ReadAsByteArrayAsync();
                         string ImageName = GetFileNameForImage.GetFileName();
                         if (!Directory.Exists(filePath))
@@ -1199,18 +1206,17 @@ namespace MolenApplicatie.Server.Services
                                     break;
                                 }
                             }
-
                             if (existingPath == null)
                             {
                                 File.WriteAllBytes(imagePath, nogWaarneembaarImage);
-                                return (new MolenImage
+                                return new MolenImage
                                 {
                                     FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imagePath),
                                     Name = ImageName.ToString(),
                                     Description = description ?? string.Empty,
                                     CanBeDeleted = canBeDeleted,
                                     ExternalUrl = nogWaarneembareImageSrc
-                                });
+                                };
                             }
                             else if (existingPath != null)
                             {
@@ -1223,6 +1229,18 @@ namespace MolenApplicatie.Server.Services
                                         Id = foundImagesInDB.Id,
                                         FilePath = pathWithoutRoot,
                                         Name = foundImagesInDB.Name,
+                                        Description = description ?? string.Empty,
+                                        CanBeDeleted = canBeDeleted,
+                                        ExternalUrl = nogWaarneembareImageSrc,
+                                        MolenDataId = foundImagesInDB.MolenDataId
+                                    };
+                                }
+                                else
+                                {
+                                    return new MolenImage
+                                    {
+                                        FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(imagePath),
+                                        Name = ImageName.ToString(),
                                         Description = description ?? string.Empty,
                                         CanBeDeleted = canBeDeleted,
                                         ExternalUrl = nogWaarneembareImageSrc,
@@ -1415,7 +1433,6 @@ namespace MolenApplicatie.Server.Services
                                 if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
                                 {
                                     alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
-                                    Console.WriteLine(url);
                                 }
                             }
                         }
@@ -1423,7 +1440,6 @@ namespace MolenApplicatie.Server.Services
                 }
                 i++;
             }
-            Console.WriteLine(alleMolenTBNR.Count);
             return alleMolenTBNR;
         }
 
