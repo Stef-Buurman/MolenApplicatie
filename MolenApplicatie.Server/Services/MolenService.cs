@@ -233,7 +233,6 @@ namespace MolenApplicatie.Server.Services
         public List<MolenData> GetAllActiveMolenData()
         {
             IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
-            Console.WriteLine(alleMolenData.Count());
             List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Werkend).Select(GetMolenData).ToList();
             return GefilterdeMolenData;
         }
