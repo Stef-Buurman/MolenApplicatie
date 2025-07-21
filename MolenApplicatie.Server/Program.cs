@@ -20,6 +20,7 @@ builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
 builder.Services.AddTransient<PlaceTypeService>();
 builder.Services.AddTransient<MolenService>();
+builder.Services.AddTransient<SearchService>();
 
 builder.Services.AddScoped<DBMolenAddedImageService>();
 builder.Services.AddScoped<DBMolenDissappearedYearsService>();
