@@ -17,11 +17,14 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<SearchResultsModel> SearchAllAsync(string query, int limit = 10)
         {
+            var Molens = await SearchMolenDataAsync(query, limit);
+            var Places = await SearchPlacesAsync(query, limit);
+            var MolenTypes = await SearchMolenTypesAsync(query, limit, Molens.Select(m => m.Data.Id).ToList());
             var results = new SearchResultsModel
             {
-                Molens = await SearchMolenDataAsync(query, limit),
-                Places = await SearchPlacesAsync(query, limit),
-                MolenTypes = await SearchMolenTypesAsync(query, limit)
+                Molens = Molens,
+                Places = Places,
+                MolenTypes = MolenTypes
             };
 
             return results;
@@ -146,7 +149,7 @@ namespace MolenApplicatie.Server.Services
 
 
 
-        public async Task<List<SearchModel<MolenType>>> SearchMolenTypesAsync(string query, int limit)
+        public async Task<List<SearchModel<MolenType>>> SearchMolenTypesAsync(string query, int limit, List<Guid> molenIds)
         {
             query = query.ToLower();
 
@@ -154,6 +157,17 @@ namespace MolenApplicatie.Server.Services
                 .Where(mt => mt.Name != null && EF.Functions.Like(mt.Name.ToLower(), $"%{query}%"))
                 .Take(limit)
                 .ToListAsync();
+
+            if (!molenTypes.Any())
+            {
+                var molenTypeIds = await _dbContext.MolenTypeAssociations
+                    .Where(ma => ma.MolenDataId != null && molenIds.Contains(ma.MolenDataId))
+                    .Select(ma => ma.MolenTypeId)
+                    .Distinct()
+                    .ToListAsync();
+
+                molenTypes = await _dbContext.MolenTypes.Where(mt => molenTypeIds.Contains(mt.Id)).ToListAsync();
+            }
 
             return molenTypes.Select(mt => new SearchModel<MolenType>
             {
