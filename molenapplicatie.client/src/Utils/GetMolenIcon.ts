@@ -39,6 +39,19 @@ export function GetMolenTypeIcon(types?: string[]): string {
     icon = 'stellingmolen';
   } else if (types?.some((m) => m.toLowerCase() === 'beltmolen')) {
     icon = 'beltmolen';
+  }else if (types?.some((m) => m.toLowerCase() === 'tonmolen')) {
+    icon = 'tonmolen';
+  }else if (types?.some((m) => m.toLowerCase() === 'watermolen')) {
+    icon = 'watermolen';
+  } else if (types?.some((m) => m.toLowerCase() === 'rosmolen')) {
+    icon = 'rosmolen';
+  } else if (types?.some((m) => m.toLowerCase() === 'windmolen')) {
+    icon = 'windmolen';
+  }else if (types?.some((m) => m.toLowerCase() === 'verttred')) {
+    icon = 'verttred';
+  }else if (types?.some((m) => m.toLowerCase() === 'tjasker')) {
+    icon = 'tjasker';
   }
+
   return icon;
 }

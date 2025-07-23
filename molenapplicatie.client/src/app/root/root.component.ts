@@ -77,38 +77,55 @@ export class RootComponent {
     if (
       !this.mapService.doesTenBruggeNumberExist(selectedMolen.ten_Brugge_Nr)
     ) {
-      if (selectedMolen.toestand?.toLowerCase() === 'restant') {
-        if (this.currentFilters.find((f) => f.filterName === 'MolenState')) {
+      let newMolenState: string = '';
+      if (
+        selectedMolen.toestand?.toLowerCase() === 'restant' ||
+        selectedMolen.toestand?.toLowerCase() === 'in aanbouw'
+      ) {
+        newMolenState = 'Bestaande';
+      } else if (selectedMolen.toestand?.toLowerCase() === 'werkend') {
+        newMolenState = 'Werkend';
+        if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
           this.currentFilters = this.currentFilters.filter(
-            (f) => f.filterName !== 'MolenState'
+            (f) => f.filterName !== 'MolenType'
           );
-          this.currentFilters.push({
-            filterName: 'MolenState',
-            value: 'Bestaande',
-            isAList: false,
-            type: 'string',
-            name: 'MolenState',
-          });
-        } else {
-          this.currentFilters.push({
-            filterName: 'MolenState',
-            value: 'Bestaande',
-            isAList: false,
-            type: 'string',
-            name: 'MolenState',
-          });
         }
-        this.onFilterChange(this.currentFilters).subscribe({
-          complete: () => {
-            setTimeout(() => {
-              this.mapService.setView(
-                [selectedMolen.latitude, selectedMolen.longitude],
-                15
-              );
-            }, 0);
-          },
+        if (this.currentFilters.find((f) => f.filterName === 'Provincie')) {
+          this.currentFilters = this.currentFilters.filter(
+            (f) => f.filterName !== 'Provincie'
+          );
+        }
+      }
+      if (this.currentFilters.find((f) => f.filterName === 'MolenState')) {
+        this.currentFilters = this.currentFilters.filter(
+          (f) => f.filterName !== 'MolenState'
+        );
+        this.currentFilters.push({
+          filterName: 'MolenState',
+          value: newMolenState,
+          isAList: false,
+          type: 'string',
+          name: 'MolenState',
+        });
+      } else {
+        this.currentFilters.push({
+          filterName: 'MolenState',
+          value: newMolenState,
+          isAList: false,
+          type: 'string',
+          name: 'MolenState',
         });
       }
+      this.onFilterChange(this.currentFilters).subscribe({
+        complete: () => {
+          setTimeout(() => {
+            this.mapService.setView(
+              [selectedMolen.latitude, selectedMolen.longitude],
+              15
+            );
+          }, 0);
+        },
+      });
     } else {
       this.mapService.setView(
         [selectedMolen.latitude, selectedMolen.longitude],
@@ -138,7 +155,7 @@ export class RootComponent {
         name: 'MolenType',
       });
     }
-    this.onFilterChange(this.currentFilters).subscribe();
+    this.changeFilters();
   }
 
   openInfoMenu() {
@@ -157,7 +174,45 @@ export class RootComponent {
       next: (result: FilterFormValues[] | undefined) => {
         if (result) {
           this.currentFilters = result;
-          this.onFilterChange(this.currentFilters).subscribe();
+          this.changeFilters();
+        }
+      },
+    });
+  }
+
+  changeFilters() {
+    this.onFilterChange(this.currentFilters).subscribe({
+      next: (mapData: MapData[]) => {
+        if (mapData.length === 0) {
+          if (
+            this.currentFilters.find((f) => f.filterName === 'MolenState') ==
+              null ||
+            (typeof this.currentFilters.find(
+              (f) => f.filterName === 'MolenState'
+            )?.value === 'string' &&
+              (
+                this.currentFilters.find((f) => f.filterName === 'MolenState')
+                  ?.value as string
+              ).toLowerCase() !== 'verdwenen')
+          ) {
+            this.currentFilters = this.currentFilters.filter(
+              (f) => f.filterName !== 'MolenState'
+            );
+            this.currentFilters.push({
+              filterName: 'MolenState',
+              value: 'Verdwenen',
+              isAList: false,
+              type: 'string',
+              name: 'MolenState',
+            });
+          } else if (
+            this.currentFilters.find((f) => f.filterName === 'Provincie') !== null
+          ) {
+            this.currentFilters = this.currentFilters.filter(
+              (f) => f.filterName !== 'Provincie'
+            );
+          }
+          this.changeFilters();
         }
       },
     });
@@ -254,7 +309,6 @@ export class RootComponent {
 
     dialogRef.afterClosed().subscribe({
       next: (result: DialogReturnType) => {
-        var previousLastExcecutionTime = this.UpdateLastExecutionTime;
         if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
           const headers = new HttpHeaders({
             Authorization: result.api_key,
