@@ -1,8 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
-import { MolenService } from "../../Services/MolenService";
 import { MolenDialogComponent } from "../dialogs/molen-dialog/molen-dialog.component";
+import { MolenService } from "../../Services/MolenService";
 
 
 @Component({
