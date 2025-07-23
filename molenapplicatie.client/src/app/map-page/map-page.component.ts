@@ -3,10 +3,11 @@ import { ErrorService } from '../../Services/ErrorService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
 import { MapData } from '../../Interfaces/Map/MapData';
-import { MapService2_0 } from '../../Services/MapService2-0';
-import { MolenService2_0 } from '../../Services/MolenService2_0';
+import { MapService } from '../../Services/MapService';
+import { MolenService } from '../../Services/MolenService';
 import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { Place } from '../../Interfaces/Models/Place';
+import { catchError, Observable, tap } from 'rxjs';
 
 @Component({
   selector: 'app-map-page',
@@ -28,41 +29,37 @@ export class MapPageComponent {
     return this.molenService.molensWithImageAmount;
   }
 
-  onFilterChanged = (filters: FilterFormValues[]) => {
-    this.getMolens(filters);
-  };
-
   constructor(
     private toasts: Toasts,
     private errors: ErrorService,
-    private molenService: MolenService2_0,
-    private mapService: MapService2_0,
+    private molenService: MolenService,
+    private mapService: MapService,
     private sharedData: SharedDataService
   ) {}
 
-  getMolens(filters: FilterFormValues[] = []): void {
-    console.log(filters);
+  getMolens(filters: FilterFormValues[] = []): Observable<MapData[]> {
     this.sharedData.IsLoadingTrue();
-    this.molenService.getMapData(filters).subscribe({
-      next: (result) => {
+    return this.molenService.getMapData(filters).pipe(
+      tap((result) => {
         this.molens = result;
-        this.mapService.SelectedMapId = this.mapPageId;
         this.mapService.initMap(result);
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         this.errors.AddError(error);
         this.toasts.showError('De allMolens kunnen niet geladen worden!');
-      },
-      complete: () => {
-        this.toasts.showSuccess('Molens zijn geladen!');
-        this.sharedData.IsLoadingFalse();
-      },
-    });
+        return [];
+      }),
+      tap({
+        complete: () => {
+          this.toasts.showSuccess('Molens zijn geladen!');
+          this.sharedData.IsLoadingFalse();
+        },
+      })
+    );
   }
 
   ngAfterViewInit(): void {
     this.mapService.SelectedMapId = this.mapPageId;
-    this.sharedData.IsLoadingTrue();
-    this.getMolens();
+    this.getMolens().subscribe();
   }
 }
