@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import * as L from 'leaflet';
-import { MolenData } from '../Interfaces/Models/MolenData';
+import { MapData } from '../Interfaces/Map/MapData';
 import { MapInformation } from '../Class/MapInformation';
+import { GetMolenIcon } from '../Utils/GetMolenIcon';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MapService {
   private maps: MapInformation[] = [];
@@ -17,30 +17,56 @@ export class MapService {
   set SelectedMapId(mapId: string) {
     this._selectedMapId = mapId;
   }
-  constructor(private dialog: MatDialog,
-    private router: Router,
-    private route: ActivatedRoute) { }
+  constructor(private router: Router) {}
 
   doesMapIdExist(mapId: string): boolean {
-    return this.maps.find(map => map.MapId == mapId) != null;
+    return this.maps.find((map) => map.MapId == mapId) != null;
   }
 
-  updateMarker(tbn: string, molen: MolenData, mapId: string | undefined = undefined) {
+  doesTenBruggeNumberExist(
+    tbn: string,
+    mapId: string | undefined = undefined
+  ): boolean {
     if (!mapId) mapId = this.SelectedMapId;
-    var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
+    var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
-      var marker = this.maps[indexOfMap].Markers.find(marker => marker.tenBruggeNumber == tbn);
+      return (
+        this.maps[indexOfMap].Markers.find(
+          (marker) => marker.tenBruggeNumber == tbn
+        ) != null
+      );
+    }
+    return false;
+  }
+
+  updateMarker(
+    tbn: string,
+    molen: MapData,
+    mapId: string | undefined = undefined
+  ) {
+    if (!mapId) mapId = this.SelectedMapId;
+    var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
+    if (indexOfMap != -1) {
+      var marker = this.maps[indexOfMap].Markers.find(
+        (marker) => marker.tenBruggeNumber == tbn
+      );
       if (marker) {
         marker.marker.remove();
-        this.maps[indexOfMap].Markers = this.maps[indexOfMap].Markers.filter(mark => mark.tenBruggeNumber != tbn);
+        this.maps[indexOfMap].Markers = this.maps[indexOfMap].Markers.filter(
+          (mark) => mark.tenBruggeNumber != tbn
+        );
         this.addMarker(molen);
       }
     }
   }
 
-  setView(coords: L.LatLngExpression, zoom: number, mapId: string | undefined = undefined): void {
+  setView(
+    coords: L.LatLngExpression,
+    zoom: number,
+    mapId: string | undefined = undefined
+  ): void {
     if (!mapId) mapId = this.SelectedMapId;
-    var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
+    var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
       this.maps[indexOfMap].Map.setView(coords, zoom);
     } else {
@@ -48,15 +74,14 @@ export class MapService {
     }
   }
 
-  initMap(molens: MolenData[], mapId: string | undefined = undefined): void {
+  initMap(molens: MapData[], mapId: string | undefined = undefined): void {
     if (!mapId) mapId = this.SelectedMapId;
 
-    const existingMapIndex = this.maps.findIndex(map => map.MapId === mapId);
+    const existingMapIndex = this.maps.findIndex((map) => map.MapId === mapId);
     if (existingMapIndex !== -1) {
       this.maps[existingMapIndex].Map.remove();
       this.maps.splice(existingMapIndex, 1);
     }
-
     setTimeout(() => {
       const newMap = new MapInformation(mapId, L.map(mapId!));
       this.maps.push(newMap);
@@ -65,68 +90,46 @@ export class MapService {
       mapInstance.setView([52, 4.4], 10);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: ''
+        attribution: '',
       }).addTo(mapInstance);
-      console.log(molens)
-      molens.forEach(molen => {
+
+      molens.forEach((molen) => {
         this.addMarker(molen, mapId!);
       });
     });
   }
 
-  addMarker(molen: MolenData, mapId: string | undefined = undefined): void {
+  addMarker(molen: MapData, mapId: string | undefined = undefined): void {
     if (!mapId) mapId = this.SelectedMapId;
-    var indexOfMap: number = this.maps.findIndex(map => map.MapId == mapId);
+    var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
       var iconLocation = 'Assets/Icons/Molens/';
-      var icon = 'windmolen_verdwenen';
-
-      if (molen.toestand?.toLowerCase() == "restant") {
-        icon = 'remainder';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "weidemolen")) {
-        icon = 'weidemolen';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "paltrokmolen")) {
-        icon = 'paltrokmolen';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "standerdmolen")) {
-        icon = 'standerdmolen';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "wipmolen" || m.molenType?.name.toLowerCase() === "spinnenkop")) {
-        icon = 'wipmolen';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "grondzeiler")) {
-        icon = 'grondzeiler';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "stellingmolen")) {
-        icon = 'stellingmolen';
-      }
-      else if (molen.molenTypeAssociations.some(m => m.molenType?.name.toLowerCase() === "beltmolen")) {
-        icon = 'beltmolen';
-      }
-
-      if (molen.hasImage) {
-        icon += '_has_image';
-      }
-
-      icon += '.png';
+      var icon = GetMolenIcon(
+        molen.toestand,
+        molen.types,
+        molen.hasImage
+      );
 
       const customIcon = L.icon({
         iconUrl: iconLocation + icon,
         iconSize: [32, 32],
         iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
+        popupAnchor: [0, -32],
       });
 
-      const marker = L.marker([molen.latitude, molen.longitude], { icon: customIcon }).addTo(this.maps[indexOfMap].Map);
+      const marker = L.marker([molen.latitude, molen.longitude], {
+        icon: customIcon,
+      }).addTo(this.maps[indexOfMap].Map);
 
       marker.on('click', () => {
-        const targetUrl = `${this.router.url}/${molen.ten_Brugge_Nr}`;
+        const targetUrl = `${this.router.url}/${molen.reference}`;
         this.router.navigateByUrl(targetUrl);
       });
 
-      this.maps[indexOfMap].Markers.push({ marker, tenBruggeNumber: molen.ten_Brugge_Nr });
+      this.maps[indexOfMap].Markers.push({
+        marker,
+        tenBruggeNumber: molen.reference,
+      });
     }
   }
 }
