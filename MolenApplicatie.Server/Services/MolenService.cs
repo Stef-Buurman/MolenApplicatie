@@ -117,7 +117,7 @@ namespace MolenApplicatie.Server.Services
                     {
                         mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower());
                     }
-                    else
+                    else if(string.IsNullOrWhiteSpace(MolenType))
                     {
                         mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == "zuid-holland");
                     }
