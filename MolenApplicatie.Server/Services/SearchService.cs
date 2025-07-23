@@ -39,6 +39,13 @@ namespace MolenApplicatie.Server.Services
                 .Take(limit)
                 .ToListAsync();
 
+            var buildYearMolens = await _dbContext.MolenData
+                .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
+                    && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+                .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
+                .Take(limit)
+                .ToListAsync();
+
             var tbnMolens = await _dbContext.MolenTBNs
                 .Where(t => t.Ten_Brugge_Nr != null && EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%"))
                 .Select(t => new { t.MolenData.Id, Name = t.Ten_Brugge_Nr, Source = "Molen TBN: " })
@@ -56,13 +63,6 @@ namespace MolenApplicatie.Server.Services
                 .Where(m => m.Plaats != null && EF.Functions.Like(m.Plaats.ToLower(), $"%{query}%")
                     && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
                 .Select(m => new { m.Id, Name = m.Plaats, Source = "Molen Plaats: " })
-                .Take(limit)
-                .ToListAsync();
-
-            var buildYearMolens = await _dbContext.MolenData
-                .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
-                    && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
-                .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
                 .Take(limit)
                 .ToListAsync();
 
@@ -86,6 +86,8 @@ namespace MolenApplicatie.Server.Services
 
             var molenDataDict = await _dbContext.MolenData
                 .Where(m => molenIds.Contains(m.Id))
+                .Include(m => m.MolenTypeAssociations)
+                .ThenInclude(ma => ma.MolenType)
                 .ToDictionaryAsync(m => m.Id);
 
             var results = references
@@ -100,7 +102,7 @@ namespace MolenApplicatie.Server.Services
             return results;
         }
 
-        public async Task<Dictionary<string, List<SearchModel<Place>>>> SearchPlacesAsync(string query, int limit)
+        public async Task<List<KeyValuePair<string, List<SearchModel<Place>>>>> SearchPlacesAsync(string query, int limit)
         {
             query = query.ToLower();
 
@@ -116,17 +118,32 @@ namespace MolenApplicatie.Server.Services
 
             var results = matchedPlaces
                 .GroupBy(x => x.TypeName)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => new SearchModel<Place>
+                .Select(g =>
+                {
+                    var list = g.Select(x => new SearchModel<Place>
                     {
                         Reference = "Plaats naam: " + x.Place.Name,
                         Data = x.Place
-                    }).OrderByDescending(x => x.Data.Population).ToList()
-                );
+                    })
+                    .OrderByDescending(x => x.Data.Population)
+                    .ToList();
+
+                    var totalPopulation = list.Sum(x => x.Data.Population);
+
+                    return new
+                    {
+                        Key = g.Key,
+                        Places = list,
+                        TotalPopulation = totalPopulation
+                    };
+                })
+                .OrderByDescending(x => x.TotalPopulation)
+                .Select(x => new KeyValuePair<string, List<SearchModel<Place>>>(x.Key, x.Places))
+                .ToList();
 
             return results;
         }
+
 
 
         public async Task<List<SearchModel<MolenType>>> SearchMolenTypesAsync(string query, int limit)

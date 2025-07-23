@@ -157,7 +157,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<ValueName>> GetAllMolenProvincies()
         {
             var provincies = await _dbContext.MolenData
-                    .Where(m => !string.IsNullOrWhiteSpace(m.Provincie))
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Provincie) && m.Latitude != 0 && m.Longitude != 0)
                     .GroupBy(m => m.Provincie)
                     .Select(g => new ValueName
                     {
@@ -172,6 +172,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<ValueName>> GetAllMolenTypes()
         {
             var types = await _dbContext.MolenData
+                    .Where(m => m.Latitude != 0 && m.Longitude != 0)
                     .SelectMany(m => m.MolenTypeAssociations.Select(mt => mt.MolenType.Name))
                     .Where(t => !string.IsNullOrWhiteSpace(t))
                     .GroupBy(t => t)
@@ -188,7 +189,7 @@ namespace MolenApplicatie.Server.Services
         public async Task<List<ValueName>> GetAllMolenConditions()
         {
             var conditions = await _dbContext.MolenData
-                    .Where(m => !string.IsNullOrWhiteSpace(m.Toestand))
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Toestand) && m.Latitude != 0 && m.Longitude != 0)
                     .GroupBy(m => m.Toestand)
                     .Select(g => new ValueName
                     {
@@ -197,6 +198,7 @@ namespace MolenApplicatie.Server.Services
                     })
                     .OrderBy(c => c.Name)
                     .ToListAsync();
+            conditions.Add(new ValueName { Name = MolenToestand.Bestaande, Count = conditions.Where(c => !MolenToestand.Equals(c.Name, MolenToestand.Verdwenen)).Sum(c => c.Count) });
             return conditions.ToList();
         }
 

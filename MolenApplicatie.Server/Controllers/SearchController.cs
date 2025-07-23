@@ -19,13 +19,13 @@ namespace EVFraudDetectionSoftware.Server.Controllers
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Search query is required");
-            
+
             if (limit <= 0)
                 return BadRequest("Limit must be greater than 0");
 
             if (limit > 100)
                 return BadRequest("Limit cannot exceed 100");
-            
+
             if (query.Length < 3)
                 return BadRequest("Search query must be at least 3 characters long");
 

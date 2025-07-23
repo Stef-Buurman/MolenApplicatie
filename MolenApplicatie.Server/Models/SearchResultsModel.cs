@@ -5,7 +5,7 @@ namespace MolenApplicatie.Server.Models
     public class SearchResultsModel
     {
         public List<SearchModel<MolenData>> Molens { get; set; } = new List<SearchModel<MolenData>>();
-        public Dictionary<string, List<SearchModel<Place>>> Places { get; set; } = new Dictionary<string, List<SearchModel<Place>>>();
+        public List<KeyValuePair<string, List<SearchModel<Place>>>> Places { get; set; } = new List<KeyValuePair<string, List<SearchModel<Place>>>>();
         public List<SearchModel<MolenType>> MolenTypes { get; set; } = new List<SearchModel<MolenType>>();
 
         public bool HasResults =>
