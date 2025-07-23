@@ -1,0 +1,102 @@
+<div class="dropdown-container">
+  <div [class.centered-search]="true" [class.focused]="searchFocused">
+    <span class="search-icon">🔍</span>
+    <input
+      #inputRef
+      type="text"
+      name="searchInput"
+      placeholder="Zoek iets..."
+      class="search-input"
+      [(ngModel)]="searchTerm"
+      (input)="filterOptions()"
+      (click)="onInputClick()"
+      (focus)="searchFocused = true"
+      autocomplete="off"
+    />
+
+    <button
+      *ngIf="searchTerm"
+      class="clear-search"
+      (click)="clearSearch(inputRef)"
+      aria-label="Clear search"
+    >
+      ✖
+    </button>
+  </div>
+
+  <div
+    *ngIf="isDropdownVisible && searchResult && searchTerm.length >= 2"
+    class="search-results-dropdown"
+  >
+    <div
+      *ngIf="searchResult.molens && searchResult.molens.length > 0"
+      class="result-section"
+    >
+      <h3>Molens</h3>
+      <div>
+        <div
+          *ngFor="let option of searchResult.molens"
+          class="result-item"
+          (click)="selectMolen(option)"
+        >
+          <span class="result-icon">
+            <img src="{{ getMolenIcon(option.data) }}" alt="" />
+          </span>
+          <div class="result-details">
+            <div class="result-title">
+              {{ option.data.name }}
+            </div>
+            <div class="result-subtitle">{{ option.reference }}...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="searchResult.places && searchResult.places.length > 0"
+      class="result-section"
+    >
+      <h3>Plaatsen</h3>
+      <div *ngFor="let item of searchResult.places">
+        <h4>{{ item.key }}</h4>
+        <div
+          *ngFor="let place of item.value"
+          class="result-item"
+          (click)="selectPlace(place)"
+        >
+          <span class="result-icon">📍</span>
+          <div class="result-details">
+            <div class="result-title">
+              {{ place.data.name }}
+            </div>
+            <div class="result-subtitle">{{ place.reference }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="searchResult.molenTypes && searchResult.molenTypes.length > 0"
+      class="result-section"
+    >
+      <h3>Molen types</h3>
+      <div>
+        <div
+          *ngFor="let option of searchResult.molenTypes"
+          class="result-item"
+          (click)="selectType(option)"
+        >
+          <span class="result-icon">
+            <img src="{{ getMolenTypeIcon(option.data) }}" alt="" />
+          </span>
+          <div class="result-details">
+            <div class="result-title">
+              {{ option.data.name }}
+            </div>
+            <div class="result-subtitle">{{ option.reference }}...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
