@@ -1,10 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FilterFormValues } from '../../../Interfaces/Filters/Filter';
-import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
 import { MolenFilterList } from '../../../Interfaces/Filters/MolenFilterList';
 import { MolenFilters } from '../../../Interfaces/Filters/MolenFilters';
+import { MolenService } from '../../../Services/MolenService';
 
 @Component({
   selector: 'app-filter-map',
@@ -35,17 +35,23 @@ export class FilterMapComponent implements OnInit {
     if (this.filters['Provincie']) {
       const provincieValue = this.filters['Provincie'].value;
       this.selectedFilter.provincie =
-        typeof provincieValue === 'string' ? provincieValue : undefined;
+        typeof provincieValue === 'string'
+          ? provincieValue.toLowerCase()
+          : undefined;
     }
     if (this.filters['MolenState']) {
       const toestandValue = this.filters['MolenState'].value;
       this.selectedFilter.toestand =
-        typeof toestandValue === 'string' ? toestandValue : undefined;
+        typeof toestandValue === 'string'
+          ? toestandValue.toLowerCase()
+          : undefined;
     }
     if (this.filters['MolenType']) {
       const molenTypeValue = this.filters['MolenType'].value;
       this.selectedFilter.type =
-        typeof molenTypeValue === 'string' ? molenTypeValue : undefined;
+        typeof molenTypeValue === 'string'
+          ? molenTypeValue.toLowerCase()
+          : undefined;
     }
     this.molenService.getAllMolenFilters().subscribe({
       next: (filters: MolenFilterList) => {

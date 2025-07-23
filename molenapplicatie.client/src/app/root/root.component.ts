@@ -12,8 +12,12 @@ import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
 import { FilterMapComponent } from '../dialogs/filter-map/filter-map.component';
 import { FilterFormValues } from '../../Interfaces/Filters/Filter';
-import { MapService2_0 } from '../../Services/MapService2-0';
-import { MolenService2_0 } from '../../Services/MolenService2_0';
+import { MapService } from '../../Services/MapService';
+import { MolenService } from '../../Services/MolenService';
+import { MolenType } from '../../Interfaces/Models/MolenType';
+import { Observable } from 'rxjs';
+import { MapData } from '../../Interfaces/Map/MapData';
+import { SharedDataService } from '../../Services/SharedDataService';
 
 @Component({
   selector: 'layout',
@@ -38,16 +42,20 @@ export class RootComponent {
     return this.molenService.molensWithImageAmount;
   }
 
-  @Input() onFilterChange!: (filters: FilterFormValues[]) => void;
+  @Input() onFilterChange!: (
+    filters: FilterFormValues[]
+  ) => Observable<MapData[]>;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private toasts: Toasts,
     private http: HttpClient,
     private dialog: MatDialog,
     private errors: ErrorService,
-    private molenService: MolenService2_0,
-    private mapService: MapService2_0
+    private molenService: MolenService,
+    private sharedData: SharedDataService,
+    private mapService: MapService
   ) {}
 
   onPlaceChange(selectedPlace: Place) {
@@ -59,6 +67,78 @@ export class RootComponent {
       [selectedPlace.latitude, selectedPlace.longitude],
       zoom
     );
+  }
+
+  onMolenChange(selectedMolen: MolenData) {
+    if (!selectedMolen) return;
+    this.router.navigate([selectedMolen.ten_Brugge_Nr], {
+      relativeTo: this.route,
+    });
+    if (
+      !this.mapService.doesTenBruggeNumberExist(selectedMolen.ten_Brugge_Nr)
+    ) {
+      if (selectedMolen.toestand?.toLowerCase() === 'restant') {
+        if (this.currentFilters.find((f) => f.filterName === 'MolenState')) {
+          this.currentFilters = this.currentFilters.filter(
+            (f) => f.filterName !== 'MolenState'
+          );
+          this.currentFilters.push({
+            filterName: 'MolenState',
+            value: 'Bestaande',
+            isAList: false,
+            type: 'string',
+            name: 'MolenState',
+          });
+        } else {
+          this.currentFilters.push({
+            filterName: 'MolenState',
+            value: 'Bestaande',
+            isAList: false,
+            type: 'string',
+            name: 'MolenState',
+          });
+        }
+        this.onFilterChange(this.currentFilters).subscribe({
+          complete: () => {
+            setTimeout(() => {
+              this.mapService.setView(
+                [selectedMolen.latitude, selectedMolen.longitude],
+                15
+              );
+            }, 0);
+          },
+        });
+      }
+    } else {
+      this.mapService.setView(
+        [selectedMolen.latitude, selectedMolen.longitude],
+        15
+      );
+    }
+  }
+
+  onTypeChange(selectedType: MolenType) {
+    if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
+      this.currentFilters = this.currentFilters.filter(
+        (f) => f.filterName !== 'MolenType'
+      );
+      this.currentFilters.push({
+        filterName: 'MolenType',
+        value: selectedType.name,
+        isAList: false,
+        type: 'string',
+        name: 'MolenType',
+      });
+    } else {
+      this.currentFilters.push({
+        filterName: 'MolenType',
+        value: selectedType.name,
+        isAList: false,
+        type: 'string',
+        name: 'MolenType',
+      });
+    }
+    this.onFilterChange(this.currentFilters).subscribe();
   }
 
   openInfoMenu() {
@@ -76,8 +156,8 @@ export class RootComponent {
     dialogRef.afterClosed().subscribe({
       next: (result: FilterFormValues[] | undefined) => {
         if (result) {
-          this.onFilterChange(result);
           this.currentFilters = result;
+          this.onFilterChange(this.currentFilters).subscribe();
         }
       },
     });

@@ -14,7 +14,7 @@ import { ConfirmationDialogComponent } from './dialogs/confirmation-dialog/confi
 import { ToastComponent } from './toast/toast.component';
 import { LoaderComponent } from './loader/loader.component';
 import { ErrorMessageComponent } from './error-message/error-message.component';
-import { DropdownComponent } from './dropdown/dropdown.component';
+import { SearchBarComponent } from './search-bar/search-bar.component';
 import { RootComponent } from './root/root.component';
 import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-details.component';
 import { FilterMapComponent } from './dialogs/filter-map/filter-map.component';
@@ -31,7 +31,7 @@ import { MapPageComponent } from './map-page/map-page.component';
     ToastComponent,
     LoaderComponent,
     ErrorMessageComponent,
-    DropdownComponent,
+    SearchBarComponent,
     RootComponent,
     OpenMolenDetailsComponent,
     FilterMapComponent,

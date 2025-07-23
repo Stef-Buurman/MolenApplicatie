@@ -1,32 +1,37 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialog,
+} from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
 import { MolenData } from '../../../Interfaces/Models/MolenData';
-import { MolenService } from '../../../Services/MolenService';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
+import { MolenService } from '../../../Services/MolenService';
 
 @Component({
   selector: 'app-molen-dialog',
   templateUrl: './molen-dialog.component.html',
-  styleUrl: './molen-dialog.component.scss'
+  styleUrl: './molen-dialog.component.scss',
 })
-export class MolenDialogComponent implements OnDestroy{
+export class MolenDialogComponent implements OnDestroy {
   public molen?: MolenData;
-  public status: "initial" | "uploading" | "success" | "fail" = "initial";
+  public status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
   public file: File | null = null;
   public imagePreview: string | null = null;
-  public APIKey: string = "";
+  public APIKey: string = '';
   public molenImages: MolenImage[] = [];
   public selectedImage?: MolenImage;
 
   public imagesAdded: boolean = false;
   get HasImagesLeft(): boolean {
-    if (this.molen == undefined || this.molen.addedImages == undefined) return false;
+    if (this.molen == undefined || this.molen.addedImages == undefined)
+      return false;
     return this.molen.addedImages.length > 0;
   }
 
@@ -36,7 +41,8 @@ export class MolenDialogComponent implements OnDestroy{
 
   deleteImageFunction = this.deleteImage.bind(this);
 
-  constructor(private toasts: Toasts,
+  constructor(
+    private toasts: Toasts,
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
@@ -44,8 +50,9 @@ export class MolenDialogComponent implements OnDestroy{
     private sanitizer: DomSanitizer,
     private router: Router,
     private route: ActivatedRoute,
-    @Inject(MAT_DIALOG_DATA) public data: { tenBruggeNr: string , molen:MolenData}
-  ) { }
+    @Inject(MAT_DIALOG_DATA)
+    public data: { tenBruggeNr: string; molen: MolenData }
+  ) {}
 
   ngOnInit(): void {
     if (!this.data.molen && !this.data.tenBruggeNr) {
@@ -65,8 +72,8 @@ export class MolenDialogComponent implements OnDestroy{
         },
         error: (error) => {
           this.toasts.showError(error.error.message);
-        }
-      })
+        },
+      });
     }
   }
 
@@ -76,24 +83,36 @@ export class MolenDialogComponent implements OnDestroy{
   }
 
   sanitizeHtml(html: string): string {
-    const sanitizedHtml = this.sanitizer.sanitize(SecurityContext.NONE, html) || '';
+    const sanitizedHtml =
+      this.sanitizer.sanitize(SecurityContext.NONE, html) || '';
     const parser = new DOMParser();
     const doc = parser.parseFromString(sanitizedHtml, 'text/html');
     return doc.body.textContent || '';
   }
 
   getBouwjaar(): string {
-    if (!this.molen) return "";
+    if (!this.molen) return '';
     if (this.molen.bouwjaar !== undefined && this.molen.bouwjaar !== null) {
       return this.molen.bouwjaar.toString();
-    } else if (this.molen.bouwjaarStart !== undefined && this.molen.bouwjaarStart !== null && this.molen.bouwjaarEinde !== undefined && this.molen.bouwjaarEinde !== null) {
+    } else if (
+      this.molen.bouwjaarStart !== undefined &&
+      this.molen.bouwjaarStart !== null &&
+      this.molen.bouwjaarEinde !== undefined &&
+      this.molen.bouwjaarEinde !== null
+    ) {
       return `${this.molen.bouwjaarStart} - ${this.molen.bouwjaarEinde}`;
-    } else if (this.molen.bouwjaarStart !== undefined && this.molen.bouwjaarStart !== null) {
+    } else if (
+      this.molen.bouwjaarStart !== undefined &&
+      this.molen.bouwjaarStart !== null
+    ) {
       return this.molen.bouwjaarStart.toString();
-    } else if (this.molen.bouwjaarEinde !== undefined && this.molen.bouwjaarEinde !== null) {
+    } else if (
+      this.molen.bouwjaarEinde !== undefined &&
+      this.molen.bouwjaarEinde !== null
+    ) {
       return this.molen.bouwjaarEinde.toString();
     } else {
-      return "Onbekend";
+      return 'Onbekend';
     }
   }
 
@@ -106,7 +125,7 @@ export class MolenDialogComponent implements OnDestroy{
   }
 
   expandDetails() {
-    this.isExpanded = !this.isExpanded
+    this.isExpanded = !this.isExpanded;
   }
 
   removeImg(): void {
@@ -117,14 +136,18 @@ export class MolenDialogComponent implements OnDestroy{
     if (!this.molen || !this.molen.ten_Brugge_Nr) {
       return of();
     }
-    return this.molenService.deleteImage(this.molen.ten_Brugge_Nr, imgName, api_key);
+    return this.molenService.deleteImage(
+      this.molen.ten_Brugge_Nr,
+      imgName,
+      api_key
+    );
   }
 
   onFileSelected(event: any): void {
     const uploadedFile: File = event.target.files[0];
 
     if (uploadedFile) {
-      this.status = "initial";
+      this.status = 'initial';
       this.file = uploadedFile;
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -135,12 +158,12 @@ export class MolenDialogComponent implements OnDestroy{
   }
 
   uploadImage() {
-    this.molen
+    this.molen;
     const dialogRef = this.dialog.open(UploadImageDialogComponent, {
       data: {
-        molen: this.molen
+        molen: this.molen,
       },
-      panelClass: 'upload-images'
+      panelClass: 'upload-images',
     });
 
     dialogRef.afterClosed().subscribe((result: MolenData) => {
@@ -150,7 +173,9 @@ export class MolenDialogComponent implements OnDestroy{
         this.molen = result;
         this.molenImages = this.getAllMolenImages();
         for (var i = 0; i < this.molenImages.length; i++) {
-          var foundImage = previousImages.find(x => x.name == this.molenImages[i].name);
+          var foundImage = previousImages.find(
+            (x) => x.name == this.molenImages[i].name
+          );
           if (foundImage == undefined) {
             this.selectedImage = this.molenImages[i];
           }
@@ -161,22 +186,24 @@ export class MolenDialogComponent implements OnDestroy{
 
   onSubmit(): void {
     if (this.file && this.molen) {
-      this.status = "uploading";
+      this.status = 'uploading';
 
       const formData = new FormData();
       formData.append('images', this.file, this.file.name);
 
       var previousMolenImages: MolenImage[] = this.getAllMolenImages();
 
-      this.molenService.uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey).subscribe({
+      this.molenService
+        .uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey)
+        .subscribe({
           next: (molen: MolenData) => {
             this.molen = molen;
             this.cdr.detectChanges();
           },
           error: (error) => {
-            this.status = "fail";
+            this.status = 'fail';
             if (error.status == 401) {
-              this.toasts.showError("Er is een verkeerde api key ingevuld!");
+              this.toasts.showError('Er is een verkeerde api key ingevuld!');
             } else {
               this.toasts.showError(error.error.message);
             }
@@ -184,12 +211,14 @@ export class MolenDialogComponent implements OnDestroy{
           complete: () => {
             this.removeImg();
             this.molenImages = this.getAllMolenImages();
-            this.selectedImage = this.molenImages.find(x => !previousMolenImages.find(y => y.name == x.name));
-            this.toasts.showSuccess("Image is saved successfully!");
+            this.selectedImage = this.molenImages.find(
+              (x) => !previousMolenImages.find((y) => y.name == x.name)
+            );
+            this.toasts.showSuccess('Image is saved successfully!');
             this.imagesAdded = true;
-          }
+          },
         });
-      this.APIKey = "";
+      this.APIKey = '';
     }
   }
 
