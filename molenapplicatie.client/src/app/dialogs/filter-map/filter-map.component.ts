@@ -77,8 +77,7 @@ export class FilterMapComponent implements OnInit {
       } else {
         this.filters['MolenState'].value = this.selectedFilter.toestand || '';
       }
-    }
-    else{
+    } else {
       delete this.filters['MolenState'];
     }
 
@@ -94,18 +93,8 @@ export class FilterMapComponent implements OnInit {
       } else {
         this.filters['Provincie'].value = this.selectedFilter.provincie || '';
       }
-    }else{
+    } else {
       delete this.filters['Provincie'];
-    }
-
-    if (
-      this.filters['MolenState'] &&
-      !this.filters['Provincie'] &&
-      (this.selectedFilter.toestand === 'verdwenen' ||
-        this.filters['MolenState'].value === 'verdwenen')
-    ) {
-      this.toasts.showInfo('Je hebt geen provincie gekozen!');
-      return;
     }
 
     if (this.selectedFilter.type) {
@@ -120,9 +109,37 @@ export class FilterMapComponent implements OnInit {
       } else {
         this.filters['MolenType'].value = this.selectedFilter.type || '';
       }
-    }else{
+
+      if (
+        !this.selectedFilter.provincie &&
+        !this.selectedFilter.toestand &&
+        (this.molenFilters.types.find(
+          (t) => t.name.toLowerCase() === this.selectedFilter.type
+        )?.count ?? 0) > 1100
+      ) {
+        this.filters['MolenState'] = {
+          filterName: 'MolenState',
+          value: 'werkend',
+          type: 'string',
+          isAList: false,
+          name: 'Molen state',
+        };
+      }
+    } else {
       delete this.filters['MolenType'];
     }
+
+        if (
+      this.filters['MolenState'] &&
+      !this.filters['Provincie'] &&
+      !this.filters['MolenType'] &&
+      (this.selectedFilter.toestand === 'verdwenen' ||
+        this.filters['MolenState'].value === 'verdwenen')
+    ) {
+      this.toasts.showInfo('Je hebt geen provincie gekozen!');
+      return;
+    }
+
     this.onClose(Object.values(this.filters));
   }
 }

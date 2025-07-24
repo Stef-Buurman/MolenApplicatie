@@ -99,7 +99,7 @@ namespace MolenApplicatie.Server.Services
                 MolenState = null;
             }
 
-            if (MolenState == null)
+            if (MolenState == null && string.IsNullOrWhiteSpace(MolenType))
             {
                 MolenState = MolenToestand.Werkend;
             }
