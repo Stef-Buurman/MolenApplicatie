@@ -54,15 +54,18 @@ export function GetMolenTypeIcon(types?: string[]): string {
     types?.some(
       (m) =>
         m.toLowerCase() === 'rosmolen' ||
-        m.toLowerCase() === 'horizontale tredmolen'
+        m.toLowerCase() === 'horizontale tredmolen' ||
+        m.toLowerCase() === 'geupel'
     )
   ) {
     icon = 'rosmolen';
   } else if (
     types?.some(
       (m) =>
-        m.toLowerCase().includes('windmolen') ||
-        m.toLowerCase().includes('windmotor')
+        (m.toLowerCase().includes('windmolen') &&
+          !m.toLowerCase().includes('onbekend')) ||
+        m.toLowerCase().includes('windmotor') ||
+        m.toLowerCase() === 'getijdenmolen'
     )
   ) {
     icon = 'windmolen';
@@ -70,7 +73,9 @@ export function GetMolenTypeIcon(types?: string[]): string {
     types?.some(
       (m) =>
         m.toLowerCase() === 'verttred' ||
-        m.toLowerCase() === 'verticale tredmolen'
+        m.toLowerCase() === 'verticale tredmolen' ||
+        m.toLowerCase() === 'kraan' ||
+        m.toLowerCase() === 'karnmolenhuisje'
     )
   ) {
     icon = 'verttred';
