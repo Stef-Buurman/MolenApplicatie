@@ -78,6 +78,9 @@ export class FilterMapComponent implements OnInit {
         this.filters['MolenState'].value = this.selectedFilter.toestand || '';
       }
     }
+    else{
+      delete this.filters['MolenState'];
+    }
 
     if (this.selectedFilter.provincie) {
       if (!this.filters['Provincie']) {
@@ -91,15 +94,17 @@ export class FilterMapComponent implements OnInit {
       } else {
         this.filters['Provincie'].value = this.selectedFilter.provincie || '';
       }
+    }else{
+      delete this.filters['Provincie'];
     }
 
     if (
       this.filters['MolenState'] &&
       !this.filters['Provincie'] &&
-      (this.selectedFilter.toestand === 'disappeared' ||
-        this.filters['MolenState'].value === 'disappeared')
+      (this.selectedFilter.toestand === 'verdwenen' ||
+        this.filters['MolenState'].value === 'verdwenen')
     ) {
-      this.toasts.showError('Je hebt geen provincie gekozen!');
+      this.toasts.showInfo('Je hebt geen provincie gekozen!');
       return;
     }
 
@@ -115,6 +120,8 @@ export class FilterMapComponent implements OnInit {
       } else {
         this.filters['MolenType'].value = this.selectedFilter.type || '';
       }
+    }else{
+      delete this.filters['MolenType'];
     }
     this.onClose(Object.values(this.filters));
   }
