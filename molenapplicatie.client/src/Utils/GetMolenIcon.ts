@@ -39,17 +39,42 @@ export function GetMolenTypeIcon(types?: string[]): string {
     icon = 'stellingmolen';
   } else if (types?.some((m) => m.toLowerCase() === 'beltmolen')) {
     icon = 'beltmolen';
-  }else if (types?.some((m) => m.toLowerCase() === 'tonmolen')) {
+  } else if (types?.some((m) => m.toLowerCase() === 'tonmolen')) {
     icon = 'tonmolen';
-  }else if (types?.some((m) => m.toLowerCase() === 'watermolen')) {
+  } else if (
+    types?.some(
+      (m) =>
+        m.toLowerCase() === 'watermolen' ||
+        m.toLowerCase() === 'schipmolen' ||
+        m.toLowerCase() === 'watervluchtmolen'
+    )
+  ) {
     icon = 'watermolen';
-  } else if (types?.some((m) => m.toLowerCase() === 'rosmolen')) {
+  } else if (
+    types?.some(
+      (m) =>
+        m.toLowerCase() === 'rosmolen' ||
+        m.toLowerCase() === 'horizontale tredmolen'
+    )
+  ) {
     icon = 'rosmolen';
-  } else if (types?.some((m) => m.toLowerCase() === 'windmolen')) {
+  } else if (
+    types?.some(
+      (m) =>
+        m.toLowerCase().includes('windmolen') ||
+        m.toLowerCase().includes('windmotor')
+    )
+  ) {
     icon = 'windmolen';
-  }else if (types?.some((m) => m.toLowerCase() === 'verttred')) {
+  } else if (
+    types?.some(
+      (m) =>
+        m.toLowerCase() === 'verttred' ||
+        m.toLowerCase() === 'verticale tredmolen'
+    )
+  ) {
     icon = 'verttred';
-  }else if (types?.some((m) => m.toLowerCase() === 'tjasker')) {
+  } else if (types?.some((m) => m.toLowerCase().includes('tjasker'))) {
     icon = 'tjasker';
   }
 
