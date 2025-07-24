@@ -27,6 +27,8 @@ export function GetMolenTypeIcon(types?: string[]): string {
     icon = 'paltrokmolen';
   } else if (types?.some((m) => m.toLowerCase() === 'standerdmolen')) {
     icon = 'standerdmolen';
+  } else if (types?.some((m) => m.toLowerCase() === 'torenmolen')) {
+    icon = 'torenmolen';
   } else if (
     types?.some(
       (m) => m.toLowerCase() === 'wipmolen' || m.toLowerCase() === 'spinnenkop'
