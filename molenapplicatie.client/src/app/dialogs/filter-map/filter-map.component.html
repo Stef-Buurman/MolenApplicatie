@@ -56,13 +56,7 @@
     </option>
   </select>
 
-  <br />
-  <button
-    class="default-button filter-button {{
-      selectedFilter.toestand == 'verdwenen' ? '' : 'add-margin-to-btn'
-    }}"
-    (click)="filterMap()"
-  >
+  <button class="default-button filter-button" (click)="filterMap()">
     Filter
   </button>
 </div>
