@@ -11,50 +11,35 @@
 </section>
 
 <div class="filter-container">
-  <label for="toestand-select">Toestand</label>
-  <select
-    id="toestand-select"
-    class="provincie-dropdown"
-    [(ngModel)]="selectedFilter.toestand"
-  >
-    <option value="">Alle toestanden</option>
-    <option
-      *ngFor="let toestand of molenFilters.toestanden"
-      [value]="toestand.name.toLowerCase()"
-    >
-      {{ toestand.name }} <span class="count">({{ toestand.count }})</span>
-    </option>
-  </select>
+  <div class="remove-filter-container">
+    <button class="remove-filter-button" (click)="removeFilters()">
+      Filters verwijderen
+    </button>
+  </div>
 
+  <div class="dropdown-container">
+      <label for="toestand-select">Toestand</label>
+    <app-custom-dropdown
+      [placeholder]="'Alle toestanden'"
+      [options]="molenFilters.toestanden"
+      [selected]="selectedFilter.toestand"
+      (selectedChange)="selectedFilter.toestand = $event"
+    ></app-custom-dropdown>
   <label for="provincie-select">Provincie</label>
-  <select
-    id="provincie-select"
-    class="provincie-dropdown"
-    [(ngModel)]="selectedFilter.provincie"
-  >
-    <option value="">Alle provincies</option>
-    <option
-      *ngFor="let prov of molenFilters.provincies"
-      [value]="prov.name.toLowerCase()"
-    >
-      {{ prov.name }} <span class="count">({{ prov.count }})</span>
-    </option>
-  </select>
-
-  <label for="type-select">Type</label>
-  <select
-    id="type-select"
-    class="provincie-dropdown"
-    [(ngModel)]="selectedFilter.type"
-  >
-    <option value="">Alle types</option>
-    <option
-      *ngFor="let type of molenFilters.types"
-      [value]="type.name.toLowerCase()"
-    >
-      {{ type.name }} <span class="count">({{ type.count }})</span>
-    </option>
-  </select>
+    <app-custom-dropdown
+      [placeholder]="'Alle provincies'"
+      [options]="molenFilters.provincies"
+      [selected]="selectedFilter.provincie"
+      (selectedChange)="selectedFilter.provincie = $event"
+    ></app-custom-dropdown>
+  <label for="toestand-select">Molentype</label>
+    <app-custom-dropdown
+      [placeholder]="'Alle types'"
+      [options]="molenFilters.types"
+      [selected]="selectedFilter.type"
+      (selectedChange)="selectedFilter.type = $event"
+    ></app-custom-dropdown>
+  </div>
 
   <button class="default-button filter-button" (click)="filterMap()">
     Filter

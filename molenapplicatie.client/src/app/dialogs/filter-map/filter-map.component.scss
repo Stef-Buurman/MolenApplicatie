@@ -2,6 +2,7 @@
   width: 300px;
   padding: 30px;
   margin-bottom: 50px;
+  
   text-align: center;
 }
 
@@ -26,12 +27,34 @@
 }
 
 .filter-container input[type="radio"]:checked + label {
-  background: rgba(0, 123, 255, 0.8);
+  background: rgba(0, 255, 0, 0.8);
   border-color: #007bff;
 }
 
 .filter-container label:hover {
-  border-color: #007bff;
+  border-color: #2bff00;
+}
+
+.remove-filter-container{
+  text-align: left;
+}
+
+.remove-filter-button {
+  background-color: #28a74665;
+  color: black;
+  border: none;
+  padding:10px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.remove-filter-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
 }
 
 .filter-button {
@@ -43,7 +66,7 @@
 .provincie-dropdown {
   appearance: none;
   background-color: #ffffff;
-  border: 2px solid #007bff;
+  border: 2px solid #33b327;
   border-radius: 8px;
   padding: 10px 15px;
   font-size: 16px;
@@ -56,12 +79,12 @@
 }
 
 .provincie-dropdown:hover {
-  border-color: #0056b3;
-  background-color: #f0f8ff;
+  border-color: #00b368;
+  background-color: #f2fff0;
 }
 
 .provincie-dropdown:focus {
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 5px rgba(0, 255, 21, 0.5);
 }
 
 .provincie-dropdown option {
@@ -80,4 +103,45 @@
   font-weight: bold;
   margin: 15px auto 5px;
   text-align: left;
+}
+
+.custom-select-wrapper {
+  position: relative;
+  width: 200px;
+}
+
+.custom-select-selected {
+  padding: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-option {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.custom-option:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-container{
+  width: 250px;
+  margin: auto;
+}
+.custom-dropdown-panel{
+  color:red
 }

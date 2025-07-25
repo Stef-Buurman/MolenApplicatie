@@ -36,22 +36,22 @@ export class FilterMapComponent implements OnInit {
       const provincieValue = this.filters['Provincie'].value;
       this.selectedFilter.provincie =
         typeof provincieValue === 'string'
-          ? provincieValue.toLowerCase()
-          : undefined;
+          ? provincieValue
+          : '';
     }
     if (this.filters['MolenState']) {
       const toestandValue = this.filters['MolenState'].value;
       this.selectedFilter.toestand =
         typeof toestandValue === 'string'
-          ? toestandValue.toLowerCase()
-          : undefined;
+          ? toestandValue
+          : '';
     }
     if (this.filters['MolenType']) {
       const molenTypeValue = this.filters['MolenType'].value;
       this.selectedFilter.type =
         typeof molenTypeValue === 'string'
-          ? molenTypeValue.toLowerCase()
-          : undefined;
+          ? molenTypeValue
+          : '';
     }
     this.molenService.getAllMolenFilters().subscribe({
       next: (filters: MolenFilterList) => {
@@ -140,6 +140,16 @@ export class FilterMapComponent implements OnInit {
       return;
     }
 
+    this.onClose(Object.values(this.filters));
+  }
+
+  removeFilters() {
+    this.selectedFilter = {
+      provincie: '',
+      toestand: '',
+      type: '',
+    };
+    this.filters = {};
     this.onClose(Object.values(this.filters));
   }
 }
