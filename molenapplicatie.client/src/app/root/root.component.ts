@@ -253,7 +253,7 @@ export class RootComponent {
           );
 
           this.http
-            .get<MolenData[]>('/api/update_oldest_molens', { headers })
+            .get<MolenData[]>('/api/molen/update_oldest_molens', { headers })
             .subscribe({
               next: (result) => {
                 this.toasts.showSuccess(
@@ -333,7 +333,7 @@ export class RootComponent {
           );
 
           this.http
-            .get<MolenData[]>('/api/search_for_new_molens', { headers })
+            .get<MolenData[]>('/api/molen/search_for_new_molens', { headers })
             .subscribe({
               next: (result: MolenData[]) => {
                 if (result.length == 0) {
