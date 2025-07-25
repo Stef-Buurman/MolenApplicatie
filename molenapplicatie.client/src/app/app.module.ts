@@ -20,6 +20,9 @@ import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-detai
 import { FilterMapComponent } from './dialogs/filter-map/filter-map.component';
 import { UploadImageDialogComponent } from './dialogs/upload-image-dialog/upload-image-dialog.component';
 import { MapPageComponent } from './map-page/map-page.component';
+import { CustomDropdownComponent } from './custom-dropdown/custom-dropdown.component';
+import { PortalModule } from '@angular/cdk/portal';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [
@@ -37,6 +40,7 @@ import { MapPageComponent } from './map-page/map-page.component';
     FilterMapComponent,
     UploadImageDialogComponent,
     MapPageComponent,
+    CustomDropdownComponent,
   ],
   imports: [
     BrowserAnimationsModule,
@@ -45,6 +49,8 @@ import { MapPageComponent } from './map-page/map-page.component';
     AppRoutingModule,
     MatDialogModule,
     FormsModule,
+    OverlayModule,
+    PortalModule,
     ToastrModule.forRoot(),
   ],
   providers: [],
