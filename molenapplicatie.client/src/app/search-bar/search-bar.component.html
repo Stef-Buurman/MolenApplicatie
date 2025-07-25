@@ -28,8 +28,11 @@
     *ngIf="isDropdownVisible && searchResult && searchTerm.length >= 2"
     class="search-results-dropdown"
   >
+    <div *ngIf="isloading" class="search-loading">Searching...</div>
     <div
-      *ngIf="searchResult.molens && searchResult.molens.length > 0"
+      *ngIf="
+        searchResult.molens && searchResult.molens.length > 0 && !isloading
+      "
       class="result-section"
     >
       <h3>Molens</h3>
@@ -46,14 +49,19 @@
             <div class="result-title">
               {{ option.data.name }}
             </div>
-            <div class="result-subtitle">{{ option.reference }}...</div>
+            <div
+              class="result-subtitle"
+              [innerHTML]="option.reference + '...'"
+            ></div>
           </div>
         </div>
       </div>
     </div>
 
     <div
-      *ngIf="searchResult.places && searchResult.places.length > 0"
+      *ngIf="
+        searchResult.places && searchResult.places.length > 0 && !isloading
+      "
       class="result-section"
     >
       <h3>Plaatsen</h3>
@@ -69,14 +77,21 @@
             <div class="result-title">
               {{ place.data.name }}
             </div>
-            <div class="result-subtitle">{{ place.reference }}</div>
+            <div
+              class="result-subtitle"
+              [innerHTML]="place.reference + '...'"
+            ></div>
           </div>
         </div>
       </div>
     </div>
 
     <div
-      *ngIf="searchResult.molenTypes && searchResult.molenTypes.length > 0"
+      *ngIf="
+        searchResult.molenTypes &&
+        searchResult.molenTypes.length > 0 &&
+        !isloading
+      "
       class="result-section"
     >
       <h3>Molen types</h3>
@@ -93,10 +108,15 @@
             <div class="result-title">
               {{ option.data.name }}
             </div>
-            <div class="result-subtitle">{{ option.reference }}...</div>
+            <div
+              class="result-subtitle"
+              [innerHTML]="option.reference + '...'"
+            ></div>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="no-results" *ngIf="!hasResults()">Geen resultaten</div>
   </div>
 </div>

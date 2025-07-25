@@ -16,6 +16,13 @@ import {
 import { MolenData } from '../../Interfaces/Models/MolenData';
 import { MolenType } from '../../Interfaces/Models/MolenType';
 import { GetMolenIcon, GetMolenTypeIcon } from '../../Utils/GetMolenIcon';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  tap,
+  switchMap,
+} from 'rxjs';
 
 @Component({
   selector: 'app-search-bar',
@@ -27,6 +34,7 @@ export class SearchBarComponent {
   searchTerm: string = '';
   searchFocused = false;
   searchTimeoutRef: any = null;
+  isloading: boolean = false;
 
   handleSearchChange(query: string) {
     this.searchTerm = query;
@@ -53,21 +61,87 @@ export class SearchBarComponent {
     private eRef: ElementRef
   ) {}
 
+  searchSubject = new Subject<string>();
+
+  ngOnInit(): void {
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(() => {
+          this.isloading = true;
+          this.isDropdownVisible = true;
+        }),
+        switchMap((term) => {
+          if (term.length <= 2) return [];
+          const encodedQuery = encodeURIComponent(term);
+          return this.http.get<SearchResultsModel>(
+            `/api/search?query=${encodedQuery}`
+          );
+        })
+      )
+      .subscribe({
+        next: (result: any) => {
+          const term = this.searchTerm;
+
+          if (result.molens) {
+            result.molens = result.molens.map(
+              (item: { reference: string }) => ({
+                ...item,
+                reference: this.highlightReference(item.reference, term),
+              })
+            );
+          }
+
+          if (result.places) {
+            result.places = result.places.map(
+              (placeGroup: { key: any; value: any[] }) => ({
+                key: placeGroup.key,
+                value: placeGroup.value.map((item: { reference: string }) => ({
+                  ...item,
+                  reference: this.highlightReference(item.reference, term),
+                })),
+              })
+            );
+          }
+
+          if (result.molenTypes) {
+            result.molenTypes = result.molenTypes.map(
+              (item: { reference: string }) => ({
+                ...item,
+                reference: this.highlightReference(item.reference, term),
+              })
+            );
+          }
+
+          this.searchResult = result;
+          this.isloading = false;
+        },
+        error: (err) => {
+          this.toastService.showError(err.error);
+        },
+      });
+  }
   filterOptions() {
-    this.isDropdownVisible = true;
-    if (this.searchTerm.length > 2) {
-      const encodedQuery = encodeURIComponent(this.searchTerm);
-      this.http
-        .get<SearchResultsModel>(`/api/search?query=${encodedQuery}`)
-        .subscribe({
-          next: (result) => {
-            this.searchResult = result;
-          },
-          error: (error) => {
-            this.toastService.showError(error.error);
-          },
-        });
-    }
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  hasResults(): boolean {
+    return (
+      (this.searchResult &&
+        (this.searchResult.molens?.length > 0 ||
+          this.searchResult.places?.length > 0 ||
+          this.searchResult.molenTypes?.length > 0)) ||
+      this.isloading
+    );
+  }
+
+  highlightReference(text: string, term: string): string {
+    if (!term || term.length < 2) return text;
+
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedTerm})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
   }
 
   getMolenIcon(molen: MolenData): string {
@@ -81,8 +155,6 @@ export class SearchBarComponent {
           .filter((type) => type !== '')
       : [];
 
-    console.log(molen.molenTypeAssociations);
-
     return (
       'Assets/Icons/Molens/' +
       GetMolenIcon(molen.toestand, types, molen.hasImage)
@@ -90,7 +162,6 @@ export class SearchBarComponent {
   }
 
   getMolenTypeIcon(molen: MolenType): string {
-    console.log(molen);
     return (
       'Assets/Icons/Molens/' +
       GetMolenTypeIcon([molen.name.toLocaleLowerCase()]) +

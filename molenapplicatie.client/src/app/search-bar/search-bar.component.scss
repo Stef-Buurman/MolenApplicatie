@@ -119,3 +119,10 @@
 .clear-search:hover {
   color: #333;
 }
+
+.search-loading,
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+}
