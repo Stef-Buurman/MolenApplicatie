@@ -206,7 +206,8 @@ export class RootComponent {
               name: 'MolenState',
             });
           } else if (
-            this.currentFilters.find((f) => f.filterName === 'Provincie') !== null
+            this.currentFilters.find((f) => f.filterName === 'Provincie') !==
+            null
           ) {
             this.currentFilters = this.currentFilters.filter(
               (f) => f.filterName !== 'Provincie'
@@ -220,6 +221,7 @@ export class RootComponent {
 
   updateMolens() {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      panelClass: 'update-molens-dialog',
       data: {
         title: 'Molens updaten',
         message: 'Weet je zeker dat je de oudste molens wilt updaten?',
@@ -300,6 +302,7 @@ export class RootComponent {
 
   searchForNewMolens() {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      panelClass: 'search-new-molens-dialog',
       data: {
         title: 'Nieuwe molens',
         message: 'Weet je zeker dat je voor nieuwe molens wilt zoeken?',
