@@ -14,21 +14,16 @@ namespace MolenApplicatie.Server.Services.Database
             _dBPlaceTypeService = dBPlaceTypeService;
         }
 
-        public override async Task<List<Place>> GetAllAsync()
-        {
-            return await _dbSet.Include(e => e.Type)
-                               .ToListAsync();
-        }
 
         public override bool Exists(Place place, out Place? existing)
         {
             return Exists(e => place.Name == e.Name && place.Province == e.Province && place.Latitude == e.Latitude && place.Longitude == e.Longitude, out existing);
         }
 
-        public override bool ExistsRange(List<Place> entities, 
-            out List<Place> matchingEntities, 
-            out List<Place> newEntities, 
-            out List<Place> updatedEntities, 
+        public override bool ExistsRange(List<Place> entities,
+            out List<Place> matchingEntities,
+            out List<Place> newEntities,
+            out List<Place> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)
@@ -72,29 +67,21 @@ namespace MolenApplicatie.Server.Services.Database
                     entity.PlaceTypeId = entity.Type.Id;
                     entity.Type = null;
                 }
-                var existingEntity = all.FirstOrDefault(e => e.Equals(entity));
-                if (existingEntity != null)
-                {
-                    if (strat == UpdateStrategy.Ignore)
-                        continue;
-
-                    if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
-                        entity.Id = existingEntity.Id;
-
-                    if (strat == UpdateStrategy.Patch)
-                        PatchUtil.Patch(entity, existingEntity);
-
-                    existingEntity.Type = null;
-                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
-                    _cache.Update(entity);
-                }
-                else
-                {
-                    entitiesToAdd.Add(entity);
-                }
             }
 
+            if (ExistsRange(entities, out List<Place> existingEntities, out List<Place> newEntities, out List<Place> updatedEntities, false, token, strat))
+            {
+                entitiesToAdd.AddRange(newEntities);
+                entitiesToUpdate.AddRange(updatedEntities);
+            }
+            else
+            {
+                entitiesToAdd.AddRange(entities);
+            }
+
+
             await AddRangeAsync(entitiesToAdd, token);
+            await UpdateRange(entitiesToUpdate, token, strat);
 
             return entities;
         }
