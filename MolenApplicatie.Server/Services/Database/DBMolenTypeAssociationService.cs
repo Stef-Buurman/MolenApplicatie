@@ -13,13 +13,6 @@ namespace MolenApplicatie.Server.Services.Database
             _dBMolenTypeService = dBMolenTypeService;
         }
 
-        public override async Task<List<MolenTypeAssociation>> GetAllAsync()
-        {
-            return await _dbSet.Include(e => e.MolenType)
-                               .Include(e => e.MolenData)
-                               .ToListAsync();
-        }
-
         public override bool Exists(MolenTypeAssociation molenTypeAssociation, out MolenTypeAssociation? existing)
         {
             return Exists(e => e.MolenTypeId == molenTypeAssociation.MolenTypeId && e.MolenDataId == molenTypeAssociation.MolenDataId, out existing);
@@ -130,9 +123,8 @@ namespace MolenApplicatie.Server.Services.Database
                 entitiesToAdd.AddRange(entities);
             }
 
-
-            await AddRangeAsync(entitiesToAdd, token);
-            await UpdateRange(entitiesToUpdate, token, strat);
+            if (entitiesToAdd.Count > 0) await AddRangeAsync(entitiesToAdd, token);
+            if (entitiesToUpdate.Count > 0) await UpdateRange(entitiesToUpdate, token, strat);
 
             return entities;
         }
