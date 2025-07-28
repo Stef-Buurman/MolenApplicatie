@@ -1,13 +1,5 @@
-<header *ngIf="!error">
+<header *ngIf="!error" class="responsiveheader">
   <div class="{{ visible ? 'responsive' : '' }} topInfo" id="mytopInfo">
-    <div class="searchBarContainer">
-      <app-search-bar
-        [(selectedPlace)]="selectedPlace"
-        (selectedPlaceChange)="onPlaceChange($event)"
-        (selectedMolenChange)="onMolenChange($event)"
-        (selectedTypeChange)="onTypeChange($event)"
-      ></app-search-bar>
-    </div>
     <div class="topInfoContent">
       <section class="logo-div">
         <span class="MolenImageCountPhone">{{ getMolenWithImageAmount }}</span>
@@ -43,6 +35,42 @@
       <div class="icon" (click)="openInfoMenu()">
         <i class="fa fa-bars"></i>
       </div>
+    </div>
+  </div>
+</header>
+<header *ngIf="!error" class="header">
+  <div class="topInfo" id="mytopInfo">
+    <div class="searchBarContainer">
+      <app-search-bar
+        [(selectedPlace)]="selectedPlace"
+        (selectedPlaceChange)="onPlaceChange($event)"
+        (selectedMolenChange)="onMolenChange($event)"
+        (selectedTypeChange)="onTypeChange($event)"
+      ></app-search-bar>
+    </div>
+    <div class="topInfoContent">
+      <section class="logo-div">
+        <span class="MolenImageCountPhone">{{ getMolenWithImageAmount }}</span>
+        <img
+          class="logo"
+          src="Assets/Background/Buurman-Buurman-logo.webp"
+          alt="Alternate Text"
+        />
+        <span>Molens</span>
+      </section>
+      <div *ngIf="visible" class="searchBarContainer">
+        <app-search-bar
+          [(selectedPlace)]="selectedPlace"
+          (selectedPlaceChange)="onPlaceChange($event)"
+          (selectedMolenChange)="onMolenChange($event)"
+          (selectedTypeChange)="onTypeChange($event)"
+        ></app-search-bar>
+      </div>
+      <img
+        class="buurmanEnBuurmanImg"
+        src="Assets/Background/Buurman-Buurman-events.png"
+        alt="Alternate Text"
+      />
     </div>
   </div>
 </header>

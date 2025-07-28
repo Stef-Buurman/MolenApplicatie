@@ -132,6 +132,7 @@ export class RootComponent {
         15
       );
     }
+    this.visible = false;
   }
 
   onTypeChange(selectedType: MolenType) {
@@ -159,6 +160,7 @@ export class RootComponent {
   }
 
   openInfoMenu() {
+    console.log('Info menu opened');
     this.visible = !this.visible;
   }
 
