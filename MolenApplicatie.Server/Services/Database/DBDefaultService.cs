@@ -21,7 +21,7 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet.AsNoTracking().ToListAsync();
         }
 
         public virtual async Task<TEntity?> GetById(Guid id)
@@ -113,7 +113,7 @@ namespace MolenApplicatie.Server.Services.Database
                 _context.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
             }
-
+            // _cache.UpdateRange(entitiesToUpdate);
             _cache.UpdateRange(entitiesToUpdate);
 
             return entities;
@@ -167,8 +167,8 @@ namespace MolenApplicatie.Server.Services.Database
                 entitiesToAdd.AddRange(entities);
             }
 
-            await AddRangeAsync(entitiesToAdd, token);
-            await UpdateRange(entitiesToUpdate, token, strat);
+            if (entitiesToAdd.Count > 0) await AddRangeAsync(entitiesToAdd, token);
+            if (entitiesToUpdate.Count > 0) await UpdateRange(entitiesToUpdate, token, strat);
 
             return entitiesToAdd.Concat(entitiesToUpdate).ToList();
         }
@@ -282,6 +282,7 @@ namespace MolenApplicatie.Server.Services.Database
 
             foreach (var entity in entities)
             {
+                if (entity == null) continue;
                 token.ThrowIfCancellationRequested();
                 var key = matchKeySelector(entity);
 
