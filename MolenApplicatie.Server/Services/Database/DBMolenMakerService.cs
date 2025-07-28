@@ -10,12 +10,6 @@ namespace MolenApplicatie.Server.Services.Database
         public DBMolenMakerService(MolenDbContext context) : base(context)
         { }
 
-        public override async Task<List<MolenMaker>> GetAllAsync()
-        {
-            return await _dbSet.Include(e => e.MolenData)
-                               .ToListAsync();
-        }
-
         public override bool Exists(MolenMaker molenMaker, out MolenMaker? existing)
         {
             return Exists(e => e.Name == molenMaker.Name && e.Year == molenMaker.Year && e.MolenDataId == molenMaker.MolenDataId, out existing);

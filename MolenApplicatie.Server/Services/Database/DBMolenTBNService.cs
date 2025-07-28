@@ -9,11 +9,6 @@ namespace MolenApplicatie.Server.Services.Database
         public DBMolenTBNService(MolenDbContext context) : base(context)
         { }
 
-        public override async Task<List<MolenTBN>> GetAllAsync()
-        {
-            return await _dbSet.ToListAsync();
-        }
-
         public override bool Exists(MolenTBN molenTBN, out MolenTBN? existing)
         {
             return Exists(e => e.Ten_Brugge_Nr == molenTBN.Ten_Brugge_Nr, out existing);

@@ -9,11 +9,6 @@ namespace MolenApplicatie.Server.Services.Database
     {
         public DBPlaceTypeService(MolenDbContext context) : base(context) { }
 
-        public override async Task<List<PlaceType>> GetAllAsync()
-        {
-            return await _dbSet.ToListAsync();
-        }
-
         public override bool Exists(PlaceType type, out PlaceType? existing)
         {
             return Exists(e => e.Name == type.Name && e.Group == type.Group, out existing);

@@ -12,12 +12,6 @@ namespace MolenApplicatie.Server.Services.Database
         public DBMolenAddedImageService(MolenDbContext context) : base(context)
         {}
 
-        public override async Task<List<AddedImage>> GetAllAsync()
-        {
-            return await _dbSet.Include(e => e.MolenData)
-                               .ToListAsync();
-        }
-
         public override bool Exists(AddedImage addedImage, out AddedImage? existing)
         {
             return Exists(e => e.FilePath == addedImage.FilePath, out existing);

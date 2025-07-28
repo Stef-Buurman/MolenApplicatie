@@ -10,12 +10,6 @@ namespace MolenApplicatie.Server.Services.Database
         public DBMolenDissappearedYearsService(MolenDbContext context) : base(context)
         { }
 
-        public override async Task<List<DisappearedYearInfo>> GetAllAsync()
-        {
-            return await _dbSet.Include(e => e.MolenData)
-                               .ToListAsync();
-        }
-
         public override bool Exists(DisappearedYearInfo molenDissappearedYears, out DisappearedYearInfo? existing)
         {
             return Exists(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year, out existing);

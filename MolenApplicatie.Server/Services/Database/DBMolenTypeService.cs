@@ -9,11 +9,6 @@ namespace MolenApplicatie.Server.Services.Database
     {
         public DBMolenTypeService(MolenDbContext context) : base(context) { }
 
-        public override async Task<List<MolenType>> GetAllAsync()
-        {
-            return await _dbSet.ToListAsync();
-        }
-
         public override bool Exists(MolenType molenType, out MolenType? existing)
         {
             return Exists(e => e.Name.ToLower() == molenType.Name.ToLower(), out existing);
