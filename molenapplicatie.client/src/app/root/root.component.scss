@@ -111,12 +111,14 @@ header,
   width: 500px;
 }
 
-  .responsiveheader{
-    display: none;
-  }
-  .header {
-    display: flex;
-  }
+.responsiveheader {
+  display: none;
+}
+.header {
+  display: block;
+  margin: auto;
+  width: 85%;
+}
 
 @media screen and (max-width: $Media_width) {
   .container,
@@ -124,7 +126,7 @@ header,
     width: 85%;
   }
 
-  .responsiveheader{
+  .responsiveheader {
     display: flex;
   }
   .header {
