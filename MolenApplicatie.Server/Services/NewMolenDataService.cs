@@ -1322,7 +1322,7 @@ namespace MolenApplicatie.Server.Services
             foreach (var molen in oldestUpdateTimesMolens)
             {
                 var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr, null, false);
-                if (result.HasValue)
+                if (result.HasValue && result is not null)
                 {
                     updatedMolens.Add(result.Value.Item1);
                 }

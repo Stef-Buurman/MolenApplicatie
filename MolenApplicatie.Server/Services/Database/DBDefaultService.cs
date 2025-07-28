@@ -68,6 +68,7 @@ namespace MolenApplicatie.Server.Services.Database
         public virtual async Task<List<TEntity>> UpdateRange(List<TEntity> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null) return entities;
+            entities = entities.Where(e => e != null).ToList();
 
             var entitiesToUpdate = new List<TEntity>();
 
@@ -149,8 +150,8 @@ namespace MolenApplicatie.Server.Services.Database
 
         public virtual async Task<List<TEntity>> AddOrUpdateRange(List<TEntity> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
-            if (entities == null || entities.Count == 0)
-                return entities;
+            if (entities == null || entities.Count == 0) return entities;
+            entities = entities.Where(e => e != null).ToList();
 
             var all = await _cache.GetAllAsync();
             token.ThrowIfCancellationRequested();
@@ -176,6 +177,7 @@ namespace MolenApplicatie.Server.Services.Database
         public virtual async Task AddRangeAsync(List<TEntity> entities, CancellationToken token = default)
         {
             if (entities == null || !entities.Any()) return;
+            entities = entities.Where(e => e != null).ToList();
 
             var localEntities = _context.Set<TEntity>().Local
                                         .ToDictionary(e => e.Id);

@@ -164,8 +164,8 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<List<MolenData>> UpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
-            if (entities == null || entities.Count == 0)
-                return entities;
+            if (entities == null || entities.Count == 0) return entities;
+            entities = entities.Where(e => e != null).ToList();
 
             var entityIds = entities.Select(e => e.Id).ToList();
             var allTBNs = await _dBMolenTBNService
@@ -283,6 +283,7 @@ namespace MolenApplicatie.Server.Services.Database
         public override async Task AddRangeAsync(List<MolenData> entities, CancellationToken token = default)
         {
             if (entities == null || entities.Count() == 0) return;
+            entities = entities.Where(e => e != null).ToList();
             var allTBNs = entities.Where(x => x != null).Select(e => e.MolenTBN).Where(x => x != null).ToList();
 
 
