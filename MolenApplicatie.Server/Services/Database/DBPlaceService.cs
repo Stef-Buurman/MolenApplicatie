@@ -14,6 +14,13 @@ namespace MolenApplicatie.Server.Services.Database
             _dBPlaceTypeService = dBPlaceTypeService;
         }
 
+        public override async Task<List<Place>> GetAllAsync()
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(p => p.Type)
+                .ToListAsync();
+        }
 
         public override bool Exists(Place place, out Place? existing)
         {
