@@ -124,13 +124,6 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _MolenService.GetMolenByTBN(tbNumber));
         }
 
-        [HttpGet]
-        [Route("get_molen_tbn")]
-        public async Task<IActionResult> GetMolenAllActiveTBN()
-        {
-            return Ok(await _NewMolenDataService.AddMolenTBNToDB());
-        }
-
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
         public async Task<IActionResult> DeleteMolenImage(string tbNumber, string imageName)
@@ -151,6 +144,10 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> UpdateOldestMolens()
         {
             var result = await _NewMolenDataService.UpdateDataOfLastUpdatedMolens();
+            if(!result.isDone && result.timeToWait == null && result.MolenData == null)
+            {
+                return BadRequest("Er zijn te veel aanvragen gedaan, probeer het later nog eens!");
+            }
             if (result.isDone)
             {
                 return Ok(result.MolenData);
@@ -179,13 +176,6 @@ namespace MolenApplicatie.Server.Controllers
             return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets fout gegaan bij het zoeken naar nieuwe molens.");
         }
 
-        [FileUploadFilter]
-        [HttpGet]
-        [Route("get_all_molen_tbn")]
-        public async Task<IActionResult> GetMolenTBN()
-        {
-            return Ok(await _NewMolenDataService.ReadAllMolenTBN());
-        }
 
         [FileUploadFilter]
         [HttpGet]
@@ -193,7 +183,11 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetMolenTypes(string tbNumber)
         {
             var results = await _NewMolenDataService.GetMolenDataByTBNumber(tbNumber);
-            return Ok(results.Item1);
+            if (results.HasValue)
+            {
+                return Ok(results.Value.Item1);
+            }
+            return NotFound("Molen niet gevonden!");
         }
 
         [FileUploadFilter]
