@@ -1143,6 +1143,7 @@ namespace MolenApplicatie.Server.Services
                     {
                         string imageName = Path.GetFileNameWithoutExtension(image);
                         string imagePath = CreateCleanPath.CreatePathWithoutWWWROOT(image);
+                        var dateTaken = GetDateTakenOfImage.GetDateTaken(image);
                         if (newMolenData != null && newMolenData.AddedImages.Find(x => x.Name == imageName && x.FilePath == imagePath) == null)
                         {
                             var newAddedMolenImage = new AddedImage
@@ -1151,6 +1152,7 @@ namespace MolenApplicatie.Server.Services
                                 Name = imageName,
                                 CanBeDeleted = true,
                                 Description = "",
+                                DateTaken = dateTaken,
                                 MolenDataId = newMolenData.Id
                             };
                             newMolenData.AddedImages.Add(newAddedMolenImage);
@@ -1254,8 +1256,7 @@ namespace MolenApplicatie.Server.Services
                                         Name = ImageName.ToString(),
                                         Description = description ?? string.Empty,
                                         CanBeDeleted = canBeDeleted,
-                                        ExternalUrl = nogWaarneembareImageSrc,
-                                        MolenDataId = foundImagesInDB.MolenDataId
+                                        ExternalUrl = nogWaarneembareImageSrc
                                     };
                                 }
                             }
