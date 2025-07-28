@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ErrorService } from '../../Services/ErrorService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
@@ -8,13 +8,14 @@ import { MolenService } from '../../Services/MolenService';
 import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { Place } from '../../Interfaces/Models/Place';
 import { catchError, Observable, tap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-map-page',
   templateUrl: './map-page.component.html',
   styleUrl: './map-page.component.scss',
 })
-export class MapPageComponent {
+export class MapPageComponent implements OnInit {
   molens: MapData[] = [];
   mapPageId: string = 'activeMolensMap';
   visible: boolean = false;
@@ -34,8 +35,28 @@ export class MapPageComponent {
     private errors: ErrorService,
     private molenService: MolenService,
     private mapService: MapService,
-    private sharedData: SharedDataService
+    private sharedData: SharedDataService,
+    private route: ActivatedRoute
   ) {}
+
+  ngOnInit() {
+    this.mapService.SelectedMapId = this.mapPageId;
+    this.getMolens().subscribe();
+    this.route.url.subscribe(() => {
+      const firstChild = this.route.firstChild;
+      if (
+        !!(firstChild && firstChild.snapshot.paramMap.get('TenBruggeNumber'))
+      ) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          this.mapService.mapReady.then(() => {
+            this.mapService.setView([latitude, longitude], 14);
+          });
+        });
+      }
+    });
+  }
 
   getMolens(filters: FilterFormValues[] = []): Observable<MapData[]> {
     this.sharedData.IsLoadingTrue();
@@ -56,10 +77,5 @@ export class MapPageComponent {
         },
       })
     );
-  }
-
-  ngAfterViewInit(): void {
-    this.mapService.SelectedMapId = this.mapPageId;
-    this.getMolens().subscribe();
   }
 }
