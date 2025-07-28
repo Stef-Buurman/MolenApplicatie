@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Services;
-using MolenApplicatie.Server.Services.Database;
 
 namespace MolenApplicatie.Server.Controllers
 {
@@ -29,8 +28,8 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> GetAllDataForDB()
         {
             await _PlacesService2_0.ReadAllNetherlandsPlaces();
-            //await _NewMolenDataService2_0.ReadAllMolenTBN();
-            //await _NewMolenDataService2_0.GetAllMolenData();
+            await _NewMolenDataService2_0.SaveAllMolenTBN();
+            await _NewMolenDataService2_0.GetAllMolenData();
             return Ok();
         }
 
@@ -56,7 +55,7 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("CallMolenResponses")]
         public async Task<IActionResult> CallMolenResponses()
         {
-            //await _NewMolenDataService2_0.SaveAllMolenTBN();
+            // await _NewMolenDataService2_0.SaveAllMolenTBN();
             await _NewMolenDataService2_0.CallMolenResponses();
             return Ok();
         }
