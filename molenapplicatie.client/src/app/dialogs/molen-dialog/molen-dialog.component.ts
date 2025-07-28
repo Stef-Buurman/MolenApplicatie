@@ -13,6 +13,7 @@ import { SecurityContext } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
+import { MapService } from '../../../Services/MapService';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -45,11 +46,10 @@ export class MolenDialogComponent implements OnDestroy {
     private toasts: Toasts,
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
+    private mapService: MapService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     private dialog: MatDialog,
     private sanitizer: DomSanitizer,
-    private router: Router,
-    private route: ActivatedRoute,
     @Inject(MAT_DIALOG_DATA)
     public data: { tenBruggeNr: string; molen: MolenData }
   ) {}
@@ -62,6 +62,14 @@ export class MolenDialogComponent implements OnDestroy {
       this.molen = this.data.molen;
       this.molenImages = this.getAllMolenImages();
       this.selectedImage = this.molenImages[0];
+      this.mapService.mapReady.then(() => {
+        if (this.molen) {
+          this.mapService.setView(
+            [this.molen.latitude, this.molen.longitude],
+            14
+          );
+        }
+      });
     }
     if (this.data.tenBruggeNr) {
       this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
@@ -72,6 +80,16 @@ export class MolenDialogComponent implements OnDestroy {
         },
         error: (error) => {
           this.toasts.showError(error.error.message);
+        },
+        complete: () => {
+          this.mapService.mapReady.then(() => {
+            if (this.molen) {
+              this.mapService.setView(
+                [this.molen.latitude, this.molen.longitude],
+                14
+              );
+            }
+          });
         },
       });
     }

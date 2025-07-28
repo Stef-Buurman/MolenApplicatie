@@ -17,6 +17,11 @@ export class MapService {
   set SelectedMapId(mapId: string) {
     this._selectedMapId = mapId;
   }
+  private mapReadyResolver!: () => void;
+  public mapReady: Promise<void> = new Promise((resolve) => {
+    this.mapReadyResolver = resolve;
+  });
+
   constructor(private router: Router) {}
 
   doesMapIdExist(mapId: string): boolean {
@@ -96,6 +101,7 @@ export class MapService {
       molens.forEach((molen) => {
         this.addMarker(molen, mapId!);
       });
+      this.mapReadyResolver?.();
     });
   }
 
@@ -104,11 +110,7 @@ export class MapService {
     var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
       var iconLocation = 'Assets/Icons/Molens/';
-      var icon = GetMolenIcon(
-        molen.toestand,
-        molen.types,
-        molen.hasImage
-      );
+      var icon = GetMolenIcon(molen.toestand, molen.types, molen.hasImage);
 
       const customIcon = L.icon({
         iconUrl: iconLocation + icon,

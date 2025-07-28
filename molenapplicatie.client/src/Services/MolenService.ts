@@ -70,20 +70,6 @@ export class MolenService {
   }
 
   public getMapData(filters: FilterFormValues[]): Observable<MapData[]> {
-    //const currentTime = Date.now();
-    //const needsRefresh = !this.activeMolens?.LastUpdatedTimestamp ||
-    //  (currentTime - this.activeMolens.LastUpdatedTimestamp) > this.refreshInterval;
-
-    //if (needsRefresh) {
-    //  return this.http.get<MolensResponseType<MapData>>('/api/molen/active').pipe(
-    //    tap((molensResponseType) => {
-    //      //this.activeMolens = new SavedMolens(currentTime, molensResponseType.molens);
-    //    }),
-    //    map(molensResponseType => molensResponseType.molens)
-    //  );
-    //} else {
-    //  return of(this.activeMolens?.Molens!);
-    //}
     return this.http
       .get<MolensResponseType<MapData>>(
         '/api/molen/mapdata' + BuildFilterQuery(filters)
