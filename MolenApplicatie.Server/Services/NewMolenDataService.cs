@@ -6,6 +6,7 @@ using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services.Database;
 using MolenApplicatie.Server.Utils;
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -52,7 +53,7 @@ namespace MolenApplicatie.Server.Services
             List<MolenData> molens = JsonSerializer.Deserialize<List<MolenData>>(jsonString)!;
             var startTime = DateTime.Now;
             Console.WriteLine("Saving progress...");
-            await _dBMolenDataService.AddOrUpdateRange(molens, default, Enums.UpdateStrategy.Ignore);
+            await _dBMolenDataService.AddOrUpdateRange(molens);
             var midTime = DateTime.Now;
             //var changes = await _dbContext.SaveChangesAsync();
             var endTime = DateTime.Now;
@@ -343,7 +344,7 @@ namespace MolenApplicatie.Server.Services
             return null;
         }
 
-        public async Task<(MolenData molen, int requestCount, Dictionary<string, object> allData)> GetMolenDataByTBNumber(string Ten_Brugge_Nr, string? url = null)
+        public async Task<(MolenData molen, int requestCount, Dictionary<string, object> allData)?> GetMolenDataByTBNumber(string Ten_Brugge_Nr, string? url = null, bool addOrUpdate = true)
         {
             MolenData? oldMolenData = await _molenService.GetMolenByTBN(Ten_Brugge_Nr);
             oldMolenData = MolenService.RemoveCircularDependency(oldMolenData);
@@ -375,6 +376,10 @@ namespace MolenApplicatie.Server.Services
                     {
                         var href = tab.GetAttributeValue("href", string.Empty);
                         HttpResponseMessage responseTab = await _client.GetAsync(href);
+                        if (responseTab.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            return null;
+                        }
                         string responseBody = await responseTab.Content.ReadAsStringAsync();
                         var doc = new HtmlDocument();
                         doc.LoadHtml(responseBody);
@@ -388,7 +393,13 @@ namespace MolenApplicatie.Server.Services
                 {
                     Name = "",
                     Ten_Brugge_Nr = Ten_Brugge_Nr,
-                    DisappearedYearInfos = oldMolenData?.DisappearedYearInfos ?? new List<DisappearedYearInfo>(),
+                    DisappearedYearInfos = oldMolenData?.DisappearedYearInfos.Select(d => new DisappearedYearInfo
+                    {
+                        Year = d.Year,
+                        MolenDataId = d.MolenDataId,
+                        Status_after = d.Status_after,
+                        Status_before = d.Status_before
+                    }).ToList() ?? new List<DisappearedYearInfo>(),
                     Images = oldMolenData?.Images ?? new List<MolenImage>(),
                     AddedImages = oldMolenData?.AddedImages ?? new List<AddedImage>(),
                     MolenMakers = oldMolenData?.MolenMakers ?? new List<MolenMaker>(),
@@ -401,12 +412,6 @@ namespace MolenApplicatie.Server.Services
                     data = res.data;
                     newMolenData = res.molen;
                 }
-
-
-                //var molenimagesCopy = newMolenData.Images;
-                //molenimagesCopy.ForEach(mta => mta.MolenData = null);
-                //if (data.ContainsKey("Images")) data["Images"] = molenimagesCopy;
-                //else data.Add("Images", molenimagesCopy);
 
                 if (newMolenData != null)
                 {
@@ -436,9 +441,15 @@ namespace MolenApplicatie.Server.Services
                 }
                 if (newMolenData != null)
                 {
-                    var addedMolen = await _dBMolenDataService.AddOrUpdate(newMolenData);
-                    //newMolenData = MolenService.RemoveCircularDependency(newMolenData);
-                    return (addedMolen, requestCount, data);
+                    if (addOrUpdate)
+                    {
+                        var addedMolen = await _dBMolenDataService.AddOrUpdate(newMolenData);
+                        return (newMolenData, requestCount, data);
+                    }
+                    else
+                    {
+                        return (newMolenData, requestCount, data);
+                    }
                 }
 
             }
@@ -1077,7 +1088,7 @@ namespace MolenApplicatie.Server.Services
                 for (int i = 0; i < newMolenData.Images.Count; i++)
                 {
                     var image = newMolenData.Images[i];
-                    var imageInOldMolen = oldMolenData?.Images.Find(x => x.Name == image.Name && x.FilePath == image.FilePath);
+                    var imageInOldMolen = oldMolenData?.Images?.Find(x => x.Name == image.Name && x.FilePath == image.FilePath);
                     bool isImageInOldMolen = oldMolenData != null && imageInOldMolen != null;
 
                     image.MolenDataId = newMolenData.Id;
@@ -1112,7 +1123,7 @@ namespace MolenApplicatie.Server.Services
                     // }
                 }
 
-                for (int i = 0; i < oldMolenData?.Images.Count; i++)
+                for (int i = 0; i < oldMolenData?.Images?.Count; i++)
                 {
                     if (newMolenData.Images.Find(x => x.Id == oldMolenData.Images[i].Id) == null && File.Exists(Globals.WWWROOTPath + oldMolenData.Images[i].FilePath))
                     {
@@ -1291,53 +1302,46 @@ namespace MolenApplicatie.Server.Services
             return null;
         }
 
-        public async Task<List<MolenTBN>> AddMolenTBNToDB()
-        {
-            List<MolenTBN> alleMolenTBNR = await _dbContext.MolenTBNs.ToListAsync();
-            List<MolenTBN> molenList = await ReadAllActiveMolenTBN();
-            foreach (var molentbn in molenList)
-            {
-                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == molentbn.Ten_Brugge_Nr).Count() == 0)
-                {
-                    await _dbContext.MolenTBNs.AddAsync(molentbn);
-                    alleMolenTBNR.Add(molentbn);
-                }
-            }
-            return alleMolenTBNR;
-        }
-
         public async Task<(List<MolenData>? MolenData, bool isDone, TimeSpan? timeToWait)> UpdateDataOfLastUpdatedMolens()
         {
-            List<MolenData>? oldestUpdateTimesMolens = await _dbContext.MolenData.OrderByDescending(x => x.LastUpdated).Take(50).ToListAsync();
-            if (oldestUpdateTimesMolens == null) return (null, false, null);
-            if (oldestUpdateTimesMolens[0].LastUpdated >= DateTime.Now.AddMinutes(-30))
+            List<MolenData> oldestUpdateTimesMolens = _dbContext.MolenData.OrderByDescending(x => x.LastUpdated).Take(10)
+                .Include(m => m.MolenTBN)
+                .Include(m => m.Images)
+                .Include(m => m.AddedImages)
+                .Include(m => m.MolenTypeAssociations)
+                    .ThenInclude(a => a.MolenType)
+                .Include(m => m.MolenMakers)
+                .Include(m => m.DisappearedYearInfos)
+                .Select(MolenService.GetMolenData).ToList();
+            if (oldestUpdateTimesMolens[0].LastUpdated >= DateTime.Now.AddMinutes(-0))
             {
                 return (null, false, oldestUpdateTimesMolens[0].LastUpdated.AddMinutes(30) - DateTime.Now);
             }
             List<MolenData> updatedMolens = new List<MolenData>();
-
             foreach (var molen in oldestUpdateTimesMolens)
             {
-                var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr);
-                updatedMolens.Add(result.Item1);
+                var result = await GetMolenDataByTBNumber(molen.Ten_Brugge_Nr, null, false);
+                if (result.HasValue)
+                {
+                    updatedMolens.Add(result.Value.Item1);
+                }
+                else
+                {
+                    return (null, false, null);
+                }
             }
+            await _dBMolenDataService.AddOrUpdateRange(updatedMolens);
+            Console.WriteLine("Updated " + updatedMolens.Count + " molens.");
+            await _dbContext.SaveChangesAsync();
+            Console.WriteLine("Saved changes to database.");
             return (oldestUpdateTimesMolens, true, TimeSpan.FromMinutes(30));
         }
 
         public async Task<List<Dictionary<string, object>>> GetAllMolenData()
         {
-            Dictionary<int, Dictionary<string, object>> keyValuePairs;
+            Dictionary<int, Dictionary<string, object>> keyValuePairs = new Dictionary<int, Dictionary<string, object>>();
             List<MolenData> currentData = await _dbContext.MolenData.ToListAsync();
             List<MolenTBN> Data = _dbContext.MolenTBNs.ToList();
-            string jsonString = await File.ReadAllTextAsync("Json/AlleMolenData.json");
-            if (!string.IsNullOrEmpty(jsonString))
-            {
-                keyValuePairs = JsonSerializer.Deserialize<Dictionary<int, Dictionary<string, object>>>(jsonString)!;
-            }
-            else
-            {
-                keyValuePairs = new Dictionary<int, Dictionary<string, object>>();
-            }
             Thread.Sleep(1000);
 
             int count = 0;
@@ -1345,32 +1349,34 @@ namespace MolenApplicatie.Server.Services
             {
                 count++;
                 if (currentData.Find(mol => mol.Ten_Brugge_Nr == tbn.Ten_Brugge_Nr) != null) continue;
+                // if (count == 101)
+                // {
+                //     break;
+                // }
                 Console.WriteLine("nr-" + count);
                 Console.WriteLine("Ten_Brugge_Nr-" + tbn.Ten_Brugge_Nr);
-                (MolenData molen, int requestCount, Dictionary<string, object> allData) res = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
-                Thread.Sleep(res.requestCount * 1000);
-                //if (count == 1)
-                //{
-                //    break;
-                //}
-                if (count % 100 == 0)
+                (MolenData molen, int requestCount, Dictionary<string, object> allData)? res = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
+                if (res.HasValue)
                 {
-                    await _dbContext.SaveChangesAsync();
-                    File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
+                    Thread.Sleep(res.Value.requestCount * 1000);
+                    if (count % 100 == 0)
                     {
-                        WriteIndented = true
-                    }));
-                    if (res.allData != null)
-                    {
-                        keyValuePairs[count] = res.allData;
+                        await _dbContext.SaveChangesAsync();
+                        File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        }));
+                        if (res.Value.allData != null)
+                        {
+                            keyValuePairs[count] = res.Value.allData;
+                        }
+                        File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        }));
                     }
-                    File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
-                    {
-                        WriteIndented = true
-                    }));
                 }
             }
-            //(MolenData, Dictionary<string, object>) molen = await GetMolenDataByTBNumber("02748");
 
             await _dbContext.SaveChangesAsync();
             File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
@@ -1443,92 +1449,53 @@ namespace MolenApplicatie.Server.Services
             return alleMolenTBNR;
         }
 
-        public async Task<List<MolenTBN>> ReadAllActiveMolenTBN()
-        {
-            List<MolenTBN> alleMolenTBNR = new List<MolenTBN>();
-
-            int countDivsAtNull = 0;
-            int i = 1;
-
-            while (countDivsAtNull <= 1)
-            {
-                HttpResponseMessage response = await _client.GetAsync("https://www.molendatabase.nl/molens?mill_state%5Bstate%5D=existing&page=" + i);
-                string responseBody = await response.Content.ReadAsStringAsync();
-
-                var doc = new HtmlDocument();
-                doc.LoadHtml(responseBody);
-                var divs = doc.DocumentNode.SelectNodes("//div[@class='mill_link']");
-                if (divs == null || divs.Count() == 0)
-                {
-                    countDivsAtNull++;
-                }
-                if (divs != null)
-                {
-                    foreach (var div in divs)
-                    {
-                        var url = div.SelectSingleNode(".//a").GetAttributeValue("href", string.Empty);
-                        if (!string.IsNullOrEmpty(url))
-                        {
-                            url = url.Substring(0, url.IndexOf('?'));
-                            string pattern = @"ten-bruggencate-nr-(\d+(-[a-zA-Z0-9]+)?)";
-
-                            Match match = Regex.Match(url, pattern);
-
-                            if (match.Success)
-                            {
-                                url = match.Groups[1].Value;
-                                if (alleMolenTBNR.Where(x => x.Ten_Brugge_Nr == url).Count() == 0)
-                                {
-                                    alleMolenTBNR.Add(new MolenTBN() { Ten_Brugge_Nr = url });
-                                }
-                            }
-                        }
-                    }
-                }
-                i++;
-            }
-
-            return alleMolenTBNR;
-        }
-
         private readonly TimeSpan cooldownTime = TimeSpan.FromHours(1);
 
         public async Task<(List<MolenData>? MolenData, TimeSpan? timeToWait)> SearchForNewMolens()
         {
             var newestSearch = await _dbContext.LastSearchedForNewDatas.OrderByDescending(x => x.LastSearched).FirstOrDefaultAsync();
+            if (newestSearch == null)
+            {
+                await AddDateTimeFromSearches();
+                await _dbContext.SaveChangesAsync();
+                return (null, cooldownTime);
+            }
             if (newestSearch.LastSearched >= DateTime.Now.Add(cooldownTime * -1))
             {
                 return (null, cooldownTime - (DateTime.Now - newestSearch.LastSearched));
             }
 
+            await AddDateTimeFromSearches();
+            await _dbContext.SaveChangesAsync();
+
             List<MolenData> allAddedMolens = new List<MolenData>();
             List<MolenTBN> allAddedMolenTBN = new List<MolenTBN>();
-            List<MolenTBN> allFoundMolenTBN = await ReadAllActiveMolenTBN();
+            List<MolenTBN> allFoundMolenTBN = await ReadAllMolenTBN();
+            await _dBMolenDataService._cache.GetAllAsync();
 
             foreach (MolenTBN readMolenTBN in allFoundMolenTBN)
             {
-                if (allAddedMolens.Count == 50) break;
-                var results = await _dbContext.MolenTBNs.Where(x => x.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr).ToListAsync();
-                if (results?.Count == 0)
+                if (!_dBMolenDataService._cache.Exists(e => e.Ten_Brugge_Nr == readMolenTBN.Ten_Brugge_Nr, out var molenData))
                 {
-                    await _dbContext.MolenTBNs.AddAsync(readMolenTBN);
-                    var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
-                    if (molen.Item1 != null)
+                    if (!_dBMolenTBNService.Exists(readMolenTBN, out var result))
                     {
-                        allAddedMolens.Add(molen.Item1);
+                        await _dbContext.MolenTBNs.AddAsync(readMolenTBN);
                     }
-                }
-                else if (await _molenService.GetMolenByTBN(readMolenTBN.Ten_Brugge_Nr) == null)
-                {
-                    var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr);
-                    if (molen.Item1 != null)
+                    var molen = await GetMolenDataByTBNumber(readMolenTBN.Ten_Brugge_Nr, null, false);
+                    if (molen.HasValue)
                     {
-                        allAddedMolens.Add(molen.Item1);
+                        if (molen.Value.Item1 != null)
+                        {
+                            allAddedMolens.Add(molen.Value.Item1);
+                        }
                     }
                 }
             }
-
-            await AddDateTimeFromSearches();
+            if (allAddedMolens.Count > 0)
+            {
+                await _dBMolenDataService.AddOrUpdateRange(allAddedMolens);
+            }
+            await _dbContext.SaveChangesAsync();
             return (allAddedMolens, cooldownTime);
         }
 
@@ -1538,10 +1505,7 @@ namespace MolenApplicatie.Server.Services
                 .Where(x => x.LastSearched < DateTime.Now.AddDays(-1))
                 .ToListAsync();
 
-            foreach (var search in searchesLongerThanOneDay)
-            {
-                _dbContext.Remove(search);
-            }
+            _dbContext.RemoveRange(searchesLongerThanOneDay);
             await _dbContext.AddAsync(new LastSearchedForNewData() { LastSearched = DateTime.Now });
             return true;
         }
