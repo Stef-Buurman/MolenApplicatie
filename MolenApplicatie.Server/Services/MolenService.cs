@@ -117,7 +117,7 @@ namespace MolenApplicatie.Server.Services
                     {
                         mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower());
                     }
-                    else if(string.IsNullOrWhiteSpace(MolenType))
+                    else if (string.IsNullOrWhiteSpace(MolenType))
                     {
                         mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == "zuid-holland");
                     }
@@ -301,11 +301,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenData?> GetMolenByTBN(string tbn)
         {
-            _dBMolenDataService._cache.Exists(p => p.Ten_Brugge_Nr.ToLower() == tbn.ToLower(), out var molen);
-
-            if (molen != null) return molen;
-
-            molen = await _dbContext.MolenData
+            var molen = await _dbContext.MolenData.AsNoTracking()
                 .Include(m => m.MolenTBN)
                     .Where(m => m.MolenTBN.Ten_Brugge_Nr.ToLower() == tbn.ToLower())
                 .Include(m => m.Images)
@@ -319,24 +315,6 @@ namespace MolenApplicatie.Server.Services
             if (molen == null) return null;
 
             return GetMolenData(molen);
-        }
-
-        public async Task<List<MolenData>> GetMolenDataByType(string type)
-        {
-            List<MolenData> MolenData = await _dbContext.MolenData
-                .Include(m => m.MolenTBN)
-                .Include(m => m.Images)
-                .Include(m => m.AddedImages)
-                .Include(m => m.MolenTypeAssociations)
-                    .ThenInclude(a => a.MolenType)
-                .Include(m => m.MolenMakers)
-                .Include(m => m.DisappearedYearInfos).ToListAsync();
-            return MolenData;
-        }
-
-        public bool CanMolenHaveAddedImages(MolenData molen)
-        {
-            return molen.Toestand != MolenToestand.Verdwenen;
         }
 
         public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(Guid id, string TBN, IFormFile file)
