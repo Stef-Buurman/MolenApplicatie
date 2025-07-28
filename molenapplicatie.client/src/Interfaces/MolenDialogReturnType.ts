@@ -1,5 +1,5 @@
-import { MolenImage } from "./Models/MolenImage";
+import { MolenImage } from './Models/MolenImage';
 
 export interface MolenDialogReturnType {
-  MolenImages: MolenImage[]
+  MolenImages: MolenImage[];
 }

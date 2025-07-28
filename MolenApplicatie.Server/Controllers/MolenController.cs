@@ -144,7 +144,7 @@ namespace MolenApplicatie.Server.Controllers
         public async Task<IActionResult> UpdateOldestMolens()
         {
             var result = await _NewMolenDataService.UpdateDataOfLastUpdatedMolens();
-            if(!result.isDone && result.timeToWait == null && result.MolenData == null)
+            if (!result.isDone && result.timeToWait == null && result.MolenData == null)
             {
                 return BadRequest("Er zijn te veel aanvragen gedaan, probeer het later nog eens!");
             }

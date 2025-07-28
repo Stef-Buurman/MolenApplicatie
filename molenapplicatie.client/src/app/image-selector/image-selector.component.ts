@@ -10,25 +10,27 @@ import { MolenImage } from '../../Interfaces/Models/MolenImage';
 @Component({
   selector: 'app-image-selector',
   templateUrl: './image-selector.component.html',
-  styleUrl: './image-selector.component.scss'
+  styleUrl: './image-selector.component.scss',
 })
-export class ImageSelectorComponent implements OnInit{
+export class ImageSelectorComponent implements OnInit {
   @Input() images: MolenImage[] = [];
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() selectedImage?: MolenImage;
   @Output() selectedImageChange = new EventEmitter<MolenImage>();
-  @Input() tbNr: string = "";
-  @Input() deleteFunction!: (imgName: string, api_key:string) => Observable<any>;
+  @Input() tbNr: string = '';
+  @Input() deleteFunction!: (
+    imgName: string,
+    api_key: string
+  ) => Observable<any>;
 
-  constructor(private dialog: MatDialog,
-    private toast: Toasts) { }
+  constructor(private dialog: MatDialog, private toast: Toasts) {}
 
   ngOnInit(): void {
     if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
   }
 
   getImageByName(name: string): MolenImage | undefined {
-    return this.images.find(x => x.name == name);
+    return this.images.find((x) => x.name == name);
   }
 
   changeImage(imgName: string) {
@@ -52,39 +54,50 @@ export class ImageSelectorComponent implements OnInit{
       const dialogRef = this.dialog.open(ImageDialogComponent, {
         data: {
           selectedImage,
-          canBeDeleted
+          canBeDeleted,
         },
-        panelClass: 'selected-image'
+        panelClass: 'selected-image',
       });
 
-      dialogRef.afterClosed().subscribe(
-        (result: DialogReturnType) => {
-          if (result && result.status == DialogReturnStatus.Deleted && result.api_key && this.deleteFunction != undefined) {
-            this.deleteFunction(selectedImage.name, result.api_key).subscribe({
-              error: (error) => {
-                if (error.status == 401) {
-                  this.toast.showError("Er is een verkeerde api key ingevuld!");
-                } else {
-                  this.toast.showError(error.error.message);
-                }
-              },
-              complete: () => {
-                this.images = this.images.filter(x => x.name != selectedImage.name);
-                this.imagesChange.emit(this.images);
-                this.selectedImage = this.images[0]
-                this.selectedImageChange.emit(this.images[0]);
-                this.toast.showSuccess("De foto is verwijderd!");
+      dialogRef.afterClosed().subscribe((result: DialogReturnType) => {
+        if (
+          result &&
+          result.status == DialogReturnStatus.Deleted &&
+          result.api_key &&
+          this.deleteFunction != undefined
+        ) {
+          this.deleteFunction(selectedImage.name, result.api_key).subscribe({
+            error: (error) => {
+              if (error.status == 401) {
+                this.toast.showError('Er is een verkeerde api key ingevuld!');
+              } else {
+                this.toast.showError(error.error.message);
               }
-            });
-          }
-          else if (result && result.status == DialogReturnStatus.Deleted && !result.api_key) {
-            this.toast.showWarning("Er is geen api key ingevuld, de foto is niet verwijderd!");
-          }
-          else if (result && result.status == DialogReturnStatus.Error) {
-            this.toast.showError("Er is iets fout gegaan met het verwijderen van de foto!");
-          }
+            },
+            complete: () => {
+              this.images = this.images.filter(
+                (x) => x.name != selectedImage.name
+              );
+              this.imagesChange.emit(this.images);
+              this.selectedImage = this.images[0];
+              this.selectedImageChange.emit(this.images[0]);
+              this.toast.showSuccess('De foto is verwijderd!');
+            },
+          });
+        } else if (
+          result &&
+          result.status == DialogReturnStatus.Deleted &&
+          !result.api_key
+        ) {
+          this.toast.showWarning(
+            'Er is geen api key ingevuld, de foto is niet verwijderd!'
+          );
+        } else if (result && result.status == DialogReturnStatus.Error) {
+          this.toast.showError(
+            'Er is iets fout gegaan met het verwijderen van de foto!'
+          );
         }
-      )
+      });
     }
   }
 }

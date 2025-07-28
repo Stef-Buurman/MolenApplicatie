@@ -19,10 +19,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.FilePath == molenImage.FilePath, out existing);
         }
 
-        public override bool ExistsRange(List<MolenImage> entities, 
-            out List<MolenImage> matchingEntities, 
-            out List<MolenImage> newEntities, 
-            out List<MolenImage> updatedEntities, 
+        public override bool ExistsRange(List<MolenImage> entities,
+            out List<MolenImage> matchingEntities,
+            out List<MolenImage> newEntities,
+            out List<MolenImage> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)

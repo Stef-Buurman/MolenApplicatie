@@ -1,4 +1,4 @@
-export type FilterType = "number" | "date" | "string" | "timespan" | "boolean";
+export type FilterType = 'number' | 'date' | 'string' | 'timespan' | 'boolean';
 
 export interface FilterOption {
   name: string;

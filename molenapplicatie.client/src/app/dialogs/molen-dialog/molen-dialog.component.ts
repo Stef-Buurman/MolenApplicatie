@@ -10,7 +10,6 @@ import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
 import { MapService } from '../../../Services/MapService';

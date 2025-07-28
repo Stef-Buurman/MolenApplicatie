@@ -57,7 +57,10 @@ export class CustomDropdownComponent implements AfterViewInit, OnDestroy {
         width: triggerRect.width, // ✅ Match width
       });
 
-      const dropdownPortal = new TemplatePortal(this.dropdownTemplate, this.vcr);
+      const dropdownPortal = new TemplatePortal(
+        this.dropdownTemplate,
+        this.vcr
+      );
       this.overlayRef.attach(dropdownPortal);
 
       this.backdropSub = this.overlayRef

@@ -1,4 +1,4 @@
-import { MarkerInfo } from "../Interfaces/Map/MarkerInfo";
+import { MarkerInfo } from '../Interfaces/Map/MarkerInfo';
 
 export class MapInformation {
   MapId: string;

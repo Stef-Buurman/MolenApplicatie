@@ -14,10 +14,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Name == type.Name && e.Group == type.Group, out existing);
         }
 
-        public override bool ExistsRange(List<PlaceType> entities, 
-            out List<PlaceType> matchingEntities, 
-            out List<PlaceType> newEntities, 
-            out List<PlaceType> updatedEntities, 
+        public override bool ExistsRange(List<PlaceType> entities,
+            out List<PlaceType> matchingEntities,
+            out List<PlaceType> newEntities,
+            out List<PlaceType> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)

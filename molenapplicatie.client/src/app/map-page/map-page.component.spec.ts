@@ -8,9 +8,8 @@ describe('MapPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MapPageComponent]
-    })
-    .compileComponents();
+      declarations: [MapPageComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(MapPageComponent);
     component = fixture.componentInstance;

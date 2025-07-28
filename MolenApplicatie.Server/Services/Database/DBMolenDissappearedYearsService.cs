@@ -15,10 +15,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.MolenDataId == molenDissappearedYears.MolenDataId && e.Year == molenDissappearedYears.Year, out existing);
         }
 
-        public override bool ExistsRange(List<DisappearedYearInfo> entities, 
-            out List<DisappearedYearInfo> matchingEntities, 
-            out List<DisappearedYearInfo> newEntities, 
-            out List<DisappearedYearInfo> updatedEntities, 
+        public override bool ExistsRange(List<DisappearedYearInfo> entities,
+            out List<DisappearedYearInfo> matchingEntities,
+            out List<DisappearedYearInfo> newEntities,
+            out List<DisappearedYearInfo> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)

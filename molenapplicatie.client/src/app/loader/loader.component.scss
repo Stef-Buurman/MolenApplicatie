@@ -1,4 +1,4 @@
-@import '../../Utils/Variables.scss';
+@import "../../Utils/Variables.scss";
 .loadingVisible {
   opacity: 1;
 }
@@ -8,18 +8,18 @@
 }
 
 .loader-container {
-  transition: opacity 0.5s ease; /* Smooth fade transition */
+  transition: opacity 0.5s ease;
   position: fixed;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
   z-index: 999999;
-  background-image: url('../../../public/Assets/Background/Buurman-en-Buurman-loader-background.jpg');
+  background-image: url("../../../public/Assets/Background/Buurman-en-Buurman-loader-background.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  pointer-events: none; /* Optional: avoids blocking interactions when invisible */
+  pointer-events: none;
 }
 
 .loader {
@@ -56,7 +56,7 @@
 
 @media only screen and (max-width: $Media_width) {
   .loader-container {
-    background-image: url('../../../public/Assets/Background/Buurman-en-Buurman-loader-background-phone.jpg');
+    background-image: url("../../../public/Assets/Background/Buurman-en-Buurman-loader-background-phone.jpg");
   }
 
   .loader {

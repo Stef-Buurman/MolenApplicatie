@@ -1,5 +1,4 @@
-@import '../../../Utils/Variables.scss';
-
+@import "../../../Utils/Variables.scss";
 
 .container {
   width: 70vw;
@@ -64,7 +63,9 @@
 }
 
 .data {
-  ul, p, strong {
+  ul,
+  p,
+  strong {
     font-size: 20px;
   }
 }
@@ -129,7 +130,7 @@
 .file-label {
   display: inline-block;
   padding: 10px 20px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -144,7 +145,7 @@
 }
 
 .file-label:active {
-  background-color: #388E3C;
+  background-color: #388e3c;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 

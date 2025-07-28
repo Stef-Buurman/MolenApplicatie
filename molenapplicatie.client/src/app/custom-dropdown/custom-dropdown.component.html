@@ -7,10 +7,7 @@
   <ng-template #dropdownTemplate>
     <ul class="dropdown-options">
       <li (click)="select('')">{{ placeholder }}</li>
-      <li
-        *ngFor="let option of options"
-        (click)="select(option.name)"
-      >
+      <li *ngFor="let option of options" (click)="select(option.name)">
         {{ option.name }}
         <span *ngIf="option.count !== undefined" class="count">
           ({{ option.count }})

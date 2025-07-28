@@ -1,12 +1,25 @@
 <div *ngIf="selectedImage" class="image-selector">
-  <div class="main-image {{selectedImage.dateTaken ? '' : 'more-margin-underneath'}}" *ngIf="selectedImage">
-    <img (click)="openImage()" [src]="selectedImage.filePath" alt="Selected Image" />
+  <div
+    class="main-image {{
+      selectedImage.dateTaken ? '' : 'more-margin-underneath'
+    }}"
+    *ngIf="selectedImage"
+  >
+    <img
+      (click)="openImage()"
+      [src]="selectedImage.filePath"
+      alt="Selected Image"
+    />
   </div>
-  <div class="date-taken" *ngIf="selectedImage.dateTaken">Foto gemaakt op {{selectedImage.dateTaken | date:'d MMMM y' }}</div>
+  <div class="date-taken" *ngIf="selectedImage.dateTaken">
+    Foto gemaakt op {{ selectedImage.dateTaken | date : "d MMMM y" }}
+  </div>
   <div class="thumbnail-container">
-    <div *ngFor="let image of images"
-         class="{{isSelectedImage(image) ? 'thumbnail selected' : 'thumbnail'}}"
-         (click)="changeImage(image.name)">
+    <div
+      *ngFor="let image of images"
+      class="{{ isSelectedImage(image) ? 'thumbnail selected' : 'thumbnail' }}"
+      (click)="changeImage(image.name)"
+    >
       <img [src]="image.filePath" alt="Thumbnail" />
     </div>
   </div>

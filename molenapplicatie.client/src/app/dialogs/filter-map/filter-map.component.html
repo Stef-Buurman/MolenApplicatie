@@ -18,21 +18,21 @@
   </div>
 
   <div class="dropdown-container">
-      <label for="toestand-select">Toestand</label>
+    <label for="toestand-select">Toestand</label>
     <app-custom-dropdown
       [placeholder]="'Alle toestanden'"
       [options]="molenFilters.toestanden"
       [selected]="selectedFilter.toestand"
       (selectedChange)="selectedFilter.toestand = $event"
     ></app-custom-dropdown>
-  <label for="provincie-select">Provincie</label>
+    <label for="provincie-select">Provincie</label>
     <app-custom-dropdown
       [placeholder]="'Alle provincies'"
       [options]="molenFilters.provincies"
       [selected]="selectedFilter.provincie"
       (selectedChange)="selectedFilter.provincie = $event"
     ></app-custom-dropdown>
-  <label for="toestand-select">Molentype</label>
+    <label for="toestand-select">Molentype</label>
     <app-custom-dropdown
       [placeholder]="'Alle types'"
       [options]="molenFilters.types"

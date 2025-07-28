@@ -1,5 +1,5 @@
-import { MolenData } from "./MolenData";
-import { MolenType } from "./MolenType";
+import { MolenData } from './MolenData';
+import { MolenType } from './MolenType';
 
 export interface MolenTypeAssociation {
   molenDataId: number;

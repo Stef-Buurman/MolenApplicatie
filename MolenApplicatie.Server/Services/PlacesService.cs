@@ -26,7 +26,6 @@ namespace MolenApplicatie.Server.Services
 
         List<string> featureClasses = new List<string>
         {
-            //"",
             "H",
             "L",
             "P",

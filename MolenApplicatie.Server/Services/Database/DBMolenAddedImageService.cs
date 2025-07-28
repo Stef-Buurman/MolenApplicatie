@@ -10,17 +10,17 @@ namespace MolenApplicatie.Server.Services.Database
     public class DBMolenAddedImageService : DBDefaultService<AddedImage>
     {
         public DBMolenAddedImageService(MolenDbContext context) : base(context)
-        {}
+        { }
 
         public override bool Exists(AddedImage addedImage, out AddedImage? existing)
         {
             return Exists(e => e.FilePath == addedImage.FilePath, out existing);
         }
-        public override bool ExistsRange(List<AddedImage> entities, 
-            out List<AddedImage> matchingEntities, 
-            out List<AddedImage> newEntities, 
-            out List<AddedImage> updatedEntities, 
-            bool searchDB = true, 
+        public override bool ExistsRange(List<AddedImage> entities,
+            out List<AddedImage> matchingEntities,
+            out List<AddedImage> newEntities,
+            out List<AddedImage> updatedEntities,
+            bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)
         {

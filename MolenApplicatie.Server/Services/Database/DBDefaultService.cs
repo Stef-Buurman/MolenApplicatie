@@ -16,7 +16,7 @@ namespace MolenApplicatie.Server.Services.Database
         {
             _context = context;
             _dbSet = _context.Set<TEntity>();
-            _cache = new DBCache<TEntity>(_dbSet, GetAllAsync);
+            _cache = new DBCache<TEntity>(GetAllAsync);
         }
 
         public virtual async Task<List<TEntity>> GetAllAsync()

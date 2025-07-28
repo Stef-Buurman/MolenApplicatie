@@ -35,23 +35,17 @@ export class FilterMapComponent implements OnInit {
     if (this.filters['Provincie']) {
       const provincieValue = this.filters['Provincie'].value;
       this.selectedFilter.provincie =
-        typeof provincieValue === 'string'
-          ? provincieValue
-          : '';
+        typeof provincieValue === 'string' ? provincieValue : '';
     }
     if (this.filters['MolenState']) {
       const toestandValue = this.filters['MolenState'].value;
       this.selectedFilter.toestand =
-        typeof toestandValue === 'string'
-          ? toestandValue
-          : '';
+        typeof toestandValue === 'string' ? toestandValue : '';
     }
     if (this.filters['MolenType']) {
       const molenTypeValue = this.filters['MolenType'].value;
       this.selectedFilter.type =
-        typeof molenTypeValue === 'string'
-          ? molenTypeValue
-          : '';
+        typeof molenTypeValue === 'string' ? molenTypeValue : '';
     }
     this.molenService.getAllMolenFilters().subscribe({
       next: (filters: MolenFilterList) => {
@@ -129,7 +123,7 @@ export class FilterMapComponent implements OnInit {
       delete this.filters['MolenType'];
     }
 
-        if (
+    if (
       this.filters['MolenState'] &&
       !this.filters['Provincie'] &&
       !this.filters['MolenType'] &&

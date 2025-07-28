@@ -1,4 +1,4 @@
-import { FilterFormValues } from "../Interfaces/Filters/Filter";
+import { FilterFormValues } from '../Interfaces/Filters/Filter';
 
 export function BuildFilterQuery(filters: FilterFormValues[]): string {
   const params = new URLSearchParams();

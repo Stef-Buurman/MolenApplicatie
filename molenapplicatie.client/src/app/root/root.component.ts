@@ -17,7 +17,6 @@ import { MolenService } from '../../Services/MolenService';
 import { MolenType } from '../../Interfaces/Models/MolenType';
 import { Observable } from 'rxjs';
 import { MapData } from '../../Interfaces/Map/MapData';
-import { SharedDataService } from '../../Services/SharedDataService';
 
 @Component({
   selector: 'layout',
@@ -54,7 +53,6 @@ export class RootComponent {
     private dialog: MatDialog,
     private errors: ErrorService,
     private molenService: MolenService,
-    private sharedData: SharedDataService,
     private mapService: MapService
   ) {}
 
@@ -116,21 +114,7 @@ export class RootComponent {
           name: 'MolenState',
         });
       }
-      this.onFilterChange(this.currentFilters).subscribe({
-        complete: () => {
-          setTimeout(() => {
-            this.mapService.setView(
-              [selectedMolen.latitude, selectedMolen.longitude],
-              15
-            );
-          }, 0);
-        },
-      });
-    } else {
-      this.mapService.setView(
-        [selectedMolen.latitude, selectedMolen.longitude],
-        15
-      );
+      this.onFilterChange(this.currentFilters).subscribe();
     }
     this.visible = false;
   }

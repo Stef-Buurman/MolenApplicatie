@@ -14,10 +14,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Name.ToLower() == molenType.Name.ToLower(), out existing);
         }
 
-        public override bool ExistsRange(List<MolenType> entities, 
-            out List<MolenType> matchingEntities, 
-            out List<MolenType> newEntities, 
-            out List<MolenType> updatedEntities, 
+        public override bool ExistsRange(List<MolenType> entities,
+            out List<MolenType> matchingEntities,
+            out List<MolenType> newEntities,
+            out List<MolenType> updatedEntities,
             bool searchDB = true,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)

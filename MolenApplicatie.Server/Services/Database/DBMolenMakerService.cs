@@ -15,10 +15,10 @@ namespace MolenApplicatie.Server.Services.Database
             return Exists(e => e.Name == molenMaker.Name && e.Year == molenMaker.Year && e.MolenDataId == molenMaker.MolenDataId, out existing);
         }
 
-        public override bool ExistsRange(List<MolenMaker> entities, 
-            out List<MolenMaker> matchingEntities, 
-            out List<MolenMaker> newEntities, 
-            out List<MolenMaker> updatedEntities, 
+        public override bool ExistsRange(List<MolenMaker> entities,
+            out List<MolenMaker> matchingEntities,
+            out List<MolenMaker> newEntities,
+            out List<MolenMaker> updatedEntities,
             bool searchDB,
             CancellationToken token = default,
             UpdateStrategy strat = UpdateStrategy.Patch)

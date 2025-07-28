@@ -12,7 +12,6 @@ namespace MolenApplicatie.Server.Services.Database
 
     public class DBCache<TEntity> where TEntity : class, DefaultModel
     {
-        private readonly DbSet<TEntity> _dbSet;
         private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private List<TEntity> _cachedData = new List<TEntity>();
         private DateTime _lastRefreshTime = DateTime.MinValue;
@@ -20,9 +19,8 @@ namespace MolenApplicatie.Server.Services.Database
         private readonly Func<Task<List<TEntity>>> _getAllAsync;
         private readonly string _cacheKey;
 
-        public DBCache(DbSet<TEntity> dbSet, Func<Task<List<TEntity>>> getAllAsync)
+        public DBCache(Func<Task<List<TEntity>>> getAllAsync)
         {
-            _dbSet = dbSet;
             _getAllAsync = getAllAsync;
             _cacheKey = typeof(TEntity).Name;
 
