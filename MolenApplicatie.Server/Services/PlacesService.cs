@@ -24,44 +24,6 @@ namespace MolenApplicatie.Server.Services
             _placeTypeService = placeTypeService;
         }
 
-        List<string> provinces = new List<string>
-        {
-            "Drenthe",
-            "Flevoland",
-            "Friesland",
-            "Fryslân",
-            "Gelderland",
-            "Groningen",
-            "Limburg",
-            "North Brabant",
-            "Noord-Brabant",
-            "North Holland",
-            "Noord-Holland",
-            "Overijssel",
-            "South Holland",
-            "Zuid-Holland",
-            "Utrecht",
-            "Zeeland"
-        };
-
-        List<string> PlaceOptions = new List<string>
-        {
-          "capital of a political entity",
-          "seat of government of a political entity",
-          "populated place",
-          "seat of a first-order administrative division",
-          "seat of a second-order administrative division",
-          "section of populated place",
-          "populated locality",
-          "populated places",
-          "first-order administrative division",
-          "second-order administrative division",
-          "administrative division",
-          "historical second-order administrative division",
-          "section of independent political entity",
-          "third-order administrative division"
-        };
-
         List<string> featureClasses = new List<string>
         {
             //"",
@@ -137,8 +99,24 @@ namespace MolenApplicatie.Server.Services
 
             if (placesResponseProvincies != null && placesResponseProvincies.Geonames != null)
             {
-                List<string> placesFound = placesResponseProvincies.Geonames.Select(geoName => geoName.ToponymName).ToList();
-                provincies.AddRange(placesFound);
+                List<Place> placesFound = placesResponseProvincies.Geonames
+                    .Where(geoName => _placeTypeService.GetPlaceType(geoName) != null)
+                    .Select(geoName => new Place
+                    {
+                        Name = geoName.Name,
+                        Province = geoName.Province,
+                        Latitude = double.Parse(geoName.Latitude, CultureInfo.InvariantCulture),
+                        Longitude = double.Parse(geoName.Longitude, CultureInfo.InvariantCulture),
+                        Population = geoName.Population,
+                        Country = geoName.CountryName,
+                        Type = _placeTypeService.GetPlaceType(geoName)!
+                    })
+                    .ToList();
+
+                if (placesFound != null) places.AddRange(placesFound);
+
+                List<string> provinciesFound = placesResponseProvincies.Geonames.Select(geoName => geoName.ToponymName).ToList();
+                provincies.AddRange(provinciesFound);
             }
 
             foreach (var featureClass in featureClasses)
@@ -262,9 +240,6 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<Place>> AddPlacesToMariaDb(List<Place> Places)
         {
-            HashSet<string> alreadyProcessed = new(StringComparer.OrdinalIgnoreCase);
-            List<Place> placesInDB = await _dbContext.Places.ToListAsync();
-
             int x = 2500;
 
             for (int i = 0; i < Places.Count; i += x)
