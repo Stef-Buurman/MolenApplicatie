@@ -4,12 +4,6 @@ namespace MolenApplicatie.Server.Utils
 {
     public static class PatchUtil
     {
-        /// <summary>
-        /// replaces all default values of the new entity with the values of the old entity
-        /// </summary>
-        /// <typeparam name="TEntity">the entity to patch</typeparam>
-        /// <param name="newEntity">the new entity with the empty/default values that needs to be patched</param>
-        /// <param name="oldEntity">the old entity without empty/default values that have to be transfered to the new entity</param>
         public static void Patch<TEntity>(TEntity newEntity, TEntity oldEntity) where TEntity : class
         {
             Type entityType = typeof(TEntity);
@@ -41,13 +35,5 @@ namespace MolenApplicatie.Server.Utils
                 }
             }
         }
-        /// <summary>
-        /// replaces all default values of the new entity with the values of the old entity
-        /// </summary>
-        /// <typeparam name="TEntity">the entity to patch</typeparam>
-        /// <param name="newEntity">the new entity with the empty/default values that needs to be patched</param>
-        /// <param name="oldEntity">the old entity without empty/default values that have to be transfered to the new entity</param>
-        public static void PatchWith<TEntity>(this TEntity newEntity, TEntity oldEntity) where TEntity : class
-            => Patch<TEntity>(newEntity, oldEntity);
     }
 }
