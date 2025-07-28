@@ -162,134 +162,117 @@ namespace MolenApplicatie.Server.Services.Database
             return molenData;
         }
 
-
         public override async Task<List<MolenData>> UpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (entities == null || entities.Count == 0)
                 return entities;
 
-            var entitiesCopy = entities.ToList();
+            var entityIds = entities.Select(e => e.Id).ToList();
+            var allTBNs = await _dBMolenTBNService
+                .AddOrUpdateRange(entities.Where(e => e.MolenTBN != null).Select(e => e.MolenTBN!).ToList(), token, strat);
 
-            var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
-            allTBNs = await _dBMolenTBNService.AddOrUpdateRange(allTBNs, token, strat);
+            var existingMolens = await _dbSet
+                .Where(e => entityIds.Contains(e.Id))
+                .ToDictionaryAsync(e => e.Id, token);
 
-            var allTypeAssMolens = new Dictionary<Guid, List<MolenTypeAssociation>>();
-            var allImagesMolens = new Dictionary<Guid, List<MolenImage>>();
-            var allMakersMolens = new Dictionary<Guid, List<MolenMaker>>();
-            var allAddedImagesMolens = new Dictionary<Guid, List<AddedImage>>();
-            var allDisappearedYearsMolens = new Dictionary<Guid, List<DisappearedYearInfo>>();
-
-            var trackedEntities = _context.ChangeTracker.Entries<MolenData>().ToDictionary(e => e.Entity.Id);
+            var relTypes = new Dictionary<Guid, List<MolenTypeAssociation>>();
+            var relImages = new Dictionary<Guid, List<MolenImage>>();
+            var relMakers = new Dictionary<Guid, List<MolenMaker>>();
+            var relAddedImages = new Dictionary<Guid, List<AddedImage>>();
+            var relDisappearedYears = new Dictionary<Guid, List<DisappearedYearInfo>>();
 
             foreach (var entity in entities)
             {
                 token.ThrowIfCancellationRequested();
+
                 var matchedTBN = allTBNs.FirstOrDefault(t => t.Equals(entity.MolenTBN));
                 if (matchedTBN != null)
-                {
                     entity.MolenTBNId = matchedTBN.Id;
-                }
                 entity.MolenTBN = null;
-                allTypeAssMolens[entity.Id] = entity.MolenTypeAssociations?.ToList() ?? new();
-                allImagesMolens[entity.Id] = entity.Images?.ToList() ?? new();
-                allMakersMolens[entity.Id] = entity.MolenMakers?.ToList() ?? new();
-                allAddedImagesMolens[entity.Id] = entity.AddedImages?.ToList() ?? new();
-                allDisappearedYearsMolens[entity.Id] = entity.DisappearedYearInfos?.ToList() ?? new();
+
+                relTypes[entity.Id] = entity.MolenTypeAssociations?.ToList() ?? new();
+                relImages[entity.Id] = entity.Images?.ToList() ?? new();
+                relMakers[entity.Id] = entity.MolenMakers?.ToList() ?? new();
+                relAddedImages[entity.Id] = entity.AddedImages?.ToList() ?? new();
+                relDisappearedYears[entity.Id] = entity.DisappearedYearInfos?.ToList() ?? new();
 
                 entity.MolenTypeAssociations = null;
                 entity.Images = null;
                 entity.MolenMakers = null;
                 entity.AddedImages = null;
                 entity.DisappearedYearInfos = null;
+                token.ThrowIfCancellationRequested();
+                if (existingMolens.TryGetValue(entity.Id, out var tracked)) CopyScalarsFrom(tracked, entity);
             }
 
-            void Attach<T>(Dictionary<Guid, List<T>> all, Action<T, Guid> setForeignKey)
+            void SetForeignKeys<T>(Dictionary<Guid, List<T>> map, Action<T, Guid> setter)
             {
-                token.ThrowIfCancellationRequested();
-                foreach (var entity in all)
+                foreach (var (id, items) in map)
                 {
-                    foreach (var item in entity.Value)
+                    token.ThrowIfCancellationRequested();
+                    foreach (var item in items)
                     {
-                        setForeignKey(item, entity.Key);
+                        setter(item, id);
                     }
                 }
             }
 
-            Attach(allTypeAssMolens, (x, id) =>
+            SetForeignKeys(relTypes, (item, id) =>
             {
-                var obj = x as MolenTypeAssociation;
-                if (obj != null)
+                if (item is MolenTypeAssociation mta)
                 {
-                    obj.MolenDataId = id;
-                    obj.MolenData = null;
+                    mta.MolenDataId = id;
+                    mta.MolenData = null;
                 }
             });
 
-            Attach(allImagesMolens, (x, id) =>
+            SetForeignKeys(relImages, (item, id) =>
             {
-                var obj = x as MolenImage;
-                if (obj != null)
+                if (item is MolenImage img)
                 {
-                    obj.MolenDataId = id;
-                    obj.MolenData = null;
+                    img.MolenDataId = id;
+                    img.MolenData = null;
                 }
             });
 
-            Attach(allMakersMolens, (x, id) =>
+            SetForeignKeys(relMakers, (item, id) =>
             {
-                var obj = x as MolenMaker;
-                if (obj != null)
+                if (item is MolenMaker maker)
                 {
-                    obj.MolenDataId = id;
-                    obj.MolenData = null;
+                    maker.MolenDataId = id;
+                    maker.MolenData = null;
                 }
             });
 
-            Attach(allAddedImagesMolens, (x, id) =>
+            SetForeignKeys(relAddedImages, (item, id) =>
             {
-                var obj = x as AddedImage;
-                if (obj != null)
+                if (item is AddedImage ai)
                 {
-                    obj.MolenDataId = id;
-                    obj.MolenData = null;
+                    ai.MolenDataId = id;
+                    ai.MolenData = null;
                 }
             });
 
-            Attach(allDisappearedYearsMolens, (x, id) =>
+            SetForeignKeys(relDisappearedYears, (item, id) =>
             {
-                var obj = x as DisappearedYearInfo;
-                if (obj != null)
+                if (item is DisappearedYearInfo dy)
                 {
-                    obj.MolenDataId = id;
-                    obj.MolenData = null;
+                    dy.MolenDataId = id;
+                    dy.MolenData = null;
                 }
             });
 
-            var allTypeAss = allTypeAssMolens.SelectMany(x => x.Value).ToList();
-            var allImages = allImagesMolens.SelectMany(x => x.Value).ToList();
-            var allMakers = allMakersMolens.SelectMany(x => x.Value).ToList();
-            var allAddedImages = allAddedImagesMolens.SelectMany(x => x.Value).ToList();
-            var allDisappearedYears = allDisappearedYearsMolens.SelectMany(x => x.Value).ToList();
+            var allTypeAss = relTypes.SelectMany(x => x.Value).ToList();
+            var allImages = relImages.SelectMany(x => x.Value).ToList();
+            var allMakers = relMakers.SelectMany(x => x.Value).ToList();
+            var allAddedImages = relAddedImages.SelectMany(x => x.Value).ToList();
+            var allDisappearedYears = relDisappearedYears.SelectMany(x => x.Value).ToList();
             await _dBMolenTypeAssociationService.AddOrUpdateRange(allTypeAss, token, strat);
             await _dBMolenImageService.AddOrUpdateRange(allImages, token, strat);
             await _dBMolenMakerService.AddOrUpdateRange(allMakers, token, strat);
             await _dBMolenAddedImageService.AddOrUpdateRange(allAddedImages, token, strat);
             await _dBMolenDissappearedYearsService.AddOrUpdateRange(allDisappearedYears, token, strat);
-            foreach (var entity in entities.DistinctBy(e => e.Id))
-            {
-                token.ThrowIfCancellationRequested();
 
-                if (trackedEntities.TryGetValue(entity.Id, out var trackedEntity))
-                {
-                    trackedEntity.State = EntityState.Detached;
-                }
-
-                _context.Attach(entity);
-                _context.Entry(entity).State = EntityState.Modified;
-            }
-
-
-            _dbSet.UpdateRange(entities);
             _cache.UpdateRange(entities);
 
             //await CheckToDeleteProperties(entitiesCopy);
@@ -300,7 +283,7 @@ namespace MolenApplicatie.Server.Services.Database
         public override async Task AddRangeAsync(List<MolenData> entities, CancellationToken token = default)
         {
             if (entities == null || entities.Count() == 0) return;
-            var allTBNs = entities.Select(e => e.MolenTBN).Where(x => x != null).ToList();
+            var allTBNs = entities.Where(x => x != null).Select(e => e.MolenTBN).Where(x => x != null).ToList();
 
 
             Dictionary<string, List<MolenTypeAssociation>> allTypeAssMolens = new Dictionary<string, List<MolenTypeAssociation>>();
@@ -547,6 +530,75 @@ namespace MolenApplicatie.Server.Services.Database
             await _dBMolenTBNService.Delete(molenDataToDelete.MolenTBN);
             await _dBMolenTypeAssociationService.DeleteRange(molenDataToDelete.MolenTypeAssociations);
             _context.MolenData.Remove(molenDataToDelete);
+        }
+
+        public void CopyScalarsFrom(MolenData target, MolenData source)
+        {
+            target.MolenTBNId = source.MolenTBNId;
+            target.Ten_Brugge_Nr = source.Ten_Brugge_Nr;
+            target.Name = source.Name;
+            target.ToelichtingNaam = source.ToelichtingNaam;
+            target.Bouwjaar = source.Bouwjaar;
+            target.HerbouwdJaar = source.HerbouwdJaar;
+            target.BouwjaarStart = source.BouwjaarStart;
+            target.BouwjaarEinde = source.BouwjaarEinde;
+            target.Functie = source.Functie;
+            target.Doel = source.Doel;
+            target.Toestand = source.Toestand;
+            target.Bedrijfsvaardigheid = source.Bedrijfsvaardigheid;
+            target.Plaats = source.Plaats;
+            target.Adres = source.Adres;
+            target.Provincie = source.Provincie;
+            target.Gemeente = source.Gemeente;
+            target.Streek = source.Streek;
+            target.Plaatsaanduiding = source.Plaatsaanduiding;
+            target.Opvolger = source.Opvolger;
+            target.Voorganger = source.Voorganger;
+            target.VerplaatstNaar = source.VerplaatstNaar;
+            target.AfkomstigVan = source.AfkomstigVan;
+            target.Literatuur = source.Literatuur;
+            target.PlaatsenVoorheen = source.PlaatsenVoorheen;
+            target.Wiekvorm = source.Wiekvorm;
+            target.WiekVerbeteringen = source.WiekVerbeteringen;
+            target.Monument = source.Monument;
+            target.PlaatsBediening = source.PlaatsBediening;
+            target.BedieningKruiwerk = source.BedieningKruiwerk;
+            target.PlaatsKruiwerk = source.PlaatsKruiwerk;
+            target.Kruiwerk = source.Kruiwerk;
+            target.Vlucht = source.Vlucht;
+            target.Openingstijden = source.Openingstijden;
+            target.OpenVoorPubliek = source.OpenVoorPubliek;
+            target.OpenOpZaterdag = source.OpenOpZaterdag;
+            target.OpenOpZondag = source.OpenOpZondag;
+            target.OpenOpAfspraak = source.OpenOpAfspraak;
+            target.Krachtbron = source.Krachtbron;
+            target.Website = source.Website;
+            target.WinkelInformatie = source.WinkelInformatie;
+            target.Bouwbestek = source.Bouwbestek;
+            target.Bijzonderheden = source.Bijzonderheden;
+            target.Museuminformatie = source.Museuminformatie;
+            target.Molenaar = source.Molenaar;
+            target.Eigendomshistorie = source.Eigendomshistorie;
+            target.Molenerf = source.Molenerf;
+            target.Trivia = source.Trivia;
+            target.Geschiedenis = source.Geschiedenis;
+            target.Wetenswaardigheden = source.Wetenswaardigheden;
+            target.Wederopbouw = source.Wederopbouw;
+            target.As = source.As;
+            target.Wieken = source.Wieken;
+            target.Toegangsprijzen = source.Toegangsprijzen;
+            target.UniekeEigenschap = source.UniekeEigenschap;
+            target.LandschappelijkeWaarde = source.LandschappelijkeWaarde;
+            target.KadastraleAanduiding = source.KadastraleAanduiding;
+            target.CanAddImages = source.CanAddImages;
+            target.Eigenaar = source.Eigenaar;
+            target.RecenteWerkzaamheden = source.RecenteWerkzaamheden;
+            target.Rad = source.Rad;
+            target.RadDiameter = source.RadDiameter;
+            target.Wateras = source.Wateras;
+            target.Latitude = source.Latitude;
+            target.Longitude = source.Longitude;
+            target.LastUpdated = source.LastUpdated;
         }
     }
 }
