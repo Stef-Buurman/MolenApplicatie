@@ -45,13 +45,13 @@ export class MapPageComponent implements OnInit {
     this.route.url.subscribe(() => {
       const firstChild = this.route.firstChild;
       if (
-        !!(firstChild && firstChild.snapshot.paramMap.get('TenBruggeNumber'))
+        !(firstChild && firstChild.snapshot.paramMap.get('TenBruggeNumber'))
       ) {
         navigator.geolocation.getCurrentPosition((position) => {
           const latitude = position.coords.latitude;
           const longitude = position.coords.longitude;
           this.mapService.mapReady.then(() => {
-            this.mapService.setView([latitude, longitude], 14);
+            this.mapService.setView([latitude, longitude], 12);
           });
         });
       }
