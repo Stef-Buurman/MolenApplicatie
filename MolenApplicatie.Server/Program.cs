@@ -39,13 +39,14 @@ builder.Services.Configure<FormOptions>(options =>
 });
 builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
 
-string connectionString = "server=localhost;user=root;password=DitIsEchtEenLastigWW;database=molen_database;port=3306";
+var connectionString = builder.Configuration.GetConnectionString("MolenDatabase");
 
 builder.Services.AddDbContext<MolenDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-           .EnableSensitiveDataLogging() // Enable sensitive data logging here
+           .EnableSensitiveDataLogging()
            .LogTo(_ => { }, LogLevel.None)
 );
+
 
 builder.Services.AddControllers()
     .AddJsonOptions(x =>
