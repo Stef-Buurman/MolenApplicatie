@@ -76,9 +76,9 @@ namespace MolenApplicatie.Server.Services.Database
             MolenImage? imageToDelete = await GetById(image.Id);
             if (imageToDelete != null)
             {
-                if (!File.Exists(Globals.WWWROOTPath + imageToDelete.FilePath))
+                if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(imageToDelete.FilePath)))
                 {
-                    File.Delete(Globals.WWWROOTPath + imageToDelete.FilePath);
+                    File.Delete(CreateCleanPath.CreatePathToWWWROOT(imageToDelete.FilePath));
                 }
                 _context.MolenImages.Remove(imageToDelete);
             }

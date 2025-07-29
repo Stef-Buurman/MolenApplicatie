@@ -114,7 +114,6 @@ namespace MolenApplicatie.Server.Services.Database
                 _context.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
             }
-            // _cache.UpdateRange(entitiesToUpdate);
             _cache.UpdateRange(entitiesToUpdate);
 
             return entities;

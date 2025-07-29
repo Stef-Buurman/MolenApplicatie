@@ -67,9 +67,9 @@ namespace MolenApplicatie.Server.Services.Database
             AddedImage? addedImageToDelete = await GetById(image.Id);
             if (addedImageToDelete != null)
             {
-                if (!File.Exists(Globals.WWWROOTPath + addedImageToDelete.FilePath))
+                if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(addedImageToDelete.FilePath)))
                 {
-                    File.Delete(Globals.WWWROOTPath + addedImageToDelete.FilePath);
+                    File.Delete(CreateCleanPath.CreatePathToWWWROOT(addedImageToDelete.FilePath));
                 }
                 _context.AddedImages.Remove(addedImageToDelete);
             }
