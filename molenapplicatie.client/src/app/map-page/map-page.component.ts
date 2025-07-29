@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ErrorService } from '../../Services/ErrorService';
 import { SharedDataService } from '../../Services/SharedDataService';
 import { Toasts } from '../../Utils/Toasts';
@@ -21,6 +21,7 @@ export class MapPageComponent implements OnInit {
   visible: boolean = false;
   selectedTenBruggeNumber: string | undefined;
   selectedPlace!: Place;
+  isPopupVisible: boolean = false;
 
   get error(): boolean {
     return this.errors.HasError;
@@ -62,6 +63,7 @@ export class MapPageComponent implements OnInit {
     this.sharedData.IsLoadingTrue();
     return this.molenService.getMapData(filters).pipe(
       tap((result) => {
+        // console.log('Molens loaded:', result);
         this.molens = result;
         this.mapService.initMap(result);
       }),
@@ -74,6 +76,7 @@ export class MapPageComponent implements OnInit {
         complete: () => {
           this.toasts.showSuccess('Molens zijn geladen!');
           this.sharedData.IsLoadingFalse();
+          console.log(this.molenService.recentAddedImages);
         },
       })
     );

@@ -3,12 +3,16 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
 import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/Models/MolenData';
-import { MolensResponseType } from '../Interfaces/MolensResponseType';
+import {
+  MolensResponseType,
+  RecentAddedImages,
+} from '../Interfaces/MolensResponseType';
 import { MapData } from '../Interfaces/Map/MapData';
 import { FilterFormValues } from '../Interfaces/Filters/Filter';
 import { BuildFilterQuery } from '../Utils/BuildFilterQuery';
 import { MolenFilterList } from '../Interfaces/Filters/MolenFilterList';
 import { MapService } from './MapService';
+import { UploadDeleteImageReturnType } from '../Interfaces/UploadImageReturnType';
 
 @Injectable({
   providedIn: 'root',
@@ -29,8 +33,8 @@ export class MolenService {
   public get molensWithImageAmount(): number | undefined {
     return this._molensWithImageAmount;
   }
-  private molenFilters!: MolenFilterList;
 
+  public recentAddedImages?: RecentAddedImages[];
   constructor(private http: HttpClient, private mapService: MapService) {}
 
   public getMolenFromBackend(ten_Brugge_Nr: string): Observable<MolenData> {
@@ -38,11 +42,7 @@ export class MolenService {
   }
 
   public getAllMolenFilters(): Observable<MolenFilterList> {
-    return this.http.get<MolenFilterList>('/api/molen/filters').pipe(
-      tap((filters: MolenFilterList) => {
-        this.molenFilters = filters;
-      })
-    );
+    return this.http.get<MolenFilterList>('/api/molen/filters');
   }
 
   public getMolen(ten_Brugge_Nr: string): Observable<MolenData> {
@@ -76,6 +76,7 @@ export class MolenService {
       )
       .pipe(
         tap((molensResponseType) => {
+          this.recentAddedImages = molensResponseType.recentAddedImages;
           this.molensWithImageAmount = molensResponseType.totalMolensWithImage;
         }),
         map((molensResponseType) => molensResponseType.molens)
@@ -97,16 +98,21 @@ export class MolenService {
     });
 
     return this.http
-      .delete<MolenData>('/api/molen/molen_image/' + tbNr + '/' + imageName, {
-        headers,
-      })
+      .delete<UploadDeleteImageReturnType>(
+        '/api/molen/molen_image/' + tbNr + '/' + imageName,
+        {
+          headers,
+        }
+      )
       .pipe(
-        tap((updatedMolen: MolenData) => {
-          this.updateMolen(updatedMolen);
+        tap((updatedMolen: UploadDeleteImageReturnType) => {
+          this.updateMolen(updatedMolen.molen);
+          this.mapService.updateMarker(tbNr, updatedMolen.mapData);
         }),
         catchError((error) => {
           return throwError(error);
-        })
+        }),
+        map((result) => result.molen)
       );
   }
 
@@ -115,14 +121,25 @@ export class MolenService {
       Authorization: APIKey,
     });
     return this.http
-      .post<MolenData>(`/api/molen/molen_image/${tbNr}`, image, { headers })
+      .post<UploadDeleteImageReturnType>(
+        `/api/molen/molen_image/${tbNr}`,
+        image,
+        {
+          headers,
+        }
+      )
       .pipe(
-        tap((updatedMolen: MolenData) => {
-          this.updateMolen(updatedMolen);
+        tap((updatedMolen: UploadDeleteImageReturnType) => {
+          this.updateMolen(updatedMolen.molen);
+          this.mapService.updateMarker(
+            updatedMolen.molen.ten_Brugge_Nr,
+            updatedMolen.mapData
+          );
         }),
         catchError((error) => {
           return throwError(error);
-        })
+        }),
+        map((result) => result.molen)
       );
   }
 

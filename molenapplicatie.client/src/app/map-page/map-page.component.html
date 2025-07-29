@@ -4,3 +4,9 @@
   </section>
   <router-outlet></router-outlet>
 </layout>
+<app-popup
+  [visible]="isPopupVisible"
+  [imageUrl]="'assets/info.png'"
+  [text]="'This is a helpful message for your user.'"
+>
+</app-popup>

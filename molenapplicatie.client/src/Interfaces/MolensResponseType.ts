@@ -1,3 +1,6 @@
+import { MolenData } from './Models/MolenData';
+import { MolenImage } from './Models/MolenImage';
+
 export interface MolensResponseType<T> {
   activeMolensWithImage: number;
   remainderMolensWithImage: number;
@@ -8,9 +11,15 @@ export interface MolensResponseType<T> {
   totalCountExistingMolens: number;
   totalCountMolens: number;
   molens: T[];
+  recentAddedImages?: RecentAddedImages[];
 }
 
 export interface CountDisappearedMolens {
   provincie: string;
   count: number;
+}
+
+export interface RecentAddedImages {
+  molen: MolenData;
+  images: MolenImage[];
 }

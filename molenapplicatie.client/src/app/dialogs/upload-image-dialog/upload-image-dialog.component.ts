@@ -83,8 +83,6 @@ export class UploadImageDialogComponent implements AfterViewInit {
 
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
-
-      var previousMolenImages: MolenImage[] = this.molen.addedImages ?? [];
       this.molenService
         .uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey)
         .subscribe({
