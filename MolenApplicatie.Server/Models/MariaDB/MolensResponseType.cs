@@ -11,11 +11,18 @@
         public int TotalCountExistingMolens { get; set; }
         public int TotalCountMolens { get; set; }
         public List<T> Molens { get; set; }
+        public List<RecentAddedImages>? RecentAddedImages { get; set; }
     }
 
     public class CountDisappearedMolens
     {
         public string Provincie { get; set; }
         public int Count { get; set; }
+    }
+
+    public class RecentAddedImages
+    {
+        public MolenData molen { get; set; }
+        public List<AddedImage> Images { get; set; }
     }
 }
