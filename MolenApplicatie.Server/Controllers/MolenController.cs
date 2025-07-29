@@ -96,7 +96,7 @@ namespace MolenApplicatie.Server.Controllers
         [FileUploadFilter]
         [HttpPost]
         [Route("molen_image/{tbNumber}")]
-        public async Task<IActionResult> UploadImage(string tbNumber, IFormFile image)
+        public async Task<ActionResult<UploadDeleteImageReturnType>> UploadImage(string tbNumber, IFormFile image)
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Geen foto meegestuurd!");
@@ -121,7 +121,11 @@ namespace MolenApplicatie.Server.Controllers
                 }
             }
 
-            return Ok(await _MolenService.GetMolenByTBN(tbNumber));
+            return Ok(new UploadDeleteImageReturnType
+            {
+                Molen = await _MolenService.GetMolenByTBN(tbNumber),
+                MapData = await _MolenService.GetMapDataByTBN(tbNumber),
+            });
         }
 
         [FileUploadFilter]
@@ -131,7 +135,11 @@ namespace MolenApplicatie.Server.Controllers
             var result = await _MolenService.DeleteImageFromMolen(tbNumber, imageName);
             if (result.status)
             {
-                return Ok(await _MolenService.GetMolenByTBN(tbNumber));
+                return Ok(new UploadDeleteImageReturnType
+                {
+                    Molen = await _MolenService.GetMolenByTBN(tbNumber),
+                    MapData = await _MolenService.GetMapDataByTBN(tbNumber),
+                });
             }
             else
             {
