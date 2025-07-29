@@ -12,11 +12,15 @@ namespace MolenApplicatie.Server.Services
         private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
+        private readonly DBMolenAddedImageService _dBMolenAddedImageService;
+        private readonly DBMolenImageService _dBMolenImageService;
 
-        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService)
+        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenAddedImageService dBMolenAddedImageService, DBMolenImageService dBMolenImageService)
         {
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
+            _dBMolenAddedImageService = dBMolenAddedImageService;
+            _dBMolenImageService = dBMolenImageService;
         }
 
         public static MolenData GetMolenData(MolenData molen)
@@ -317,6 +321,23 @@ namespace MolenApplicatie.Server.Services
             return GetMolenData(molen);
         }
 
+        public async Task<MapData?> GetMapDataByTBN(string tbn)
+        {
+            var molen = await GetMolenByTBN(tbn);
+            if (molen == null) return null;
+
+            return new MapData
+            {
+                Reference = molen.Ten_Brugge_Nr,
+                Latitude = molen.Latitude,
+                Longitude = molen.Longitude,
+                HasImage = molen.AddedImages.Count > 0,
+                Toestand = molen.Toestand,
+                Type = "Molens",
+                Types = molen.MolenTypeAssociations.Select(mt => mt.MolenType.Name).ToList(),
+            };
+        }
+
         public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(Guid id, string TBN, IFormFile file)
         {
             var maxSavedFilesCount = 5;
@@ -353,7 +374,7 @@ namespace MolenApplicatie.Server.Services
                     FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
                 }
                 File.WriteAllBytes(FileDirectory, imageBytes);
-                await _dbContext.AddedImages.AddAsync(new AddedImage
+                await _dBMolenAddedImageService.AddOrUpdate(new AddedImage
                 {
                     FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(FileDirectory),
                     Name = Path.GetFileNameWithoutExtension(FileDirectory),
@@ -361,6 +382,7 @@ namespace MolenApplicatie.Server.Services
                     CanBeDeleted = true,
                     MolenDataId = id
                 });
+                await _dbContext.SaveChangesAsync();
             }
             return (file, "");
         }
@@ -374,14 +396,13 @@ namespace MolenApplicatie.Server.Services
             if (molenImageToDelete == null && molenAddedImageToDelete == null) return (false, "Images not found");
             if (molenImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath)))
             {
-                File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath));
-                _dbContext.Remove(molenImageToDelete);
+                await _dBMolenImageService.Delete(molenImageToDelete);
             }
             else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
             {
-                File.Delete(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath));
-                _dbContext.Remove(molenAddedImageToDelete);
+                await _dBMolenAddedImageService.Delete(molenAddedImageToDelete);
             }
+            await _dbContext.SaveChangesAsync();
             return (true, "Images deleted");
         }
 
@@ -439,6 +460,31 @@ namespace MolenApplicatie.Server.Services
             List<CountDisappearedMolens> totalDisappearedMolens = await GetCountOfDisappearedMolens();
 
             int totalMolens = await GetCountMolens();
+
+            var recentImages = _dbContext.AddedImages
+                .Where(ai => ai.DateTaken >= DateTime.Now.AddDays(-7) && ai.DateTaken <= DateTime.Now)
+                .GroupBy(ai => ai.MolenDataId)
+                .Select(g => new
+                {
+                    MolenDataId = g.Key,
+                    Images = g.OrderByDescending(i => i.DateTaken).ToList()
+                })
+                .ToList();
+
+            var molenDataDict = _dbContext.MolenData
+                .Where(m => recentImages.Select(r => r.MolenDataId).Contains(m.Id))
+                .ToDictionary(m => m.Id);
+
+            var recentAddedImages = recentImages
+                .Select(g => new RecentAddedImages
+                {
+                    molen = (g.MolenDataId != null && molenDataDict.ContainsKey(g.MolenDataId)) ? molenDataDict[g.MolenDataId] : null,
+                    Images = g.Images
+                })
+                .OrderByDescending(r => r.Images.Count)
+                .ToList();
+
+
             return new MolensResponseType<T>
             {
                 Molens = molens,
@@ -449,7 +495,8 @@ namespace MolenApplicatie.Server.Services
                 TotalCountRemainderMolens = totalRemainderMolens,
                 TotalCountExistingMolens = totalExistingMolens,
                 TotalCountDisappearedMolens = totalDisappearedMolens,
-                TotalCountMolens = totalMolens
+                TotalCountMolens = totalMolens,
+                RecentAddedImages = recentAddedImages
             };
         }
     }

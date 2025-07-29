@@ -53,6 +53,10 @@ namespace MolenApplicatie.Server.Services
             List<MolenData> molens = JsonSerializer.Deserialize<List<MolenData>>(jsonString)!;
             var startTime = DateTime.Now;
             Console.WriteLine("Saving progress...");
+            molens.ForEach(m =>
+            {
+                m.CanAddImages = !MolenToestand.Equals(MolenToestand.Verdwenen, m.Toestand);
+            });
             await _dBMolenDataService.AddOrUpdateRange(molens);
             var midTime = DateTime.Now;
             //var changes = await _dbContext.SaveChangesAsync();
@@ -690,7 +694,7 @@ namespace MolenApplicatie.Server.Services
                                 if (!string.IsNullOrEmpty(dd))
                                 {
                                     newMolenData.Toestand = MolenToestand.From(dd);
-                                    newMolenData.CanAddImages = MolenToestand.Equals(newMolenData.Toestand, dd);
+                                    newMolenData.CanAddImages = !MolenToestand.Equals(MolenToestand.Verdwenen, newMolenData.Toestand);
                                 }
                                 break;
 
