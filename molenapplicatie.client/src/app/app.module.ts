@@ -23,6 +23,7 @@ import { MapPageComponent } from './map-page/map-page.component';
 import { CustomDropdownComponent } from './custom-dropdown/custom-dropdown.component';
 import { PortalModule } from '@angular/cdk/portal';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { PopupComponent } from './popup/popup.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     UploadImageDialogComponent,
     MapPageComponent,
     CustomDropdownComponent,
+    PopupComponent,
   ],
   imports: [
     BrowserAnimationsModule,

@@ -53,25 +53,12 @@ export class MolenDialogComponent implements OnDestroy {
 
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA)
-    public data: { tenBruggeNr: string; molen: MolenData }
+    public data: { tenBruggeNr: string }
   ) {}
 
   ngOnInit(): void {
-    if (!this.data.molen && !this.data.tenBruggeNr) {
+    if (!this.data.tenBruggeNr) {
       this.onClose();
-    }
-    if (this.data.molen) {
-      this.molen = this.data.molen;
-      this.molenImages = this.getAllMolenImages();
-      this.selectedImage = this.molenImages[0];
-      this.mapService.mapReady.then(() => {
-        if (this.molen) {
-          this.mapService.setView(
-            [this.molen.latitude, this.molen.longitude],
-            14
-          );
-        }
-      });
     }
     if (this.data.tenBruggeNr) {
       this.molenService.getMolen(this.data.tenBruggeNr).subscribe({

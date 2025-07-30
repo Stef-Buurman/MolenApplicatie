@@ -9,6 +9,7 @@ import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { Place } from '../../Interfaces/Models/Place';
 import { catchError, Observable, tap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 
 @Component({
   selector: 'app-map-page',
@@ -22,6 +23,7 @@ export class MapPageComponent implements OnInit {
   selectedTenBruggeNumber: string | undefined;
   selectedPlace!: Place;
   isPopupVisible: boolean = false;
+  recentAddedImages: RecentAddedImages[] = [];
 
   get error(): boolean {
     return this.errors.HasError;
@@ -46,7 +48,11 @@ export class MapPageComponent implements OnInit {
     this.route.url.subscribe(() => {
       const firstChild = this.route.firstChild;
       if (
-        !(firstChild && firstChild.snapshot.paramMap.get('TenBruggeNumber'))
+        !(
+          firstChild &&
+          firstChild.snapshot &&
+          firstChild.snapshot.paramMap.get('TenBruggeNumber')
+        )
       ) {
         navigator.geolocation.getCurrentPosition((position) => {
           const latitude = position.coords.latitude;
@@ -63,7 +69,6 @@ export class MapPageComponent implements OnInit {
     this.sharedData.IsLoadingTrue();
     return this.molenService.getMapData(filters).pipe(
       tap((result) => {
-        // console.log('Molens loaded:', result);
         this.molens = result;
         this.mapService.initMap(result);
       }),
@@ -76,7 +81,13 @@ export class MapPageComponent implements OnInit {
         complete: () => {
           this.toasts.showSuccess('Molens zijn geladen!');
           this.sharedData.IsLoadingFalse();
-          console.log(this.molenService.recentAddedImages);
+          if (
+            this.molenService.recentAddedImages &&
+            this.molenService.recentAddedImages.length > 0
+          ) {
+            this.recentAddedImages = this.molenService.recentAddedImages;
+            this.isPopupVisible = true;
+          }
         },
       })
     );

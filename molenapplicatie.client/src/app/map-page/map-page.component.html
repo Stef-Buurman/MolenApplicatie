@@ -5,8 +5,7 @@
   <router-outlet></router-outlet>
 </layout>
 <app-popup
-  [visible]="isPopupVisible"
-  [imageUrl]="'assets/info.png'"
-  [text]="'This is a helpful message for your user.'"
+  [(visible)]="isPopupVisible"
+  [molenImages]="recentAddedImages"
 >
 </app-popup>

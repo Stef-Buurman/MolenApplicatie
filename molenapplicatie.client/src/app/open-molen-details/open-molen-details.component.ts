@@ -11,6 +11,7 @@ import { MolenService } from '../../Services/MolenService';
 })
 export class OpenMolenDetailsComponent implements OnInit {
   selectedTenBruggeNumber: string | undefined;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
