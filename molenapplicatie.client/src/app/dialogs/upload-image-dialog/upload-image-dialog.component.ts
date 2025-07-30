@@ -98,7 +98,7 @@ export class UploadImageDialogComponent implements AfterViewInit {
             if (error.status == 401) {
               this.toasts.showError('Er is een verkeerde api key ingevuld!');
             } else {
-              this.toasts.showError(error.error.message);
+              this.toasts.showError(error.error);
             }
           },
         });

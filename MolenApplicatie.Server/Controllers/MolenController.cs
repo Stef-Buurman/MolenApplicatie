@@ -117,7 +117,7 @@ namespace MolenApplicatie.Server.Controllers
                 }
                 else
                 {
-                    return BadRequest(result.errorMessage);
+                    return StatusCode((int)result.statusCode, result.errorMessage);
                 }
             }
 

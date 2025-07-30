@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Net;
+using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
@@ -338,7 +340,7 @@ namespace MolenApplicatie.Server.Services
             };
         }
 
-        public async Task<(IFormFile? file, string errorMessage)> SaveMolenImage(Guid id, string TBN, IFormFile file)
+        public async Task<(IFormFile? file, string errorMessage, HttpStatusCode statusCode)> SaveMolenImage(Guid id, string TBN, IFormFile file)
         {
             var maxSavedFilesCount = 5;
             using (var memoryStream = new MemoryStream())
@@ -349,42 +351,75 @@ namespace MolenApplicatie.Server.Services
                 {
                     Directory.CreateDirectory(folderName);
                 }
-                folderName += "/" + TBN;
+
+                folderName = Path.Combine(folderName, TBN);
 
                 if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesCount)
                 {
-                    return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN);
+                    return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN, HttpStatusCode.BadRequest);
                 }
 
                 var fileExtension = Path.GetExtension(file.FileName);
                 if (fileExtension == null ||
                     (fileExtension.ToLower() != ".jpg"
                     && fileExtension.ToLower() != ".jpeg"
-                    && fileExtension.ToLower() != ".png")) return (null, "Dit soort bestand wordt niet ondersteund!");
+                    && fileExtension.ToLower() != ".png"))
+                {
+                    return (null, "Dit soort bestand wordt niet ondersteund!", HttpStatusCode.UnsupportedMediaType);
+                }
+
                 await file.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
 
-                if (!Directory.Exists(folderName))
+                var uploadedHash = ComputeSha256Hash(imageBytes);
+
+                if (Directory.Exists(folderName))
+                {
+                    foreach (var existingFile in Directory.GetFiles(folderName))
+                    {
+                        var existingBytes = await File.ReadAllBytesAsync(existingFile);
+                        var existingHash = ComputeSha256Hash(existingBytes);
+                        if (uploadedHash == existingHash)
+                        {
+                            return (null, "Deze afbeelding is al opgeslagen.", HttpStatusCode.Conflict);
+                        }
+                    }
+                }
+                else
                 {
                     Directory.CreateDirectory(folderName);
                 }
-                var FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
-                while (File.Exists(FileDirectory))
+
+                var fileDirectory = Path.Combine(folderName, GetFileNameForImage.GetFileName() + fileExtension);
+                while (File.Exists(fileDirectory))
                 {
-                    FileDirectory = $"{folderName}/{GetFileNameForImage.GetFileName()}{fileExtension}";
+                    fileDirectory = Path.Combine(folderName, GetFileNameForImage.GetFileName() + fileExtension);
                 }
-                File.WriteAllBytes(FileDirectory, imageBytes);
+
+                await File.WriteAllBytesAsync(fileDirectory, imageBytes);
+
                 await _dBMolenAddedImageService.AddOrUpdate(new AddedImage
                 {
-                    FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(FileDirectory),
-                    Name = Path.GetFileNameWithoutExtension(FileDirectory),
-                    DateTaken = GetDateTakenOfImage.GetDateTaken(FileDirectory),
+                    FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(fileDirectory),
+                    Name = Path.GetFileNameWithoutExtension(fileDirectory),
+                    DateTaken = GetDateTakenOfImage.GetDateTaken(fileDirectory),
                     CanBeDeleted = true,
                     MolenDataId = id
                 });
+
                 await _dbContext.SaveChangesAsync();
             }
-            return (file, "");
+
+            return (file, "", HttpStatusCode.OK);
+        }
+
+        private string ComputeSha256Hash(byte[] bytes)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(bytes);
+                return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            }
         }
 
         public async Task<(bool status, string message)> DeleteImageFromMolen(string tbNummer, string imgName)
