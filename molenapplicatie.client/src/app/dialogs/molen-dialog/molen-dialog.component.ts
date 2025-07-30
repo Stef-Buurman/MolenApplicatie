@@ -4,7 +4,7 @@ import {
   MAT_DIALOG_DATA,
   MatDialog,
 } from '@angular/material/dialog';
-import { Observable, of } from 'rxjs';
+import { filter, map, Observable, of, switchMap } from 'rxjs';
 import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
@@ -13,6 +13,8 @@ import { SecurityContext } from '@angular/core';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
 import { MapService } from '../../../Services/MapService';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -48,6 +50,7 @@ export class MolenDialogComponent implements OnDestroy {
     private mapService: MapService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     private dialog: MatDialog,
+
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA)
     public data: { tenBruggeNr: string; molen: MolenData }

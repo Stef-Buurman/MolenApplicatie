@@ -38,7 +38,7 @@
       </p>
 
       <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
-      <p><strong>Adres:</strong> {{ molen.adres }}</p>
+      <p *ngIf="molen.adres"><strong>Adres:</strong> {{ molen.adres }}</p>
       <p *ngIf="molen.provincie">
         <strong>Provincie:</strong> {{ molen.provincie }}
         <span *ngIf="molen.gemeente"

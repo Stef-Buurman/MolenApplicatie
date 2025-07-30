@@ -9,7 +9,13 @@ const routes: Routes = [
     path: 'map',
     component: MapPageComponent,
     children: [
-      { path: ':TenBruggeNumber', component: OpenMolenDetailsComponent },
+      {
+        path: ':TenBruggeNumber',
+        component: OpenMolenDetailsComponent,
+        children: [
+          { path: ':imageName', component: OpenMolenDetailsComponent },
+        ],
+      },
     ],
   },
 ];
