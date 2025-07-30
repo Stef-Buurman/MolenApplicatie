@@ -1,14 +1,8 @@
 import {
-  ApplicationRef,
-  ComponentFactoryResolver,
   ComponentRef,
   Injectable,
-  Injector,
-  Renderer2,
-  RendererFactory2,
   ViewContainerRef,
 } from '@angular/core';
-import { Subject } from 'rxjs';
 import { ToastType } from '../Enums/ToastType';
 import { ToastComponent } from '../app/toast/toast.component';
 
