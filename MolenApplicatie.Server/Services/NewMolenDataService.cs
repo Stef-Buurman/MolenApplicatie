@@ -78,14 +78,9 @@ namespace MolenApplicatie.Server.Services
         {
             _dbContext.ChangeTracker.Clear();
             List<string> fileNames = Directory.GetFiles("Json/Responses").ToList();
-            // List<string> fileNames = new List<string>()
-            // {
-            //     "Json/Responses/03526-b.json"
-            // };
             List<MolenData> allNewMolenData = new List<MolenData>();
             List<MolenData> TotalMolenData = new List<MolenData>();
             List<string> allMolenTBN = fileNames.Select(Path.GetFileNameWithoutExtension).ToList();
-            // List<string> allMolenTBN = new List<string>(){"03526-b"};
             List<MolenData> allOldMolenData = _molenService.GetMolensByTBN(allMolenTBN);
             var allOldMolenDataWithTBN = await _dBMolenDataService.GetAllAsync();
             var molenDict = allOldMolenDataWithTBN.ToDictionary(e => e.Ten_Brugge_Nr);
@@ -97,9 +92,6 @@ namespace MolenApplicatie.Server.Services
             foreach (var fileName in fileNames)
             {
                 count++;
-
-                //if (count <= 16000) continue;
-                //if (addedCount == 2500) break;
 
                 string tbn = Path.GetFileNameWithoutExtension(fileName);
                 if (string.IsNullOrEmpty(tbn)) continue;
@@ -228,8 +220,6 @@ namespace MolenApplicatie.Server.Services
                     responses[tbn.Ten_Brugge_Nr][baseUrl + tbn.Ten_Brugge_Nr] = responseBodyWebsite;
                     var docWebsite = new HtmlDocument();
                     docWebsite.LoadHtml(responseBodyWebsite);
-
-                    List<HtmlDocument> htmlAttributes = new List<HtmlDocument>() { docWebsite };
 
                     var tabs = docWebsite.DocumentNode.SelectNodes("//nav[@aria-label='molenpaspoort tabs']//a");
                     if (tabs != null)
@@ -473,6 +463,7 @@ namespace MolenApplicatie.Server.Services
             var Image = doc.DocumentNode.SelectNodes("//img[@class='figure-img img-fluid large portrait']");
             var ArticleAbout = doc.DocumentNode.SelectNodes("//article[@class='mill-about']");
             var ArticleFotos = doc.DocumentNode.SelectNodes("//article[@class='mill-photos']");
+            var ArticleFotos2 = doc.DocumentNode.SelectNodes("//section[@class='mill-photos']");
             bool isNogWaarneembaarPrevious = false;
             bool isGeschiedenisPrevious = false;
             if (divs != null)
@@ -1020,63 +1011,75 @@ namespace MolenApplicatie.Server.Services
                             }
                         }
                     }
-                    if (((isImageAdded && newMolenData.Images.Count < Globals.MaxNormalImagesCount) || !isImageAdded) && ArticleFotos != null)
+                    if ((isImageAdded && newMolenData.Images.Count < Globals.MaxNormalImagesCount) || !isImageAdded)
                     {
                         string pattern = @"\((\d{1,2}-\d{1,2}-(\d{4}))\)";
-                        var firstArticle = ArticleFotos.First();
-                        var turboFrames = firstArticle.SelectNodes(".//turbo-frame");
-                        List<(string, HtmlNode)> foundTurboFrames = new List<(string, HtmlNode)>();
-                        for (int i = 0; i < turboFrames.Count; i++)
+                        HtmlNode firstArticle = null;
+                        if (ArticleFotos != null)
                         {
-                            var divsInTurboFrame = turboFrames[i].SelectNodes(".//div");
-                            foreach (var div in divsInTurboFrame)
+                            firstArticle = ArticleFotos.First();
+                        }
+                        else if (ArticleFotos2 != null)
+                        {
+                            firstArticle = ArticleFotos2.First();
+                        }
+
+                        if (firstArticle != null)
+                        {
+                            var turboFrames = firstArticle.SelectNodes(".//turbo-frame");
+                            List<(string, HtmlNode)> foundTurboFrames = new List<(string, HtmlNode)>();
+                            for (int i = 0; i < turboFrames.Count; i++)
                             {
-                                Match match = Regex.Match(div.InnerText.Trim(), pattern);
-                                if (match.Success)
+                                var divsInTurboFrame = turboFrames[i].SelectNodes(".//div");
+                                foreach (var div in divsInTurboFrame)
                                 {
-                                    foundTurboFrames.Add((match.Groups[2].Value, turboFrames[i]));
+                                    Match match = Regex.Match(div.InnerText.Trim(), pattern);
+                                    if (match.Success)
+                                    {
+                                        foundTurboFrames.Add((match.Groups[2].Value, turboFrames[i]));
+                                    }
+                                }
+                                if (i == 2)
+                                {
+                                    break;
                                 }
                             }
-                            if (i == 2)
-                            {
-                                break;
-                            }
-                        }
 
-                        foundTurboFrames = foundTurboFrames
-                            .OrderByDescending(frame => int.Parse(frame.Item1))
-                            .ToList();
+                            foundTurboFrames = foundTurboFrames
+                                .OrderByDescending(frame => int.Parse(frame.Item1))
+                                .ToList();
 
-                        List<HtmlNode> imagesPortraits = new List<HtmlNode>();
-                        foreach (var turboFrame in foundTurboFrames)
-                        {
-                            var imageContainer = turboFrame.Item2;
-                            var images = imageContainer.SelectNodes(".//img[@class='figure-img img-fluid large portrait']");
-                            if (images != null && images.Count > 0)
+                            List<HtmlNode> imagesPortraits = new List<HtmlNode>();
+                            foreach (var turboFrame in foundTurboFrames)
                             {
-                                imagesPortraits.Add(imageContainer);
+                                var imageContainer = turboFrame.Item2;
+                                var images = imageContainer.SelectNodes(".//img[@class='figure-img img-fluid large']");
+                                if (images != null && images.Count > 0)
+                                {
+                                    imagesPortraits.Add(imageContainer);
+                                }
                             }
-                        }
-                        if (imagesPortraits.Count > 0)
-                        {
-                            var imageToAdd = imagesPortraits.First();
-                            var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
-                            if (molenImage != null)
+                            if (imagesPortraits.Count > 0)
                             {
-                                newMolenData.Images.Add(molenImage);
-                            }
-
-                        }
-                        else if (foundTurboFrames.Count > 0)
-                        {
-                            var imageContainer = foundTurboFrames.First().Item2;
-                            var images = imageContainer.SelectNodes(".//img");
-                            if (images != null)
-                            {
-                                var molenImage = await GetImageFromHtmlNode(imageContainer, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                var imageToAdd = imagesPortraits.First();
+                                var molenImage = await GetImageFromHtmlNode(imageToAdd, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
                                 if (molenImage != null)
                                 {
                                     newMolenData.Images.Add(molenImage);
+                                }
+
+                            }
+                            else if (foundTurboFrames.Count > 0)
+                            {
+                                var imageContainer = foundTurboFrames.First().Item2;
+                                var images = imageContainer.SelectNodes(".//img");
+                                if (images != null)
+                                {
+                                    var molenImage = await GetImageFromHtmlNode(imageContainer, newMolenData.Ten_Brugge_Nr, Globals.MolenImagesFolder, canBeDeleted: true);
+                                    if (molenImage != null)
+                                    {
+                                        newMolenData.Images.Add(molenImage);
+                                    }
                                 }
                             }
                         }
@@ -1097,8 +1100,6 @@ namespace MolenApplicatie.Server.Services
 
                     image.MolenDataId = newMolenData.Id;
 
-                    // if (!isImageInOldMolen)
-                    // {
                     CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(newMolenData.Ten_Brugge_Nr);
 
                     string fullFilePath = Globals.WWWROOTPath + image.FilePath;
@@ -1124,7 +1125,6 @@ namespace MolenApplicatie.Server.Services
                             Console.WriteLine($"Error checking or downloading image from URL: {image.ExternalUrl}. Exception: {ex.Message}");
                         }
                     }
-                    // }
                 }
 
                 for (int i = 0; i < oldMolenData?.Images?.Count; i++)
@@ -1142,7 +1142,11 @@ namespace MolenApplicatie.Server.Services
 
                 if (Directory.Exists(Globals.MolenAddedImagesFolder) && Directory.Exists(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr))
                 {
-                    var allImages = Directory.GetFiles(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr, "*.jpg");
+                    var allImages = Directory.GetFiles(Globals.MolenAddedImagesFolder + "/" + Ten_Brugge_Nr, "*.*")
+                        .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                                 || f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+                                 || f.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
                     foreach (var image in allImages)
                     {
                         string imageName = Path.GetFileNameWithoutExtension(image);
@@ -1155,7 +1159,7 @@ namespace MolenApplicatie.Server.Services
                                 FilePath = imagePath,
                                 Name = imageName,
                                 CanBeDeleted = true,
-                                Description = "",
+                                Description = null,
                                 DateTaken = dateTaken,
                                 MolenDataId = newMolenData.Id
                             };
