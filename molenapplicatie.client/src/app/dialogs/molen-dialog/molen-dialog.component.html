@@ -1,5 +1,5 @@
 <section class="dialog-header" *ngIf="molen">
-  <span *ngIf="molen">{{ molen.name }}</span>
+  <span class="dialog-header-title" *ngIf="molen">{{ molen.name }}</span>
   <div class="actions">
     <button class="default-button" (click)="uploadImage()">
       Voeg foto toe
@@ -25,6 +25,7 @@
   <div class="data molen-data" [ngClass]="{ expanded: isExpanded }">
     <div class="molen-data-div">
       <h2>Details</h2>
+      <p *ngIf="molen.name"><strong>Volledige Naam:</strong> {{ molen.name }}</p>
       <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
       <p *ngIf="molen.functie"><strong>Functie:</strong> {{ molen.functie }}</p>
       <p><strong>Toestand:</strong> {{ molen.toestand || "Onbekend" }}</p>

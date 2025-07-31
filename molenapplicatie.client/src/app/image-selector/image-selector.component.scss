@@ -1,3 +1,5 @@
+@import "../../Utils/Variables.scss";
+
 .image-selector {
   display: flex;
   flex-direction: column;
@@ -55,4 +57,10 @@
 .thumbnail:hover {
   transform: scale(1.1);
   border: 2px solid white;
+}
+
+@media only screen and (max-width: $Media_width) {
+  .main-image {
+  height: auto;
+}
 }
