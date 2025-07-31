@@ -36,71 +36,72 @@ namespace MolenApplicatie.Server.Services
             query = query.ToLower();
 
             var directMolens = await _dbContext.MolenData
-                .Where(m => m.Name != null && EF.Functions.Like(m.Name.ToLower(), $"%{query}%") && m.Toestand != null
-                    && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
-                .Select(m => new { m.Id, m.Name, Source = "Molen naam: " })
-                .Take(limit)
-                .ToListAsync();
+            .Where(m => m.Name != null && EF.Functions.Like(m.Name.ToLower(), $"%{query}%") && m.Toestand != null
+                && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .Select(m => new { m.Id, m.Name, Source = "Molen naam: " })
+            .Take(limit)
+            .ToListAsync();
 
             var buildYearMolens = await _dbContext.MolenData
-                .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
-                    && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
-                .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
-                .Take(limit)
-                .ToListAsync();
+            .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
+                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
+            .Take(limit)
+            .ToListAsync();
 
             var tbnMolens = await _dbContext.MolenTBNs
-                .Where(t => t.Ten_Brugge_Nr != null && EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%"))
-                .Select(t => new { t.MolenData.Id, Name = t.Ten_Brugge_Nr, Source = "Molen TBN: " })
-                .Take(limit)
-                .ToListAsync();
+            .Where(t => t.Ten_Brugge_Nr != null && EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%"))
+            .Select(t => new { t.MolenData.Id, Name = t.Ten_Brugge_Nr, Source = "Molen TBN: " })
+            .Take(limit)
+            .ToListAsync();
 
             var typeMolens = await _dbContext.MolenTypeAssociations
-                .Where(ma => ma.MolenType.Name != null && EF.Functions.Like(ma.MolenType.Name.ToLower(), $"%{query}%")
-                    && ma.MolenData.Toestand != null && ma.MolenData.Toestand != MolenToestand.Verdwenen && allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
-                .Select(ma => new { ma.MolenData.Id, ma.MolenType.Name, Source = "Molen Type: " })
-                .Take(limit)
-                .ToListAsync();
+            .Where(ma => ma.MolenType.Name != null && EF.Functions.Like(ma.MolenType.Name.ToLower(), $"%{query}%")
+                && ma.MolenData.Toestand != null && ma.MolenData.Toestand != MolenToestand.Verdwenen && allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
+            .Select(ma => new { ma.MolenData.Id, ma.MolenType.Name, Source = "Molen Type: " })
+            .Take(limit)
+            .ToListAsync();
 
             var placeMolens = await _dbContext.MolenData
-                .Where(m => m.Plaats != null && EF.Functions.Like(m.Plaats.ToLower(), $"%{query}%")
-                    && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
-                .Select(m => new { m.Id, Name = m.Plaats, Source = "Molen Plaats: " })
-                .Take(limit)
-                .ToListAsync();
+            .Where(m => m.Plaats != null && EF.Functions.Like(m.Plaats.ToLower(), $"%{query}%")
+                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .Select(m => new { m.Id, Name = m.Plaats, Source = "Molen Plaats: " })
+            .Take(limit)
+            .ToListAsync();
 
             var combined = directMolens
-                .Concat(tbnMolens)
-                .Concat(typeMolens)
-                .Concat(placeMolens)
-                .Concat(buildYearMolens);
+            .Concat(tbnMolens)
+            .Concat(typeMolens)
+            .Concat(placeMolens)
+            .Concat(buildYearMolens);
 
             var references = combined
-                .GroupBy(x => x.Id)
-                .Select(g => new
-                {
-                    Id = g.Key,
-                    Reference = g.First().Source + g.First().Name
-                })
-                .Take(limit)
-                .ToList();
+            .GroupBy(x => x.Id)
+            .Select(g => new
+            {
+                Id = g.Key,
+                Reference = g.First().Source + g.First().Name
+            })
+            .Take(limit)
+            .ToList();
 
             var molenIds = references.Select(r => r.Id).ToList();
 
             var molenDataDict = await _dbContext.MolenData
-                .Where(m => molenIds.Contains(m.Id))
-                .Include(m => m.MolenTypeAssociations)
-                .ThenInclude(ma => ma.MolenType)
-                .ToDictionaryAsync(m => m.Id);
+            .Where(m => molenIds.Contains(m.Id))
+            .Include(m => m.MolenTypeAssociations)
+            .ThenInclude(ma => ma.MolenType)
+            .ToDictionaryAsync(m => m.Id);
 
             var results = references
-                .Where(r => molenDataDict.ContainsKey(r.Id))
-                .Select(r => new SearchModel<MolenData>
-                {
-                    Reference = r.Reference,
-                    Data = molenDataDict[r.Id]
-                })
-                .ToList();
+            .Where(r => molenDataDict.ContainsKey(r.Id))
+            .OrderByDescending(r => molenDataDict[r.Id].Toestand == MolenToestand.Werkend)
+            .Select(r => new SearchModel<MolenData>
+            {
+                Reference = r.Reference,
+                Data = molenDataDict[r.Id]
+            })
+            .ToList();
 
             return results;
         }
