@@ -12,7 +12,7 @@
       <span
         >Molen:
         <button
-          (click)="goToMolen(molenImages[currentIndex].molen.ten_Brugge_Nr)"
+          (click)="goToMolen(molenImages[currentIndex].molen)"
           class="goToMolenButton"
         >
           {{ molenImages[currentIndex].molen.name }}
@@ -29,9 +29,7 @@
           <img
             [src]="img.filePath"
             [alt]="img.name"
-            (click)="
-              goToImage(molenImages[currentIndex].molen.ten_Brugge_Nr, img)
-            "
+            (click)="goToImage(molenImages[currentIndex].molen, img)"
           />
         </div>
       </div>

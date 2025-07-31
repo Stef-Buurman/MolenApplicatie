@@ -108,7 +108,9 @@ export class FilterMapComponent implements OnInit {
         !this.selectedFilter.provincie &&
         !this.selectedFilter.toestand &&
         (this.molenFilters.types.find(
-          (t) => t.name.toLowerCase() === this.selectedFilter.type
+          (t) =>
+            t.name.toLowerCase() ===
+            this.selectedFilter.type.toLocaleLowerCase()
         )?.count ?? 0) > 1100
       ) {
         this.filters['MolenState'] = {
@@ -126,9 +128,16 @@ export class FilterMapComponent implements OnInit {
     if (
       this.filters['MolenState'] &&
       !this.filters['Provincie'] &&
-      !this.filters['MolenType'] &&
-      (this.selectedFilter.toestand === 'verdwenen' ||
-        this.filters['MolenState'].value === 'verdwenen')
+      (!this.filters['MolenType'] ||
+        (this.molenFilters.types.find(
+          (t) =>
+            t.name.toLowerCase() ===
+            this.selectedFilter.type.toLocaleLowerCase()
+        )?.count ?? 0) > 1100) &&
+      (this.selectedFilter.toestand.toLocaleLowerCase() === 'verdwenen' ||
+        (typeof this.filters['MolenState']?.value === 'string' &&
+          this.filters['MolenState']?.value.toLocaleLowerCase() ===
+            'verdwenen'))
     ) {
       this.toasts.showInfo('Je hebt geen provincie gekozen!');
       return;

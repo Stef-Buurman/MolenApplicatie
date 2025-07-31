@@ -150,7 +150,7 @@ namespace MolenApplicatie.Server.Services
 
 
 
-        public async Task<List<SearchModel<MolenType>>> SearchMolenTypesAsync(string query, int limit, List<Guid> molenIds)
+        public async Task<List<SearchModelWithCount<MolenType>>> SearchMolenTypesAsync(string query, int limit, List<Guid> molenIds)
         {
             query = query.ToLower();
 
@@ -170,10 +170,20 @@ namespace MolenApplicatie.Server.Services
                 molenTypes = await _dbContext.MolenTypes.Where(mt => molenTypeIds.Contains(mt.Id)).ToListAsync();
             }
 
-            return molenTypes.Select(mt => new SearchModel<MolenType>
+            var molenTypeIdsToCount = molenTypes.Select(mt => mt.Id).ToList();
+
+            var molenTypeCounts = await _dbContext.MolenTypeAssociations
+                .Where(ma => molenTypeIdsToCount.Contains(ma.MolenTypeId))
+                .GroupBy(ma => ma.MolenTypeId)
+                .Select(ma => new { ma.Key, Count = ma.Count() })
+                .ToDictionaryAsync(ma => ma.Key, ma => ma.Count);
+
+
+            return molenTypes.Select(mt => new SearchModelWithCount<MolenType>
             {
                 Reference = "Molen Type: " + mt.Name,
-                Data = mt
+                Data = mt,
+                Count = molenTypeCounts.ContainsKey(mt.Id) ? molenTypeCounts[mt.Id] : 0
             }).ToList();
         }
 

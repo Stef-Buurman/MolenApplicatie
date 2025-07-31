@@ -2,6 +2,9 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MolenImage } from '../../Interfaces/Models/MolenImage';
+import { MolenData } from '../../Interfaces/Models/MolenData';
+import { MapData } from '../../Interfaces/Map/MapData';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-popup',
@@ -12,6 +15,10 @@ export class PopupComponent implements OnInit {
   @Input() molenImages?: RecentAddedImages[];
   @Input() visible: boolean = true;
   @Output() visibleChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Input() onMolenChange?: (
+    selectedMolen: MolenData,
+    navigate?: boolean
+  ) => Observable<MapData[]>;
 
   currentIndex: number = 0;
 
@@ -40,15 +47,17 @@ export class PopupComponent implements OnInit {
     }
   }
 
-  goToMolen(tenBruggeNr: string) {
-    this.router.navigate([tenBruggeNr], {
-      relativeTo: this.route,
-    });
+  goToMolen(molen: MolenData) {
+    this.onMolenChange?.(molen)?.subscribe();
   }
 
-  goToImage(tenBruggeNr: string, image: MolenImage) {
-    this.router.navigate([tenBruggeNr, image.name], {
-      relativeTo: this.route,
+  goToImage(molen: MolenData, image: MolenImage) {
+    this.onMolenChange?.(molen)?.subscribe({
+      complete: () => {
+        this.router.navigate([molen.ten_Brugge_Nr, image.name], {
+          relativeTo: this.route,
+        });
+      },
     });
   }
 }

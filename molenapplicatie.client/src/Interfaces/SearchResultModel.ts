@@ -7,6 +7,10 @@ export interface SearchModel<T> {
   data: T;
 }
 
+export interface SearchModelWithCount<T> extends SearchModel<T> {
+  count: number;
+}
+
 export interface KeyValuePair<K, V> {
   key: K;
   value: V;
@@ -15,5 +19,5 @@ export interface KeyValuePair<K, V> {
 export interface SearchResultsModel {
   molens: SearchModel<MolenData>[];
   places: Array<KeyValuePair<string, SearchModel<Place>[]>>;
-  molenTypes: SearchModel<MolenType>[];
+  molenTypes: SearchModelWithCount<MolenType>[];
 }

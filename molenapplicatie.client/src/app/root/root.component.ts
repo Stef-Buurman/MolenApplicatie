@@ -15,9 +15,10 @@ import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { MapService } from '../../Services/MapService';
 import { MolenService } from '../../Services/MolenService';
 import { MolenType } from '../../Interfaces/Models/MolenType';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { MapData } from '../../Interfaces/Map/MapData';
-import { SharedDataService } from '../../Services/SharedDataService';
+import { SearchModelWithCount } from '../../Interfaces/SearchResultModel';
+import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 
 @Component({
   selector: 'layout',
@@ -33,6 +34,9 @@ export class RootComponent {
   private UpdateLastExecutionTime: number | null = null;
   private readonly cooldownTime = 10 * 60 * 1000;
   private currentFilters: FilterFormValues[] = [];
+
+  @Input() recentAddedImages!: RecentAddedImages[];
+  @Input() isPopupVisible: boolean = false;
 
   get error(): boolean {
     return this.errors.HasError;
@@ -54,7 +58,6 @@ export class RootComponent {
     private dialog: MatDialog,
     private errors: ErrorService,
     private molenService: MolenService,
-    private sharedData: SharedDataService,
     private mapService: MapService
   ) {}
 
@@ -69,11 +72,16 @@ export class RootComponent {
     );
   }
 
-  onMolenChange(selectedMolen: MolenData) {
-    if (!selectedMolen) return;
-    this.router.navigate([selectedMolen.ten_Brugge_Nr], {
-      relativeTo: this.route,
-    });
+  onMolenChange(
+    selectedMolen: MolenData,
+    navigate: boolean = true
+  ): Observable<MapData[]> {
+    if (!selectedMolen) return of([]);
+    if (navigate) {
+      this.router.navigate([selectedMolen.ten_Brugge_Nr], {
+        relativeTo: this.route,
+      });
+    }
     if (
       !this.mapService.doesTenBruggeNumberExist(selectedMolen.ten_Brugge_Nr)
     ) {
@@ -116,19 +124,21 @@ export class RootComponent {
           name: 'MolenState',
         });
       }
-      this.onFilterChange(this.currentFilters).subscribe();
+      if (navigate) this.onFilterChange(this.currentFilters).subscribe();
     }
     this.visible = false;
+    if (!navigate) return this.onFilterChange(this.currentFilters);
+    return of();
   }
 
-  onTypeChange(selectedType: MolenType) {
+  onTypeChange(selectedType: SearchModelWithCount<MolenType>) {
     if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
       this.currentFilters = this.currentFilters.filter(
         (f) => f.filterName !== 'MolenType'
       );
       this.currentFilters.push({
         filterName: 'MolenType',
-        value: selectedType.name,
+        value: selectedType.data.name,
         isAList: false,
         type: 'string',
         name: 'MolenType',
@@ -136,12 +146,26 @@ export class RootComponent {
     } else {
       this.currentFilters.push({
         filterName: 'MolenType',
-        value: selectedType.name,
+        value: selectedType.data.name,
         isAList: false,
         type: 'string',
         name: 'MolenType',
       });
     }
+
+    if (
+      !this.currentFilters.find((f) => f.filterName === 'MolenState') &&
+      (selectedType.count ?? 0) > 1100
+    ) {
+      this.currentFilters.push({
+        filterName: 'MolenState',
+        value: 'Werkend',
+        isAList: false,
+        type: 'string',
+        name: 'MolenState',
+      });
+    }
+
     this.changeFilters();
   }
 

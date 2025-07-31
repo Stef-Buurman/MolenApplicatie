@@ -74,6 +74,13 @@
     </div>
   </div>
 </header>
+
+<app-popup
+  [(visible)]="isPopupVisible"
+  [molenImages]="recentAddedImages"
+  [onMolenChange]="onMolenChange.bind(this)"
+></app-popup>
+
 <div *ngIf="!error" class="container">
   <div class="allButtons">
     <h2>Menu</h2>

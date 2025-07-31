@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Toasts } from '../../Utils/Toasts';
 import {
   SearchModel,
+  SearchModelWithCount,
   SearchResultsModel,
 } from '../../Interfaces/SearchResultModel';
 import { MolenData } from '../../Interfaces/Models/MolenData';
@@ -52,7 +53,9 @@ export class SearchBarComponent {
   @Input() selectedPlace!: Place;
   @Output() selectedPlaceChange = new EventEmitter<Place>();
   @Output() selectedMolenChange = new EventEmitter<MolenData>();
-  @Output() selectedTypeChange = new EventEmitter<MolenType>();
+  @Output() selectedTypeChange = new EventEmitter<
+    SearchModelWithCount<MolenType>
+  >();
 
   isDropdownVisible: boolean = false;
   constructor(
@@ -181,8 +184,8 @@ export class SearchBarComponent {
     this.searchTerm = option.data.name;
   }
 
-  selectType(option: SearchModel<MolenType>) {
-    this.selectedTypeChange.emit(option.data);
+  selectType(option: SearchModelWithCount<MolenType>) {
+    this.selectedTypeChange.emit(option);
     this.isDropdownVisible = false;
     this.searchTerm = option.data.name;
   }
