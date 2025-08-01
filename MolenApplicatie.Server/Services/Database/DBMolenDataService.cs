@@ -67,99 +67,170 @@ namespace MolenApplicatie.Server.Services.Database
             );
         }
 
-        public override async Task<MolenData> Add(MolenData molenData, CancellationToken token = default)
+        public override async Task<MolenData> Add(MolenData entity, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            var TypeAss = molenData.MolenTypeAssociations.ToList();
-            var images = molenData.Images.ToList();
-            var makers = molenData.MolenMakers.ToList();
-            var addedImages = molenData.AddedImages.ToList();
-            var dissappearedYears = molenData.DisappearedYearInfos.ToList();
-            var tbn = molenData.MolenTBN;
-            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages, token);
-            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears, token);
-            images = await _dBMolenImageService.AddOrUpdateRange(images, token);
-            makers = await _dBMolenMakerService.AddOrUpdateRange(makers, token);
-            tbn = await _dBMolenTBNService.AddOrUpdate(tbn, token);
-            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss, token);
+            if (entity == null)
+                return null;
 
-            molenData.AddedImages.Clear();
-            molenData.DisappearedYearInfos.Clear();
-            molenData.Images.Clear();
-            molenData.MolenMakers.Clear();
-            molenData.MolenTypeAssociations.Clear();
-            molenData.MolenTBN = null!;
+            if (entity.MolenTBN != null)
+            {
+                var tbn = await _dBMolenTBNService.AddOrUpdate(entity.MolenTBN, token);
+                entity.MolenTBNId = tbn.Id;
+                entity.MolenTBN = null;
+            }
 
-            await base.Add(molenData, token);
+            var relTypes = entity.MolenTypeAssociations?.ToList() ?? new();
+            var relImages = entity.Images?.ToList() ?? new();
+            var relMakers = entity.MolenMakers?.ToList() ?? new();
+            var relAddedImages = entity.AddedImages?.ToList() ?? new();
+            var relDisappearedYears = entity.DisappearedYearInfos?.ToList() ?? new();
 
-            molenData.AddedImages = addedImages;
-            molenData.DisappearedYearInfos = dissappearedYears;
-            molenData.Images = images;
-            molenData.MolenMakers = makers;
-            molenData.MolenTypeAssociations = TypeAss;
-            molenData.MolenTBN = tbn;
+            entity.MolenTypeAssociations = null;
+            entity.Images = null;
+            entity.MolenMakers = null;
+            entity.AddedImages = null;
+            entity.DisappearedYearInfos = null;
 
-            return molenData;
+            entity = await base.Add(entity, token);
+
+            if (relTypes?.Any() == true)
+            {
+                foreach (var association in relTypes)
+                    association.MolenDataId = entity.Id;
+
+                await _dBMolenTypeAssociationService.AddOrUpdateRange(relTypes, token);
+            }
+
+            if (relImages?.Any() == true)
+            {
+                foreach (var image in relImages)
+                    image.MolenDataId = entity.Id;
+
+                await _dBMolenImageService.AddOrUpdateRange(relImages, token);
+            }
+
+            if (relMakers?.Any() == true)
+            {
+                foreach (var maker in relMakers)
+                    maker.MolenDataId = entity.Id;
+
+                await _dBMolenMakerService.AddOrUpdateRange(relMakers, token);
+            }
+
+            if (relAddedImages?.Any() == true)
+            {
+                foreach (var addedImage in relAddedImages)
+                    addedImage.MolenDataId = entity.Id;
+
+                await _dBMolenAddedImageService.AddOrUpdateRange(relAddedImages, token);
+            }
+
+            if (relDisappearedYears?.Any() == true)
+            {
+                foreach (var year in relDisappearedYears)
+                    year.MolenDataId = entity.Id;
+
+                await _dBMolenDissappearedYearsService.AddOrUpdateRange(relDisappearedYears, token);
+            }
+
+            return entity;
         }
 
-        public override async Task<MolenData> Update(MolenData molenData, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
+
+        public override async Task<MolenData?> Update(MolenData entity, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
+            if (entity == null) return null;
+
             token.ThrowIfCancellationRequested();
-            var TypeAss = molenData.MolenTypeAssociations.ToList();
-            var images = molenData.Images.ToList();
-            var makers = molenData.MolenMakers.ToList();
-            var addedImages = molenData.AddedImages.ToList();
-            var dissappearedYears = molenData.DisappearedYearInfos.ToList();
-            var tbn = molenData.MolenTBN;
 
-            molenData.AddedImages.Clear();
-            molenData.DisappearedYearInfos.Clear();
-            molenData.Images.Clear();
-            molenData.MolenMakers.Clear();
-            molenData.MolenTypeAssociations.Clear();
-            molenData.MolenTBN = null!;
+            if (entity.MolenTBN != null)
+            {
+                entity.MolenTBN.MolenData = null;
+                var tbn = await _dBMolenTBNService.AddOrUpdate(entity.MolenTBN, token, strat);
+                entity.MolenTBNId = tbn.Id;
+                entity.MolenTBN = null;
+            }
 
-            tbn = await _dBMolenTBNService.AddOrUpdate(tbn, token, strat);
-            molenData.MolenTBNId = tbn.Id;
+            var relTypes = entity.MolenTypeAssociations?.ToList() ?? new();
+            var relImages = entity.Images?.ToList() ?? new();
+            var relMakers = entity.MolenMakers?.ToList() ?? new();
+            var relAddedImages = entity.AddedImages?.ToList() ?? new();
+            var relDisappearedYears = entity.DisappearedYearInfos?.ToList() ?? new();
 
-            molenData = await base.Update(molenData, token, strat);
+            entity.MolenTypeAssociations = null;
+            entity.Images = null;
+            entity.MolenMakers = null;
+            entity.AddedImages = null;
+            entity.DisappearedYearInfos = null;
 
-            images.ForEach(mak =>
+            var tracked = await _dbSet.FirstOrDefaultAsync(e => e.Id == entity.Id, token);
+            if (tracked != null)
             {
-                mak.MolenDataId = molenData.Id;
-                mak.MolenData = mak.MolenData;
-            });
-            makers.ForEach(mak =>
+                CopyScalarsFrom(tracked, entity);
+            }
+
+            void SetForeignKeys<T>(List<T> list, Action<T, Guid> setter)
             {
-                mak.MolenDataId = molenData.Id;
-                mak.MolenData = mak.MolenData;
-            });
-            addedImages.ForEach(mak =>
+                foreach (var item in list)
+                {
+                    setter(item, entity.Id);
+                }
+            }
+
+            SetForeignKeys(relTypes, (item, id) =>
             {
-                mak.MolenDataId = molenData.Id;
-                mak.MolenData = mak.MolenData;
+                if (item is MolenTypeAssociation mta)
+                {
+                    mta.MolenDataId = id;
+                    mta.MolenData = null;
+                }
             });
-            dissappearedYears.ForEach(mak =>
+
+            SetForeignKeys(relImages, (item, id) =>
             {
-                mak.MolenDataId = molenData.Id;
-                mak.MolenData = mak.MolenData;
+                if (item is MolenImage img)
+                {
+                    img.MolenDataId = id;
+                    img.MolenData = null;
+                }
             });
-            TypeAss.ForEach(mak =>
+
+            SetForeignKeys(relMakers, (item, id) =>
             {
-                mak.MolenData = molenData;
+                if (item is MolenMaker maker)
+                {
+                    maker.MolenDataId = id;
+                    maker.MolenData = null;
+                }
             });
-            TypeAss = await _dBMolenTypeAssociationService.AddOrUpdateRange(TypeAss, token, strat);
-            images = await _dBMolenImageService.AddOrUpdateRange(images, token, strat);
-            makers = await _dBMolenMakerService.AddOrUpdateRange(makers, token, strat);
-            addedImages = await _dBMolenAddedImageService.AddOrUpdateRange(addedImages, token, strat);
-            dissappearedYears = await _dBMolenDissappearedYearsService.AddOrUpdateRange(dissappearedYears, token, strat);
-            molenData.AddedImages = addedImages;
-            molenData.DisappearedYearInfos = dissappearedYears;
-            molenData.Images = images;
-            molenData.MolenMakers = makers;
-            molenData.MolenTypeAssociations = TypeAss;
-            molenData.MolenTBN = tbn;
-            return molenData;
+
+            SetForeignKeys(relAddedImages, (item, id) =>
+            {
+                if (item is AddedImage ai)
+                {
+                    ai.MolenDataId = id;
+                    ai.MolenData = null;
+                }
+            });
+
+            SetForeignKeys(relDisappearedYears, (item, id) =>
+            {
+                if (item is DisappearedYearInfo dy)
+                {
+                    dy.MolenDataId = id;
+                    dy.MolenData = null;
+                }
+            });
+
+            await _dBMolenTypeAssociationService.AddOrUpdateRange(relTypes, token, strat);
+            await _dBMolenImageService.AddOrUpdateRange(relImages, token, strat);
+            await _dBMolenMakerService.AddOrUpdateRange(relMakers, token, strat);
+            await _dBMolenAddedImageService.AddOrUpdateRange(relAddedImages, token, strat);
+            await _dBMolenDissappearedYearsService.AddOrUpdateRange(relDisappearedYears, token, strat);
+
+            _cache.Update(entity);
+
+            return entity;
         }
 
         public override async Task<List<MolenData>> UpdateRange(List<MolenData> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
