@@ -25,6 +25,9 @@ jobs:
       - name: Test SSH Connection
         run: ssh $SSH_USER@$SSH_IP "echo Connection Successful"
 
+      - name: Set up virtual environment
+        run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH
+
       - name: Set api key and database connection
         run: |
           ssh "$SSH_USER@$SSH_IP" "cat > $APP_SETTINGS_PATH << EOF
