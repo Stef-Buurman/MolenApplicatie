@@ -1,9 +1,9 @@
-@import '../../../Utils/Variables.scss';
+@import "../../../Utils/Variables.scss";
 
 .container {
   width: 50vw;
   height: 100vh;
-  background-image: url('../../../../public/Assets/Background/UploadImageBackground.jpg');
+  background-image: url("../../../../public/Assets/Background/UploadImageBackground.jpg");
   background-origin: border-box;
   background-size: cover;
   color: #ffffff;
@@ -30,7 +30,8 @@
   width: 50%;
 }
 
-.image-details, .image-preview {
+.image-details,
+.image-preview {
   padding: 2% 1% 1% 0;
 }
 
@@ -49,7 +50,7 @@
   }
 }
 
-.api-key input[type=text] {
+.api-key input[type="text"] {
   width: 80%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -75,7 +76,7 @@
 .file-label {
   display: inline-block;
   padding: 10px 20px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -90,10 +91,9 @@
 }
 
 .file-label:active {
-  background-color: #388E3C;
+  background-color: #388e3c;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 
 .close-btn {
   border: none;
@@ -116,7 +116,6 @@
   background-color: #f44336;
   color: white;
 }
-
 
 @media only screen and (max-width: $Media_width) {
   .image-details {

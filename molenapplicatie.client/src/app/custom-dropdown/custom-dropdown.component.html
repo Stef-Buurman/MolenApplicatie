@@ -1,0 +1,18 @@
+<div class="custom-dropdown">
+  <div class="trigger" #triggerRef (click)="toggleDropdown()" tabindex="0">
+    {{ selected || placeholder }}
+    <span class="arrow">{{ isOpen ? "▲" : "▼" }}</span>
+  </div>
+
+  <ng-template #dropdownTemplate>
+    <ul class="dropdown-options">
+      <li (click)="select('')">{{ placeholder }}</li>
+      <li *ngFor="let option of options" (click)="select(option.name)">
+        {{ option.name }}
+        <span *ngIf="option.count !== undefined" class="count">
+          ({{ option.count }})
+        </span>
+      </li>
+    </ul>
+  </ng-template>
+</div>

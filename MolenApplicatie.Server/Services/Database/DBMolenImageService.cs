@@ -1,0 +1,87 @@
+﻿using Microsoft.EntityFrameworkCore;
+using MolenApplicatie.Server.Data;
+using MolenApplicatie.Server.Enums;
+using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Utils;
+
+namespace MolenApplicatie.Server.Services.Database
+{
+    public class DBMolenImageService : DBDefaultService<MolenImage>
+    {
+        private readonly HttpClient _client;
+        public DBMolenImageService(MolenDbContext context, HttpClient client) : base(context)
+        {
+            _client = client;
+        }
+
+        public override bool Exists(MolenImage molenImage, out MolenImage? existing)
+        {
+            return Exists(e => e.FilePath == molenImage.FilePath, out existing);
+        }
+
+        public override bool ExistsRange(List<MolenImage> entities,
+            out List<MolenImage> matchingEntities,
+            out List<MolenImage> newEntities,
+            out List<MolenImage> updatedEntities,
+            bool searchDB = true,
+            CancellationToken token = default,
+            UpdateStrategy strat = UpdateStrategy.Patch)
+        {
+            return ExistsRange(
+                entities,
+                e => e.FilePath,
+                y => e => e.FilePath == y.FilePath,
+                out matchingEntities,
+                out newEntities,
+                out updatedEntities,
+                searchDB,
+                token,
+                strat
+            );
+        }
+
+        public override async Task<MolenImage> Add(MolenImage molenImage, CancellationToken token = default)
+        {
+            bool DoesFileExist = File.Exists(Globals.WWWROOTPath + molenImage.FilePath);
+            if (!DoesFileExist && Uri.IsWellFormedUriString(molenImage.ExternalUrl, UriKind.Absolute))
+            {
+                string? tbn = CreateDirectoryIfNotExists.GetMolenImagesFolder(molenImage.FilePath);
+                if (tbn == null) return molenImage;
+                CreateDirectoryIfNotExists.CreateMolenImagesFolderDirectory(tbn);
+                File.WriteAllBytes(Globals.WWWROOTPath + molenImage.FilePath, await _client.GetByteArrayAsync(molenImage.ExternalUrl));
+            }
+            else if (!DoesFileExist) return molenImage;
+            return await base.Add(molenImage, token);
+        }
+
+        public async Task<List<MolenImage>> GetImagesOfMolen(Guid MolenId)
+        {
+            var images = await _context.MolenImages
+                .Where(e => e.MolenDataId == MolenId)
+                .ToListAsync();
+            return images;
+        }
+
+        public async Task<Dictionary<Guid, List<MolenImage>>> GetImagesOfMolens(List<Guid> molens)
+        {
+            var images = await _context.MolenImages
+                .Where(e => molens.Contains(e.MolenDataId))
+                .GroupBy(e => e.MolenDataId)
+                .ToDictionaryAsync(g => g.Key, g => g.ToList());
+            return images;
+        }
+
+        public override async Task Delete(MolenImage image)
+        {
+            MolenImage? imageToDelete = await GetById(image.Id);
+            if (imageToDelete != null)
+            {
+                if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(imageToDelete.FilePath)))
+                {
+                    File.Delete(CreateCleanPath.CreatePathToWWWROOT(imageToDelete.FilePath));
+                }
+                _context.MolenImages.Remove(imageToDelete);
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-@import '../../../Utils/Variables.scss';
+@import "../../../Utils/Variables.scss";
 
 .selectedImage {
   height: 95vh;
@@ -10,7 +10,8 @@
   height: fit-content;
   max-height: 100%;
   max-width: 60vw;
-  box-shadow: 30px, 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 30px, 0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+    0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
   border-radius: 30px 0 0 30px;
 }
 
@@ -29,7 +30,7 @@
 
 .date-taken {
   text-align: center;
-  padding:10px 0 10px 0;
+  padding: 10px 0 10px 0;
   background-color: #1f1f1f;
   color: white;
   border-radius: 0 0 30px 0;
@@ -83,8 +84,8 @@
   margin-left: 50px;
 }
 
-.gif{
-    margin-top:5vh;
+.gif {
+  margin-top: 5vh;
 }
 
 @media only screen and (max-width: $Media_width) {
@@ -92,7 +93,8 @@
     display: block;
   }
 
-  .download_btn, .deleteButton {
+  .download_btn,
+  .deleteButton {
     border-radius: 0;
     width: 100%;
   }
@@ -132,7 +134,7 @@
     top: 0;
     right: 0;
   }
-  .gif{
-      display:none;
+  .gif {
+    display: none;
   }
 }

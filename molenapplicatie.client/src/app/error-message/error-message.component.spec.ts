@@ -8,9 +8,8 @@ describe('ErrorMessageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ErrorMessageComponent]
-    })
-    .compileComponents();
+      declarations: [ErrorMessageComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ErrorMessageComponent);
     component = fixture.componentInstance;

@@ -1,0 +1,56 @@
+<div
+  class="popup-container"
+  *ngIf="visible && molenImages && molenImages.length"
+>
+  <div class="popup-background"></div>
+  <div class="popup-content">
+    <button class="close-btn" (click)="dismiss()">×</button>
+
+    <div class="popup-header">
+      <span>Recent toegevoegde foto's</span>
+      <br />
+      <span
+        >Molen:
+        <button
+          (click)="goToMolen(molenImages[currentIndex].molen)"
+          class="goToMolenButton"
+        >
+          {{ molenImages[currentIndex].molen.name }}
+        </button></span
+      >
+    </div>
+
+    <div class="popup-body">
+      <div class="image-grid">
+        <div
+          class="image-box"
+          *ngFor="let img of molenImages[currentIndex]?.images"
+        >
+          <img
+            [src]="img.filePath"
+            [alt]="img.name"
+            (click)="goToImage(molenImages[currentIndex].molen, img)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination-controls" *ngIf="molenImages.length > 1">
+      <button
+        class="arrow-btn"
+        (click)="previous()"
+        [disabled]="currentIndex === 0"
+      >
+        ←
+      </button>
+      <span>{{ currentIndex + 1 }} / {{ molenImages.length }}</span>
+      <button
+        class="arrow-btn"
+        (click)="next()"
+        [disabled]="currentIndex === molenImages.length - 1"
+      >
+        →
+      </button>
+    </div>
+  </div>
+</div>
