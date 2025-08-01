@@ -14,6 +14,11 @@ jobs:
       REMOTE_SCRIPT_PATH: ${{ secrets.UPDATE_PROJECT_FILE_PATH }}
       APP_SETTINGS_PATH: ${{ secrets.APP_SETTINGS_PATH }}
       API_KEY: ${{ secrets.API_KEY }}
+      DB_User: ${{ secrets.DB_User }}
+      DB_Password: ${{ secrets.DB_Password }}
+      DB_Name: ${{ secrets.DB_Name }}
+      DB_Port: ${{ secrets.DB_Port }}
+      DB_IP: ${{ secrets.DB_IP }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,8 +27,8 @@ jobs:
 
       - name: Set up virtual environment
         run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH
-      
-      - name: Set api key
+
+      - name: Set api key and database connection
         run: |
           ssh "$SSH_USER@$SSH_IP" "cat > $APP_SETTINGS_PATH << EOF
           {
@@ -43,6 +48,9 @@ jobs:
             },
             \"FileUploadFilter\": {
               \"Authorization\": \"$API_KEY\"
+            },
+            \"ConnectionStrings\": {
+              \"MolenDatabase\": \"server=$DB_IP;user=$DB_User;password=$DB_Password;database=$DB_Name;port=$DB_Port\"
             }
           }
           EOF"
