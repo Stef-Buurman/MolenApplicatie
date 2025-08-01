@@ -1,0 +1,56 @@
+.custom-dropdown {
+  width: 100%;
+  position: relative;
+
+  .trigger {
+    width: 100%;
+    border: 1px solid #ccc;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .arrow {
+    margin-left: 1rem;
+    font-size: 0.75rem;
+  }
+}
+
+.dropdown-options {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+
+  li {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f2f2f2;
+    }
+  }
+
+  .count {
+    color: #999;
+    margin-left: 0.5rem;
+  }
+}
+
+.custom-dropdown-panel {
+  z-index: 1500 !important;
+}
+::ng-deep .custom-dropdown-panel {
+  z-index: 1500 !important;
+}

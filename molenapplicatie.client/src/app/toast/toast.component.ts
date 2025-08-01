@@ -1,15 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Toasts } from '../../Utils/Toasts';
 import { ToastType } from '../../Enums/ToastType';
-import { Toast } from '../../Interfaces/Toast';
 
 @Component({
   selector: 'app-toast',
   templateUrl: './toast.component.html',
-  styleUrl: './toast.component.scss'
+  styleUrl: './toast.component.scss',
 })
 export class ToastComponent implements OnInit {
-  ToastType = ToastType
+  ToastType = ToastType;
   @Input() title: string | undefined;
   @Input() message: string = '';
   @Input() type: ToastType | undefined;

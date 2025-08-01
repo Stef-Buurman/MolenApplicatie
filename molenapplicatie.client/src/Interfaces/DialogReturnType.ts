@@ -1,4 +1,4 @@
-import { DialogReturnStatus } from "../Enums/DialogReturnStatus";
+import { DialogReturnStatus } from '../Enums/DialogReturnStatus';
 
 export interface DialogReturnType {
   status: DialogReturnStatus;
