@@ -5,6 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { MapComponent } from './map/map.component';
 import { MolenDialogComponent } from './dialogs/molen-dialog/molen-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { ImageSelectorComponent } from './image-selector/image-selector.component';
@@ -12,22 +13,25 @@ import { ImageDialogComponent } from './dialogs/image-dialog/image-dialog.compon
 import { ToastrModule } from 'ngx-toastr';
 import { ConfirmationDialogComponent } from './dialogs/confirmation-dialog/confirmation-dialog.component';
 import { ToastComponent } from './toast/toast.component';
+import { Toasts } from '../Utils/Toasts';
 import { LoaderComponent } from './loader/loader.component';
 import { ErrorMessageComponent } from './error-message/error-message.component';
-import { SearchBarComponent } from './search-bar/search-bar.component';
+import { DropdownComponent } from './dropdown/dropdown.component';
 import { RootComponent } from './root/root.component';
+import { ErrorService } from '../Services/ErrorService';
 import { OpenMolenDetailsComponent } from './open-molen-details/open-molen-details.component';
+import { MapActiveMolensComponent } from './map-active-molens/map-active-molens.component';
+import { MapExistingMolensComponent } from './map-existing-molens/map-existing-molens.component';
+import { MapDisappearedMolensComponent } from './map-disappeared-molens/map-disappeared-molens.component';
+import { MolensRootActiveComponent } from './molens-root-active/molens-root-active.component';
 import { FilterMapComponent } from './dialogs/filter-map/filter-map.component';
 import { UploadImageDialogComponent } from './dialogs/upload-image-dialog/upload-image-dialog.component';
-import { MapPageComponent } from './map-page/map-page.component';
-import { CustomDropdownComponent } from './custom-dropdown/custom-dropdown.component';
-import { PortalModule } from '@angular/cdk/portal';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { PopupComponent } from './popup/popup.component';
+import { MapRemainderMolensComponent } from './map-remainder-molens/map-remainder-molens.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    MapComponent,
     MolenDialogComponent,
     ImageSelectorComponent,
     ImageDialogComponent,
@@ -35,14 +39,16 @@ import { PopupComponent } from './popup/popup.component';
     ToastComponent,
     LoaderComponent,
     ErrorMessageComponent,
-    SearchBarComponent,
+    DropdownComponent,
     RootComponent,
     OpenMolenDetailsComponent,
+    MapActiveMolensComponent,
+    MapExistingMolensComponent,
+    MapRemainderMolensComponent,
+    MapDisappearedMolensComponent,
+    MolensRootActiveComponent,
     FilterMapComponent,
-    UploadImageDialogComponent,
-    MapPageComponent,
-    CustomDropdownComponent,
-    PopupComponent,
+    UploadImageDialogComponent
   ],
   imports: [
     BrowserAnimationsModule,
@@ -51,11 +57,9 @@ import { PopupComponent } from './popup/popup.component';
     AppRoutingModule,
     MatDialogModule,
     FormsModule,
-    OverlayModule,
-    PortalModule,
-    ToastrModule.forRoot(),
+    ToastrModule.forRoot()
   ],
   providers: [],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

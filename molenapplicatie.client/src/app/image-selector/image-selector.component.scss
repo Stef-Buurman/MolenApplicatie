@@ -1,5 +1,3 @@
-@import "../../Utils/Variables.scss";
-
 .image-selector {
   display: flex;
   flex-direction: column;
@@ -7,15 +5,15 @@
 }
 
 .main-image {
-  height: 72vh;
+  height:72vh;
 }
 
 .main-image img {
   width: 100%;
   height: auto;
   max-height: 100%;
-  padding: 2px;
-  cursor: pointer;
+  padding:2px;
+  cursor:pointer;
 }
 
 .main-image img:hover {
@@ -53,14 +51,7 @@
   border: 2px solid transparent;
 }
 
-.selected,
-.thumbnail:hover {
+.selected, .thumbnail:hover {
   transform: scale(1.1);
   border: 2px solid white;
-}
-
-@media only screen and (max-width: $Media_width) {
-  .main-image {
-  height: auto;
-}
 }

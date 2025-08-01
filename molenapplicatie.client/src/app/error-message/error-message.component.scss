@@ -1,4 +1,4 @@
-@import "../../Utils/Variables.scss";
+@import '../../Utils/Variables.scss';
 
 .ErrorDiv {
   background-color: black;
@@ -15,7 +15,7 @@ img {
 @media only screen and (max-width: $Media_width) {
   img {
     height: auto !important;
-    margin-top: 150px;
+    margin-top:150px;
     width: 100%;
   }
 

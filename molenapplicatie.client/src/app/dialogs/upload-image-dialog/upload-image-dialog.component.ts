@@ -1,46 +1,38 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  Inject,
-  ViewChild,
-} from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MolenData } from '../../../Interfaces/Models/MolenData';
-import { Toasts } from '../../../Utils/Toasts';
-import { MolenImage } from '../../../Interfaces/Models/MolenImage';
+import { MolenDataClass } from '../../../Class/MolenDataClass';
+import { MolenImage } from '../../../Class/MolenImage';
+import { MolenData } from '../../../Interfaces/MolenData';
 import { MolenService } from '../../../Services/MolenService';
+import { Toasts } from '../../../Utils/Toasts';
 
 @Component({
   selector: 'app-upload-image-dialog',
   templateUrl: './upload-image-dialog.component.html',
-  styleUrl: './upload-image-dialog.component.scss',
+  styleUrl: './upload-image-dialog.component.scss'
 })
-export class UploadImageDialogComponent implements AfterViewInit {
+export class UploadImageDialogComponent implements AfterViewInit{
   public molen?: MolenData;
-  public status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
+  public status: "initial" | "uploading" | "success" | "fail" = "initial";
   public file: File | null = null;
   public imagePreview: string | null = null;
-  public APIKey: string = '';
+  public APIKey: string = "";
   @ViewChild('fileUpload') fileUpload!: ElementRef;
 
   public imagesAdded: boolean = false;
   get HasImagesLeft(): boolean {
-    if (this.molen == undefined || this.molen.addedImages == undefined)
-      return false;
+    if (this.molen == undefined || this.molen.addedImages == undefined) return false;
     return this.molen.addedImages.length > 0;
   }
 
   isExpanded = false;
 
-  constructor(
-    private toasts: Toasts,
+  constructor(private toasts: Toasts,
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
     private dialogRef: MatDialogRef<UploadImageDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { molen: MolenData }
-  ) {}
+  ) { }
 
   ngAfterViewInit(): void {
     this.molen = this.data.molen;
@@ -56,7 +48,7 @@ export class UploadImageDialogComponent implements AfterViewInit {
   }
 
   expandDetails() {
-    this.isExpanded = !this.isExpanded;
+    this.isExpanded = !this.isExpanded
   }
 
   removeImg(): void {
@@ -67,7 +59,7 @@ export class UploadImageDialogComponent implements AfterViewInit {
     const uploadedFile: File = event.target.files[0];
 
     if (uploadedFile) {
-      this.status = 'initial';
+      this.status = "initial";
       this.file = uploadedFile;
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -79,29 +71,29 @@ export class UploadImageDialogComponent implements AfterViewInit {
 
   onSubmit(): void {
     if (this.file && this.molen) {
-      this.status = 'uploading';
+      this.status = "uploading";
 
       const formData = new FormData();
       formData.append('image', this.file, this.file.name);
-      this.molenService
-        .uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey)
-        .subscribe({
-          next: (molen: MolenData) => {
-            this.molen = molen;
-            this.removeImg();
-            this.APIKey = '';
-            this.toasts.showSuccess('Image is saved successfully!');
-            this.onClose();
-          },
-          error: (error) => {
-            this.status = 'fail';
-            if (error.status == 401) {
-              this.toasts.showError('Er is een verkeerde api key ingevuld!');
-            } else {
-              this.toasts.showError(error.error);
-            }
-          },
-        });
+
+      var previousMolenImages: MolenImage[] = this.molen.addedImages ?? [];
+      this.molenService.uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey).subscribe({
+        next: (molen: MolenData) => {
+          this.molen = molen;
+          this.removeImg();
+          this.APIKey = "";
+          this.toasts.showSuccess("Image is saved successfully!");
+          this.onClose();
+        },
+        error: (error) => {
+          this.status = "fail";
+          if (error.status == 401) {
+            this.toasts.showError("Er is een verkeerde api key ingevuld!");
+          } else {
+            this.toasts.showError(error.error.message);
+          }
+        }
+      });
     }
   }
 }

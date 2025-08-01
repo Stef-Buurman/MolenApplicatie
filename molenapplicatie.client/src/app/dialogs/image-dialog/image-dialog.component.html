@@ -2,31 +2,10 @@
   <img [src]="getFilePath()" alt="Alternate Text" />
   <div class="button-container">
     <div class="image-buttons">
-      <button
-        class="btn {{
-          data.canBeDeleted ? 'deleteButton' : 'deleteButtoDisabled'
-        }}"
-        (click)="openDeleteDialog()"
-      >
-        <i class="fas fa-trash"></i> Delete
-      </button>
-      <button
-        class="btn download_btn {{
-          image.dateTaken ? 'remove-round-border' : ''
-        }}"
-        (click)="downloadImage(image)"
-      >
-        <i class="fa fa-download"></i> Download
-      </button>
-      <div class="date-taken" *ngIf="image.dateTaken">
-        Foto gemaakt op <br />
-        {{ image.dateTaken | date : "d MMMM y" }}
-      </div>
-      <img
-        class="gif"
-        src="Assets/Background/Buurman-en-Buurman.gif"
-        alt="Alternate Text"
-      />
+      <button class="btn {{data.canBeDeleted ? 'deleteButton' : 'deleteButtoDisabled'}}" (click)="openDeleteDialog()"><i class="fas fa-trash"></i> Delete</button>
+      <button class="btn download_btn {{image.dateTaken ? 'remove-round-border' : ''}}" (click)="downloadImage(image)"><i class="fa fa-download"></i> Download</button>
+      <div class="date-taken" *ngIf="image.dateTaken">Foto gemaakt op <br /> {{image.dateTaken | date:'d MMMM y' }}</div>
+      <img class="gif" src="Assets/Background/Buurman-en-Buurman.gif" alt="Alternate Text" />
     </div>
     <div>
       <div (click)="onClose()" class="container-close-btn">
