@@ -128,6 +128,18 @@ namespace MolenApplicatie.Server.Controllers
             });
         }
 
+        // [FileUploadFilter]
+        [HttpPost]
+        [Route("uploadMolensHtml")]
+        public async Task<ActionResult> UploadMolensHtml(Dictionary<string, Dictionary<string, string>> molenResponses)
+        {
+            if (molenResponses == null || molenResponses.Count == 0)
+                return BadRequest("Geen molens meegestuurd!");
+
+            var result = await _NewMolenDataService.SaveMolensByResponses(molenResponses);
+            return Ok(result);
+        }
+
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
         public async Task<IActionResult> DeleteMolenImage(string tbNumber, string imageName)
