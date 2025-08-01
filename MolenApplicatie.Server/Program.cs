@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
+using MolenApplicatie.Server.Services.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,14 +16,41 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
+builder.Services.AddTransient<PlaceTypeService>();
+builder.Services.AddTransient<MolenService>();
+builder.Services.AddTransient<SearchService>();
+
+builder.Services.AddScoped<DBMolenAddedImageService>();
+builder.Services.AddScoped<DBMolenDissappearedYearsService>();
+builder.Services.AddScoped<DBPlaceService>();
+builder.Services.AddScoped<DBPlaceTypeService>();
+builder.Services.AddScoped<DBMolenTypeService>();
+builder.Services.AddScoped<DBMolenDataService>();
+builder.Services.AddScoped<DBMolenMakerService>();
+builder.Services.AddScoped<DBMolenImageService>();
+builder.Services.AddScoped<DBMolenTBNService>();
+builder.Services.AddScoped<DBMolenTypeAssociationService>();
+builder.Services.AddTransient<HttpClient>();
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
 });
 builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
+
+var connectionString = builder.Configuration.GetConnectionString("MolenDatabase");
+
+builder.Services.AddDbContext<MolenDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+           .EnableSensitiveDataLogging()
+           .LogTo(_ => { }, LogLevel.None)
+);
+
+
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -67,5 +97,18 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapFallbackToFile("/index.html");
+
+
+#if DEBUG
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetService<MolenDbContext>();
+    context!.Database.EnsureCreated();
+
+    if (!context.Database.CanConnect())
+        throw new FileLoadException("cannot connect to db!");
+}
+#endif
 
 app.Run();

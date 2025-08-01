@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: DitIsEchtEenLastigWW
+      MARIADB_DATABASE: molen_database
+      MARIADB_PASSWORD: DitIsEchtEenLastigWW
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./scripts:/docker-entrypoint-initdb.d
+    networks:
+      - mynetwork
+    logging:
+      driver: json-file
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: DitIsEchtEenLastigWW
+    depends_on:
+      - mariadb
+    networks:
+      - mynetwork
+    logging:
+      driver: json-file
+
+volumes:
+  mariadb-data:
+
+networks:
+  mynetwork:
+    driver: bridge

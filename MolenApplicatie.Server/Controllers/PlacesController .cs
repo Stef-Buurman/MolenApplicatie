@@ -19,23 +19,23 @@ namespace MolenApplicatie.Server.Controllers
         [HttpGet("read_all_netherlands_places")]
         public async Task<IActionResult> ReadAllNetherlandsPlaces()
         {
-            var locations = await _PlacesService.ReadAllNetherlandsPlaces();
-            return Ok(locations);
+            await _PlacesService.ReadAllNetherlandsPlaces();
+            return Ok();
         }
 
         [HttpGet("get_all_netherlands_places")]
         public async Task<IActionResult> GetAllNetherlandsPlaces()
         {
-            var locations = await _PlacesService.GetAllNetherlandsPlaces();
-            return Ok(locations);
+            await _PlacesService.GetAllNetherlandsPlaces();
+            return Ok();
         }
 
 
         [HttpGet("get_places_by_input/{input}")]
         public async Task<IActionResult> GetPlacesByInput(string input)
         {
-            var locations = await _PlacesService.GetPlacesByType(input);
-            return Ok(locations);
+            await _PlacesService.GetPlacesByName(input);
+            return Ok();
         }
     }
 }

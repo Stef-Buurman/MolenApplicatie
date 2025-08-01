@@ -3,7 +3,14 @@
     <span>Foto uploaden</span>
     <div class="actions">
       <div *ngIf="!file" class="file-input-container">
-        <input (change)="onFileSelected($event)" type="file" accept="image/*" id="fileInput" class="file-input" #fileUpload />
+        <input
+          (change)="onFileSelected($event)"
+          type="file"
+          accept="image/*"
+          id="fileInput"
+          class="file-input"
+          #fileUpload
+        />
         <label for="fileInput" class="file-label">Choose File</label>
       </div>
       <div class="status" *ngIf="file">
@@ -15,12 +22,10 @@
         </section>
       </div>
       <div (click)="onClose()" class="container-close-btn">
-
         <div class="circle">
           <div class="line one"></div>
           <div class="line two"></div>
         </div>
-
       </div>
     </div>
   </section>
@@ -29,17 +34,20 @@
       <div *ngIf="file">
         <section class="file-info">
           <button (click)="removeImg()" class="close-btn">&times;</button>
-          <!--<br />
-          <strong>File details:</strong>
-          <ul>
-            <li>Naam: {{file.name}}</li>
-            <li>Type: {{file.type}}</li>
-            <li>Size: {{file.size}} bytes</li>
-          </ul>-->
         </section>
         <section class="api-key">
-          <span>API Key: <input matInput type="text" name="username" [(ngModel)]="APIKey" autocomplete="off" /></span>
-          <button class="default-button" (click)="onSubmit()">Upload the file</button>
+          <span
+            >API Key:
+            <input
+              matInput
+              type="text"
+              name="username"
+              [(ngModel)]="APIKey"
+              autocomplete="off"
+          /></span>
+          <button class="default-button" (click)="onSubmit()">
+            Upload the file
+          </button>
         </section>
       </div>
     </div>
