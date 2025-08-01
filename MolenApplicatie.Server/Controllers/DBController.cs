@@ -33,6 +33,15 @@ namespace MolenApplicatie.Server.Controllers
             return Ok();
         }
 
+        [FileUploadFilter]
+        [HttpGet("places")]
+        public async Task<IActionResult> GetPlacesDB()
+        {
+            await _PlacesService2_0.ReadAllNetherlandsPlaces();
+            return Ok();
+        }
+
+        [FileUploadFilter]
         [HttpGet("GetMolens")]
         public ActionResult<List<MolenData>> GetMolens()
         {
@@ -40,6 +49,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(molens2);
         }
 
+        [FileUploadFilter]
         [HttpGet("CallMolenResponses")]
         public async Task<IActionResult> CallMolenResponses()
         {
@@ -48,6 +58,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok();
         }
 
+        [FileUploadFilter]
         [HttpGet("SaveMolenResponses")]
         public async Task<IActionResult> SaveMolenResponses()
         {
@@ -55,35 +66,35 @@ namespace MolenApplicatie.Server.Controllers
             return Ok();
         }
 
-        [HttpGet("test")]
-        public async Task<IActionResult> test()
-        {
-            var startTime = DateTime.Now;
-            await _NewMolenDataService2_0.test();
-            var midTime = DateTime.Now;
-            await _PlacesService2_0.test();
-            var midTime2 = DateTime.Now;
-            var changes = await _dbContext.SaveChangesAsync();
-            var endTime = DateTime.Now;
-            Console.WriteLine($"Start: {startTime}, Mid1: {midTime}, Mid2: {midTime2}, End: {endTime}");
-            Console.WriteLine($"Molen duration: {midTime - startTime}");
-            Console.WriteLine($"Places duration: {midTime2 - midTime}");
-            Console.WriteLine($"Save changes duration: {endTime - midTime2}");
-            Console.WriteLine($"Total duration: {endTime - startTime}");
-            Console.WriteLine($"Changes saved: {changes}");
-            return Ok();
-        }
+        // [HttpGet("test")]
+        // public async Task<IActionResult> test()
+        // {
+        //     var startTime = DateTime.Now;
+        //     await _NewMolenDataService2_0.test();
+        //     var midTime = DateTime.Now;
+        //     await _PlacesService2_0.test();
+        //     var midTime2 = DateTime.Now;
+        //     var changes = await _dbContext.SaveChangesAsync();
+        //     var endTime = DateTime.Now;
+        //     Console.WriteLine($"Start: {startTime}, Mid1: {midTime}, Mid2: {midTime2}, End: {endTime}");
+        //     Console.WriteLine($"Molen duration: {midTime - startTime}");
+        //     Console.WriteLine($"Places duration: {midTime2 - midTime}");
+        //     Console.WriteLine($"Save changes duration: {endTime - midTime2}");
+        //     Console.WriteLine($"Total duration: {endTime - startTime}");
+        //     Console.WriteLine($"Changes saved: {changes}");
+        //     return Ok();
+        // }
 
-        [HttpGet("test2")]
-        public async Task<IActionResult> test2()
-        {
-            var startTime = DateTime.Now;
-            await _NewMolenDataService2_0.test2();
-            var midTime = DateTime.Now;
-            await _PlacesService2_0.test2();
-            var endTime = DateTime.Now;
-            Console.WriteLine($"Start: {startTime}, Mid: {midTime}, End: {endTime}, Duration: {endTime - startTime}");
-            return Ok();
-        }
+        // [HttpGet("test2")]
+        // public async Task<IActionResult> test2()
+        // {
+        //     var startTime = DateTime.Now;
+        //     await _NewMolenDataService2_0.test2();
+        //     var midTime = DateTime.Now;
+        //     await _PlacesService2_0.test2();
+        //     var endTime = DateTime.Now;
+        //     Console.WriteLine($"Start: {startTime}, Mid: {midTime}, End: {endTime}, Duration: {endTime - startTime}");
+        //     return Ok();
+        // }
     }
 }
