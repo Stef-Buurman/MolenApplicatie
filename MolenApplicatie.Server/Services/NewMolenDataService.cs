@@ -176,82 +176,135 @@ namespace MolenApplicatie.Server.Services
             return _dbContext.SaveChanges();
         }
 
-        public async Task<List<MolenData>> SaveMolensByResponses(Dictionary<string, Dictionary<string, string>> molenResponses)
-        {
-            List<MolenData> allNewMolens = new List<MolenData>();
+        // public async Task<List<MolenData>> SaveMolensByResponses(Dictionary<string, Dictionary<string, string>> molenResponses)
+        // {
+        //     List<MolenData> allNewMolens = new List<MolenData>();
 
-            var allTBNs = molenResponses.Keys.ToList();
-            var oldMolensDict = _dbContext.MolenData
-                .AsNoTracking()
-                .Where(m => allTBNs.Contains(m.Ten_Brugge_Nr))
-                .ToDictionary(m => m.Ten_Brugge_Nr);
+        //     var allTBNs = molenResponses.Keys.ToList();
+        //     var oldMolensDict = _dbContext.MolenData
+        //         .AsNoTracking()
+        //         .Where(m => allTBNs.Contains(m.Ten_Brugge_Nr))
+        //         .ToDictionary(m => m.Ten_Brugge_Nr);
 
-            var molenImages = await _dbContext.MolenImages.AsNoTracking().ToDictionaryAsync(m => m.FilePath);
+        //     var molenImages = await _dbContext.MolenImages.AsNoTracking().ToDictionaryAsync(m => m.FilePath);
 
-            foreach (var kvp in molenResponses)
-            {
-                string tbNumber = kvp.Key;
-                var responses = kvp.Value;
+        //     foreach (var kvp in molenResponses)
+        //     {
+        //         string tbNumber = kvp.Key;
+        //         var responses = kvp.Value;
 
-                oldMolensDict.TryGetValue(tbNumber, out var oldMolenData);
+        //         oldMolensDict.TryGetValue(tbNumber, out var oldMolenData);
 
-                MolenData newMolenData = new MolenData
-                {
-                    Name = "",
-                    Ten_Brugge_Nr = tbNumber,
-                    DisappearedYearInfos = oldMolenData?.DisappearedYearInfos ?? new(),
-                    Images = oldMolenData?.Images ?? new(),
-                    AddedImages = oldMolenData?.AddedImages ?? new(),
-                    MolenMakers = oldMolenData?.MolenMakers ?? new(),
-                    MolenTypeAssociations = oldMolenData?.MolenTypeAssociations ?? new(),
-                };
+        //         MolenData newMolenData = new MolenData
+        //         {
+        //             Name = "",
+        //             Ten_Brugge_Nr = tbNumber,
+        //             DisappearedYearInfos = oldMolenData?.DisappearedYearInfos ?? new(),
+        //             Images = oldMolenData?.Images ?? new(),
+        //             AddedImages = oldMolenData?.AddedImages ?? new(),
+        //             MolenMakers = oldMolenData?.MolenMakers ?? new(),
+        //             MolenTypeAssociations = oldMolenData?.MolenTypeAssociations ?? new(),
+        //         };
 
-                foreach (var response in responses)
-                {
-                    string url = response.Key;
-                    string responseBody = response.Value;
-                    if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(responseBody)) continue;
+        //         foreach (var response in responses)
+        //         {
+        //             string url = response.Key;
+        //             string responseBody = response.Value;
+        //             if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(responseBody)) continue;
 
-                    var doc = new HtmlAgilityPack.HtmlDocument();
-                    doc.LoadHtml(responseBody);
-                    if (doc.DocumentNode == null) continue;
+        //             var doc = new HtmlAgilityPack.HtmlDocument();
+        //             doc.LoadHtml(responseBody);
+        //             if (doc.DocumentNode == null) continue;
 
-                    var res = await GetDataFromNode(doc, tbNumber, newMolenData, oldMolenData, molenImages);
-                    newMolenData = res.molen;
-                }
+        //             var res = await GetDataFromNode(doc, tbNumber, newMolenData, oldMolenData, molenImages);
+        //             newMolenData = res.molen;
+        //         }
 
-                if (newMolenData != null)
-                {
-                    if (newMolenData.MolenTBN == null)
-                    {
-                        newMolenData.MolenTBN = new MolenTBN { Ten_Brugge_Nr = tbNumber };
-                    }
+        //         if (newMolenData != null)
+        //         {
+        //             if (newMolenData.MolenTBN == null)
+        //             {
+        //                 newMolenData.MolenTBN = new MolenTBN { Ten_Brugge_Nr = tbNumber };
+        //             }
 
-                    if (newMolenData.Toestand == null)
-                    {
-                        if (newMolenData.Opvolger == null
-                            && newMolenData.VerplaatstNaar == null
-                            && (newMolenData.DisappearedYearInfos == null || !newMolenData.DisappearedYearInfos.Any())
-                            && (newMolenData.Images == null || newMolenData.Images.Any())
-                            && newMolenData.Latitude != 0.0
-                            && newMolenData.Longitude != 0.0)
-                        {
-                            newMolenData.Toestand = MolenToestand.Werkend;
-                        }
-                        else
-                        {
-                            newMolenData.Toestand = MolenToestand.Verdwenen;
-                        }
-                    }
+        //             if (newMolenData.Toestand == null)
+        //             {
+        //                 if (newMolenData.Opvolger == null
+        //                     && newMolenData.VerplaatstNaar == null
+        //                     && (newMolenData.DisappearedYearInfos == null || !newMolenData.DisappearedYearInfos.Any())
+        //                     && (newMolenData.Images == null || newMolenData.Images.Any())
+        //                     && newMolenData.Latitude != 0.0
+        //                     && newMolenData.Longitude != 0.0)
+        //                 {
+        //                     newMolenData.Toestand = MolenToestand.Werkend;
+        //                 }
+        //                 else
+        //                 {
+        //                     newMolenData.Toestand = MolenToestand.Verdwenen;
+        //                 }
+        //             }
 
-                    allNewMolens.Add(newMolenData);
-                }
-            }
+        //             allNewMolens.Add(newMolenData);
+        //         }
+        //     }
 
-            await _dBMolenDataService.AddOrUpdateRange(allNewMolens);
-            await _dbContext.SaveChangesAsync();
-            return allNewMolens;
-        }
+        //     await _dBMolenDataService.AddOrUpdateRange(allNewMolens);
+        //     await _dbContext.SaveChangesAsync();
+        //     return allNewMolens;
+        // }
+
+        // public async Task SendMolenByResponses()
+        // {
+        //     _dbContext.ChangeTracker.Clear();
+
+        //     List<string> fileNames = Directory.GetFiles("Json/Responses")
+        //                                       .Where(f => f.EndsWith(".json"))
+        //                                       .ToList();
+
+        //     List<string> allMolenTBN = fileNames.Select(Path.GetFileNameWithoutExtension).ToList();
+        //     List<MolenData> allOldMolenData = _molenService.GetMolensByTBN(allMolenTBN);
+        //     var allOldMolenDataWithTBN = await _dBMolenDataService.GetAllAsync();
+        //     var molenDict = allOldMolenDataWithTBN.ToDictionary(e => e.Ten_Brugge_Nr);
+
+        //     int count = 0;
+
+        //     const int batchSize = 250;
+        //     int batchCount = 0;
+
+        //     foreach (var batch in fileNames.Chunk(batchSize))
+        //     {
+        //         count++;
+        //         Console.WriteLine($"Sending batch {++batchCount} with {batch.Length} molens...");
+
+        //         Dictionary<string, Dictionary<string, string>> batchedResponses = new();
+
+        //         foreach (var fileName in batch)
+        //         {
+        //             string tbn = Path.GetFileNameWithoutExtension(fileName);
+        //             if (string.IsNullOrEmpty(tbn) || !File.Exists(fileName)) continue;
+
+        //             string jsonString = await File.ReadAllTextAsync(fileName);
+        //             if (string.IsNullOrWhiteSpace(jsonString)) continue;
+
+        //             var responseDict = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
+        //             if (responseDict == null || responseDict.Count == 0) continue;
+
+        //             batchedResponses[tbn] = responseDict;
+        //         }
+
+        //         var content = new StringContent(JsonSerializer.Serialize(batchedResponses), Encoding.UTF8, "application/json");
+        //         var response = await _client.PostAsync("http://192.168.178.241:5000/api/molen/uploadMolensHtml", content);
+
+        //         if (response.IsSuccessStatusCode)
+        //         {
+        //             Console.WriteLine("✅ Successfully posted batch of molens");
+        //         }
+        //         else
+        //         {
+        //             Console.WriteLine($"❌ Failed to post batch, StatusCode: {response.StatusCode}");
+        //         }
+        //     }
+        // }
 
         public async Task<int> CallMolenResponses()
         {
