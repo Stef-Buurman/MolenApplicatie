@@ -128,25 +128,25 @@ namespace MolenApplicatie.Server.Controllers
             });
         }
 
-        // [HttpPost]
-        // [Route("uploadMolensHtml")]
-        // public async Task<ActionResult> UploadMolensHtml(Dictionary<string, Dictionary<string, string>> molenResponses)
-        // {
-        //     if (molenResponses == null || molenResponses.Count == 0)
-        //         return BadRequest("Geen molens meegestuurd!");
+        [HttpPost]
+        [Route("uploadMolensHtml")]
+        public async Task<ActionResult> UploadMolensHtml(Dictionary<string, Dictionary<string, string>> molenResponses)
+        {
+            if (molenResponses == null || molenResponses.Count == 0)
+                return BadRequest("Geen molens meegestuurd!");
 
-        //     var result = await _NewMolenDataService.SaveMolensByResponses(molenResponses);
-        //     return Ok(result);
-        // }
+            var result = await _NewMolenDataService.SaveMolensByResponses(molenResponses);
+            return Ok(result);
+        }
 
-        // [FileUploadFilter]
-        // [HttpGet]
-        // [Route("uploadMolenHtml")]
-        // public async Task<ActionResult> sendMolenHtml()
-        // {
-        //     await _NewMolenDataService.SendMolenByResponses();
-        //     return Ok();
-        // }
+        [FileUploadFilter]
+        [HttpGet]
+        [Route("uploadMolenHtml")]
+        public async Task<ActionResult> sendMolenHtml()
+        {
+            await _NewMolenDataService.SendMolenByResponses();
+            return Ok();
+        }
 
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
