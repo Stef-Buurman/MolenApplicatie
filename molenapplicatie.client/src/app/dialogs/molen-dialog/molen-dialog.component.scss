@@ -1,4 +1,5 @@
-@import "../../../Utils/Variables.scss";
+@import '../../../Utils/Variables.scss';
+
 
 .container {
   width: 70vw;
@@ -9,14 +10,6 @@
 .data-left {
   width: 40%;
   padding: 10px;
-}
-
-.dialog-header-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80%;
-  display: inline-block;
 }
 
 .molen-data {
@@ -32,28 +25,8 @@
 }
 
 .molen-data.expanded {
-  overflow-y: auto;
   max-height: none;
-  margin-right: 5px;
-
-  &::-webkit-scrollbar {
-    width: 20px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #28a745;
-    border-radius: 10px;
-    border: 4px solid transparent;
-  }
-
-  scrollbar-width: 20px;
-  .toggle-btn {
-    margin-bottom: 20px;
-  }
+  overflow: scroll;
 }
 
 .molen-data-div {
@@ -91,9 +64,7 @@
 }
 
 .data {
-  ul,
-  p,
-  strong {
+  ul, p, strong {
     font-size: 20px;
   }
 }
@@ -136,6 +107,7 @@
   color: red;
   border: 2px solid #f44336;
   border-radius: 100%;
+  float: right;
 }
 
 .close-btn:hover {
@@ -157,7 +129,7 @@
 .file-label {
   display: inline-block;
   padding: 10px 20px;
-  background-color: #4caf50;
+  background-color: #4CAF50;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -172,30 +144,17 @@
 }
 
 .file-label:active {
-  background-color: #388e3c;
+  background-color: #388E3C;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 @media only screen and (max-width: $Media_width) {
   .container {
-    width: 100vw;
+    width: 95vw;
     display: block;
   }
 
   .data {
-    width: calc(100% - 20px);
-  }
-
-  .molen-data {
-    overflow-y: auto;
-    max-height: none;
-
-    .toggle-btn {
-      display: none;
-    }
-  }
-
-  .dialog-header-title {
-    max-width: 100%;
+    width: 90%;
   }
 }

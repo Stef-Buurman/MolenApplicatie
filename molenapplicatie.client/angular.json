@@ -36,10 +36,10 @@
 						],
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
-							{
-								"glob": "**/*",
-								"input": "public"
-							}
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
 						],
 						"styles": [
 							"src/styles.scss",
@@ -67,7 +67,7 @@
 						"development": {
 							"optimization": false,
 							"extractLicenses": false,
-							"sourceMap": true
+              "sourceMap": true
 						}
 					},
 					"defaultConfiguration": "production"

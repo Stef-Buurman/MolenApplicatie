@@ -1,74 +1,53 @@
-import {
-  ComponentRef,
-  Injectable,
-  ViewContainerRef,
-} from '@angular/core';
+import { ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector, Renderer2, RendererFactory2, ViewContainerRef } from '@angular/core';
+import { Subject } from 'rxjs';
 import { ToastType } from '../Enums/ToastType';
+import { Toast } from '../Interfaces/Toast';
+import { BehaviorSubject } from 'rxjs';
 import { ToastComponent } from '../app/toast/toast.component';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class Toasts {
+  private renderer: Renderer2;
   private activeToasts: ComponentRef<ToastComponent>[] = [];
   private viewContainerRef!: ViewContainerRef;
   private defaultToastTime = 4000;
 
-  constructor() {}
-
-  showSuccess(
-    message: string,
-    title?: string,
-    duration: number = this.defaultToastTime
+  constructor(
+    private rendererFactory: RendererFactory2,
+    private appRef: ApplicationRef,
+    private injector: Injector
   ) {
+    this.renderer = this.rendererFactory.createRenderer(null, null);
+  }
+
+  showSuccess(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Success', message, ToastType.Success, duration);
   }
 
-  showError(
-    message: string,
-    title?: string,
-    duration: number = this.defaultToastTime
-  ) {
+  showError(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Error', message, ToastType.Error, duration);
   }
 
-  showInfo(
-    message: string,
-    title?: string,
-    duration: number = this.defaultToastTime
-  ) {
+  showInfo(message: string, title?: string, duration: number = this.defaultToastTime) {
     this.showToast(title || 'Informatie', message, ToastType.Info, duration);
   }
 
-  showWarning(
-    message: string,
-    title?: string,
-    duration: number = this.defaultToastTime
-  ) {
-    this.showToast(
-      title || 'Waarschuwing!',
-      message,
-      ToastType.Warning,
-      duration
-    );
+  showWarning(message: string, title?: string, duration: number = this.defaultToastTime) {
+    this.showToast(title || 'Waarschuwing!', message, ToastType.Warning, duration);
   }
 
   setViewContainerRef(vcr: ViewContainerRef) {
     this.viewContainerRef = vcr;
   }
 
-  showToast(
-    title: string,
-    message: string,
-    type: ToastType,
-    duration: number = this.defaultToastTime
-  ) {
+  showToast(title: string, message: string, type: ToastType, duration: number = this.defaultToastTime) {
     const toastContainer = document.getElementById('toast-container');
 
     if (!toastContainer || !this.viewContainerRef) return;
 
-    const componentRef: ComponentRef<ToastComponent> =
-      this.viewContainerRef.createComponent(ToastComponent);
+    const componentRef: ComponentRef<ToastComponent> = this.viewContainerRef.createComponent(ToastComponent);
 
     componentRef.instance.title = title;
     componentRef.instance.message = message;
@@ -84,7 +63,7 @@ export class Toasts {
   }
 
   clearAllToasts() {
-    this.activeToasts.forEach((toast) => {
+    this.activeToasts.forEach(toast => {
       const index = this.viewContainerRef.indexOf(toast.hostView);
       if (index !== -1) {
         this.viewContainerRef.remove(index);
@@ -95,7 +74,7 @@ export class Toasts {
 
   clearToast(toast: ComponentRef<ToastComponent>) {
     const index = this.viewContainerRef.indexOf(toast.hostView);
-    this.clearToastByIndex(index);
+    this.clearToastByIndex(index)
   }
 
   clearToastByIndex(index: number) {
@@ -103,7 +82,7 @@ export class Toasts {
       const toast = this.activeToasts[index];
       if (toast != null) {
         this.viewContainerRef.remove(index);
-        this.activeToasts = this.activeToasts.filter((t) => t !== toast);
+        this.activeToasts = this.activeToasts.filter(t => t !== toast);
       }
     }
   }

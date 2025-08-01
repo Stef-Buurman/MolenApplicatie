@@ -9,39 +9,48 @@
     </div>
   </div>
 </section>
-
 <div class="filter-container">
-  <div class="remove-filter-container">
-    <button class="remove-filter-button" (click)="removeFilters()">
-      Filters verwijderen
-    </button>
+  <input type="radio"
+         name="options"
+         id="active"
+         [value]="'active'"
+         [(ngModel)]="selectedOption" />
+  <label for="active">
+    Actieve molens
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="remainder"
+         [value]="'remainder'"
+         [(ngModel)]="selectedOption" />
+  <label for="remainder">
+    Remainder
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="existing"
+         [value]="'existing'"
+         [(ngModel)]="selectedOption" />
+  <label for="existing">
+    Existing
+  </label>
+  <br />
+  <input type="radio"
+         name="options"
+         id="disappeared"
+         [value]="'disappeared'"
+         [(ngModel)]="selectedOption" />
+  <label for="disappeared">
+    Disappeared
+  </label>
+  <div *ngIf="selectedOption == 'disappeared'">
+    <select class="provincie-dropdown" [(ngModel)]="provincie">
+      <option value="">Kies een provincie</option>
+      <option *ngFor="let prov of provincies" [value]="prov.toLowerCase()">{{ prov }}</option>
+    </select>
   </div>
-
-  <div class="dropdown-container">
-    <label for="toestand-select">Toestand</label>
-    <app-custom-dropdown
-      [placeholder]="'Alle toestanden'"
-      [options]="molenFilters.toestanden"
-      [selected]="selectedFilter.toestand"
-      (selectedChange)="selectedFilter.toestand = $event"
-    ></app-custom-dropdown>
-    <label for="provincie-select">Provincie</label>
-    <app-custom-dropdown
-      [placeholder]="'Alle provincies'"
-      [options]="molenFilters.provincies"
-      [selected]="selectedFilter.provincie"
-      (selectedChange)="selectedFilter.provincie = $event"
-    ></app-custom-dropdown>
-    <label for="toestand-select">Molentype</label>
-    <app-custom-dropdown
-      [placeholder]="'Alle types'"
-      [options]="molenFilters.types"
-      [selected]="selectedFilter.type"
-      (selectedChange)="selectedFilter.type = $event"
-    ></app-custom-dropdown>
-  </div>
-
-  <button class="default-button filter-button" (click)="filterMap()">
-    Filter
-  </button>
+  <br />
+  <button class="default-button filter-button {{selectedOption == 'disappeared' ? '' : 'add-margin-to-btn'}}" (click)="filterMap()">Filter</button>
 </div>

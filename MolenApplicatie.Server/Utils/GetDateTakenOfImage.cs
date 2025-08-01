@@ -13,7 +13,7 @@ namespace MolenApplicatie.Server.Utils
                 {
                     throw new FileNotFoundException("File not found.", path);
                 }
-                else if (File.Exists(CreateCleanPath.CreatePathToWWWROOT(path)))
+                else if(File.Exists(CreateCleanPath.CreatePathToWWWROOT(path)))
                 {
                     path = CreateCleanPath.CreatePathToWWWROOT(path);
                 }
