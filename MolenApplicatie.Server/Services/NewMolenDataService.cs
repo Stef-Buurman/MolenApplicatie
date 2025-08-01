@@ -129,6 +129,7 @@ namespace MolenApplicatie.Server.Services
                     if (doc.DocumentNode == null) continue;
                     var res = await GetDataFromNode(doc, tbn, newMolenData, oldMolenData);
                     newMolenData = res.molen;
+                    newMolenData.CanAddImages = !MolenToestand.Equals(MolenToestand.Verdwenen, newMolenData.Toestand);
                 }
                 if (newMolenData != null)
                 {
@@ -814,7 +815,6 @@ namespace MolenApplicatie.Server.Services
                                 if (!string.IsNullOrEmpty(dd))
                                 {
                                     newMolenData.Toestand = MolenToestand.From(dd);
-                                    newMolenData.CanAddImages = !MolenToestand.Equals(MolenToestand.Verdwenen, newMolenData.Toestand);
                                 }
                                 break;
 
