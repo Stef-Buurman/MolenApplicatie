@@ -37,8 +37,19 @@ namespace MolenApplicatie.Server.Services.Database
             {
                 return existingEntity!;
             }
+
             token.ThrowIfCancellationRequested();
-            entity.Id = Guid.Empty;
+
+            var changeTrackerEntity = _context.ChangeTracker
+                .Entries<TEntity>()
+                .FirstOrDefault(e => e.Entity.Id == entity.Id);
+            if (changeTrackerEntity != null)
+            {
+                if (!ReferenceEquals(changeTrackerEntity, entity))
+                {
+                    _context.Entry(changeTrackerEntity).State = EntityState.Detached;
+                }
+            }
             var addedEntityEntry = await _dbSet.AddAsync(entity, token);
             _cache.Add(addedEntityEntry.Entity);
             return addedEntityEntry.Entity;
@@ -50,17 +61,36 @@ namespace MolenApplicatie.Server.Services.Database
 
             token.ThrowIfCancellationRequested();
 
-            var existingEntry = _context.ChangeTracker
-                .Entries<TEntity>()
-                .FirstOrDefault(e => e.Entity != null && e.Entity.Id == entity.Id);
-
-            if (existingEntry != null)
+            if (Exists(entity, out TEntity? existingEntity))
             {
-                existingEntry.State = EntityState.Detached;
-            }
+                if (entity.Id == Guid.Empty && existingEntity.Id != Guid.Empty)
+                {
+                    entity.Id = existingEntity.Id;
+                }
+                var changeTrackerEntity = _context.ChangeTracker
+                    .Entries<TEntity>()
+                    .FirstOrDefault(e => e.Entity.Id == entity.Id);
+                if (changeTrackerEntity != null)
+                {
+                    changeTrackerEntity.CurrentValues.SetValues(entity);
+                }
+                else
+                {
+                    var localEntity = _context.Set<TEntity>().Local.FirstOrDefault(e => e.Id == entity.Id);
+                    if (localEntity != null)
+                    {
+                        _context.Entry(localEntity).State = EntityState.Detached;
+                    }
 
-            _dbSet.Update(entity);
-            _cache.Update(entity);
+                    _context.Attach(entity);
+                    _context.Entry(entity).State = EntityState.Modified;
+                    _cache.Update(entity);
+                }
+            }
+            else
+            {
+                await Add(entity);
+            }
             await Task.CompletedTask;
             return entity;
         }
@@ -152,7 +182,7 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null || entities.Count == 0) return entities;
             entities = entities.Where(e => e != null).ToList();
 
-            var all = await _cache.GetAllAsync();
+            await _cache.GetAllAsync();
             token.ThrowIfCancellationRequested();
             var entitiesToAdd = new List<TEntity>();
             var entitiesToUpdate = new List<TEntity>();
@@ -246,6 +276,48 @@ namespace MolenApplicatie.Server.Services.Database
             }
             return false;
         }
+
+        //     public virtual bool Exists(
+        // Expression<Func<TEntity, bool>> predicate,
+        // out TEntity? existing,
+        // bool searchDB = true,
+        // CancellationToken token = default)
+        //     {
+        //         existing = default;
+
+        //         // 1. Check the in-memory cache and tracked entities
+        //         var sources = _cache.GetAllAsync().Result
+        //             .Concat(_context.ChangeTracker.Entries<TEntity>()
+        //                 .Where(e => e.State != EntityState.Deleted)
+        //                 .Select(e => e.Entity))
+        //             .Concat(_dbSet.Local);
+
+        //         foreach (var source in sources)
+        //         {
+        //             token.ThrowIfCancellationRequested();
+        //             if (predicate.Compile().Invoke(source))
+        //             {
+        //                 existing = source;
+        //                 return true;
+        //             }
+        //         }
+
+        //         // 2. Check the database if needed
+        //         if (searchDB)
+        //         {
+        //             token.ThrowIfCancellationRequested();
+        //             var dbMatch = _dbSet.AsNoTracking().FirstOrDefault(predicate);
+        //             if (dbMatch != null)
+        //             {
+        //                 existing = dbMatch;
+        //                 _cache.Add(dbMatch);
+        //                 return true;
+        //             }
+        //         }
+
+        //         return false;
+        //     }
+
 
         public virtual bool ExistsRange(
             List<TEntity> entities,

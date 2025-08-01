@@ -128,14 +128,16 @@ namespace MolenApplicatie.Server.Controllers
             });
         }
 
-
-        [FileUploadFilter]
-        [HttpGet]
-        [Route("uploadMolenHtml")]
-        public async Task<ActionResult> sendMolenHtml()
+        // [FileUploadFilter]
+        [HttpPost]
+        [Route("uploadMolensHtml")]
+        public async Task<ActionResult> UploadMolensHtml(Dictionary<string, Dictionary<string, string>> molenResponses)
         {
-            await _NewMolenDataService.SendMolenByResponses();
-            return Ok();
+            if (molenResponses == null || molenResponses.Count == 0)
+                return BadRequest("Geen molens meegestuurd!");
+
+            var result = await _NewMolenDataService.SaveMolensByResponses(molenResponses);
+            return Ok(result);
         }
 
         [FileUploadFilter]

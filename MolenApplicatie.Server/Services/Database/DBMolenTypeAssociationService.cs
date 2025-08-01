@@ -59,22 +59,28 @@ namespace MolenApplicatie.Server.Services.Database
         public override async Task<MolenTypeAssociation> Add(MolenTypeAssociation molenTypeAssociation, CancellationToken token = default)
         {
             if (molenTypeAssociation == null) return molenTypeAssociation;
-            molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
-            molenTypeAssociation.MolenData = null!;
+            if (molenTypeAssociation.MolenData != null)
+            {
+                molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
+                molenTypeAssociation.MolenData = null!;
+            }
             molenTypeAssociation.MolenType = await _dBMolenTypeService.AddOrUpdate(molenTypeAssociation.MolenType);
             molenTypeAssociation.MolenTypeId = molenTypeAssociation.MolenType.Id;
             molenTypeAssociation.MolenType = null;
-            return await base.Add(molenTypeAssociation);
+            return await base.Add(molenTypeAssociation, token);
         }
 
         public override async Task<MolenTypeAssociation> Update(MolenTypeAssociation molenTypeAssociation, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
         {
             if (molenTypeAssociation == null) return molenTypeAssociation;
-            molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
-            molenTypeAssociation.MolenData = null!;
+            if (molenTypeAssociation.MolenData != null)
+            {
+                molenTypeAssociation.MolenDataId = molenTypeAssociation.MolenData.Id;
+                molenTypeAssociation.MolenData = null!;
+            }
             molenTypeAssociation.MolenType = await _dBMolenTypeService.AddOrUpdate(molenTypeAssociation.MolenType);
             molenTypeAssociation.MolenTypeId = molenTypeAssociation.MolenType.Id;
-            molenTypeAssociation.MolenType = null;
+            molenTypeAssociation.MolenType = null!;
             return await base.Update(molenTypeAssociation, token, strat);
         }
         public override async Task<List<MolenTypeAssociation>> AddOrUpdateRange(List<MolenTypeAssociation> entities, CancellationToken token = default, UpdateStrategy strat = UpdateStrategy.Patch)
@@ -88,7 +94,7 @@ namespace MolenApplicatie.Server.Services.Database
                 all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types, token, strat);
             }
 
-            var all = await _cache.GetAllAsync();
+            await _cache.GetAllAsync();
 
             var entitiesToAdd = new List<MolenTypeAssociation>();
             var entitiesToUpdate = new List<MolenTypeAssociation>();
