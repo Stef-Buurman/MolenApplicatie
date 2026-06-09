@@ -14,6 +14,7 @@ import { MolenService } from '../../../Services/MolenService';
 
 @Component({
   selector: 'app-upload-image-dialog',
+  standalone: false,
   templateUrl: './upload-image-dialog.component.html',
   styleUrl: './upload-image-dialog.component.scss',
 })

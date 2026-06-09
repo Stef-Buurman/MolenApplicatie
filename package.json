@@ -1,0 +1,37 @@
+{
+    "name": "molenapplicatie",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Detecting Fraud in the EV Industry for Last Mile Solutions",
+    "workspaces": [
+        "molenapplicatie.client",
+        "MolenApplicatie.Server",
+        "MolenApplicatie.Database",
+        "MolenApplicatie.DB.Tests",
+        "MolenApplicatie.Server.Tests"
+    ],
+    "config": {
+        "clientOutput": "molenapplicatie.client",
+        "serverOutput": "MolenApplicatie.Server",
+        "serverTestOutput": "MolenApplicatie.Server.Tests",
+        "DBOutput": "MolenApplicatie.Database",
+        "DBTestsOutput": "MolenApplicatie.DB.Tests"
+    },
+    "scripts": {
+        "dev": "node Scripts/Node/dev.mjs",
+        "dev:no": "node Scripts/Node/dev.mjs --no",
+        "stop": "node Scripts/Node/stop.mjs",
+        "migrate": "node Scripts/Node/ef-migrate.mjs",
+        "db-update": "docker compose up mariadb phpmyadmin --build -d && cd %npm_package_config_serverOutput% && dotnet ef database update && docker compose down",
+        "clean": "cd %npm_package_config_serverOutput% && dotnet clean",
+        "restore": "cd %npm_package_config_serverOutput% && dotnet restore",
+        "build": "cd %npm_package_config_serverOutput% && dotnet build"
+     },
+    "dependencies": {
+        "open": "^11.0.0"
+    },
+    "devDependencies": {
+        "baseline-browser-mapping": "^2.9.18",
+        "prettier": "^3.7.4"
+    }
+}

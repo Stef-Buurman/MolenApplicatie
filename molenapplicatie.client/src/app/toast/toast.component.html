@@ -1,6 +1,7 @@
 <div
   *ngIf="type && type != ToastType.Error"
-  class="toast {{ isVisible ? 'show' : '' }} '{{ type }}'"
+  class="toast"
+  [class.show]="isVisible"
   [ngClass]="type"
   (mouseenter)="pauseTimer()"
   (mouseleave)="resumeTimer()"
@@ -30,7 +31,8 @@
 
 <div
   *ngIf="type && type == ToastType.Error && random_error == 0"
-  class="toast toast1 {{ isVisible ? 'show' : '' }}"
+  class="toast toast1"
+  [class.show]="isVisible"
   [ngClass]="type"
   (mouseenter)="pauseTimer()"
   (mouseleave)="resumeTimer()"
@@ -46,7 +48,8 @@
 
 <div
   *ngIf="type && type == ToastType.Error && random_error == 1"
-  class="toast toast2 {{ isVisible ? 'show' : '' }}"
+  class="toast toast2"
+  [class.show]="isVisible"
   [ngClass]="type"
   (mouseenter)="pauseTimer()"
   (mouseleave)="resumeTimer()"

@@ -8,6 +8,7 @@ import { MolenService } from '../../../Services/MolenService';
 
 @Component({
   selector: 'app-filter-map',
+  standalone: false,
   templateUrl: './filter-map.component.html',
   styleUrl: './filter-map.component.scss',
 })

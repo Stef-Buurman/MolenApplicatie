@@ -14,6 +14,7 @@ import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 
 @Component({
   selector: 'app-image-dialog',
+  standalone: false,
   templateUrl: './image-dialog.component.html',
   styleUrl: './image-dialog.component.scss',
 })

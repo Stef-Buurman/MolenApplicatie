@@ -1,4 +1,5 @@
-@import "Utils/Variables.scss";
+@use "sass:color";
+@use "Utils/Variables.scss" as *;
 
 body {
   margin: 0;
@@ -163,7 +164,7 @@ body {
     transition: all 0.2s;
 
     &:hover {
-      background-color: darken(black, 10%);
+      background-color: color.adjust(black, $lightness: -10%);
       cursor: pointer;
     }
 
@@ -186,7 +187,7 @@ body {
     height: 20px;
     width: 3px;
     border-radius: 2px;
-    background-color: darken(black, 20%);
+    background-color: color.adjust(black, $lightness: -20%);
     position: absolute;
     transition: all 0.5s;
   }

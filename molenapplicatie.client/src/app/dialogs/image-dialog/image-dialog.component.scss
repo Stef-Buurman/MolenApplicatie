@@ -1,4 +1,4 @@
-@import "../../../Utils/Variables.scss";
+@use "../../../Utils/Variables.scss" as *;
 
 .selectedImage {
   height: 95vh;

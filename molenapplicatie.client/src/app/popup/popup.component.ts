@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-popup',
+  standalone: false,
   templateUrl: './popup.component.html',
   styleUrls: ['./popup.component.scss'],
 })

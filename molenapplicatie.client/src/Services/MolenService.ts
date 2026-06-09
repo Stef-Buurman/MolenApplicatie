@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, tap, throwError } from 'rxjs';
 import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/Models/MolenData';
 import {
@@ -27,9 +27,13 @@ export class MolenService {
   public remainderMolens?: SavedMolens;
   private allMolenProvincies: string[] = [];
   private _molensWithImageAmount: number | undefined;
+  public molensWithImageAmount$ = new BehaviorSubject<number | undefined>(undefined);
+
   private set molensWithImageAmount(value: number | undefined) {
     this._molensWithImageAmount = value;
+    this.molensWithImageAmount$.next(value);
   }
+
   public get molensWithImageAmount(): number | undefined {
     return this._molensWithImageAmount;
   }
@@ -76,8 +80,10 @@ export class MolenService {
       )
       .pipe(
         tap((molensResponseType) => {
-          this.recentAddedImages = molensResponseType.recentAddedImages;
-          this.molensWithImageAmount = molensResponseType.totalMolensWithImage;
+          setTimeout(() => {
+            this.recentAddedImages = molensResponseType.recentAddedImages;
+            this.molensWithImageAmount = molensResponseType.totalMolensWithImage;
+          });
         }),
         map((molensResponseType) => molensResponseType.molens)
       );
@@ -114,6 +120,10 @@ export class MolenService {
         }),
         map((result) => result.molen)
       );
+  }
+
+  public getMolenByTBN(ten_Brugge_Nr: string): Observable<MolenData> {
+    return this.http.get<MolenData>('/api/molen/' + ten_Brugge_Nr);
   }
 
   public uploadImage(tbNr: string, image: FormData, APIKey: string) {

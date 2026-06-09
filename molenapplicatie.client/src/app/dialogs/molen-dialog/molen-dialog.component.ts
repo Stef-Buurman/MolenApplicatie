@@ -18,6 +18,7 @@ import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 
 @Component({
   selector: 'app-molen-dialog',
+  standalone: false,
   templateUrl: './molen-dialog.component.html',
   styleUrl: './molen-dialog.component.scss',
 })
@@ -53,35 +54,51 @@ export class MolenDialogComponent implements OnDestroy {
 
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA)
-    public data: { tenBruggeNr: string }
+    public data: { tenBruggeNr: string; molen?: MolenData }
   ) {}
 
   ngOnInit(): void {
-    if (!this.data.tenBruggeNr) {
+    if (!this.data.tenBruggeNr && !this.data.molen) {
       this.onClose();
+      return;
     }
-    if (this.data.tenBruggeNr) {
-      this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
-        next: (molen: MolenData) => {
-          this.molen = molen;
-          this.molenImages = this.getAllMolenImages();
-          this.selectedImage = this.molenImages[0];
-        },
-        error: (error) => {
-          this.toasts.showError(error.error.message);
-        },
-        complete: () => {
-          this.mapService.mapReady.then(() => {
-            if (this.molen) {
-              this.mapService.setView(
-                [this.molen.latitude, this.molen.longitude],
-                14
-              );
-            }
-          });
-        },
+
+    if (this.data.molen) {
+      setTimeout(() => {
+        this.setMolen(this.data.molen!);
+        this.centerMapOnMolen();
       });
+      return;
     }
+
+    this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
+      next: (molen: MolenData) => {
+        setTimeout(() => {
+          this.setMolen(molen);
+        });
+      },
+      error: (error) => {
+        this.toasts.showError(error.error.message);
+      },
+      complete: () => {
+        this.centerMapOnMolen();
+      },
+    });
+  }
+
+  private setMolen(molen: MolenData): void {
+    this.molen = molen;
+    this.molenImages = this.getAllMolenImages();
+    this.selectedImage = this.molenImages[0];
+    this.cdr.detectChanges();
+  }
+
+  private centerMapOnMolen(): void {
+    this.mapService.mapReady.then(() => {
+      if (this.molen) {
+        this.mapService.setView([this.molen.latitude, this.molen.longitude], 14);
+      }
+    });
   }
 
   GoToMolen(TBN: string) {

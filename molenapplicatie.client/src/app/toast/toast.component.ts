@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ToastType } from '../../Enums/ToastType';
 
 @Component({
   selector: 'app-toast',
+  standalone: false,
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.scss',
 })
@@ -17,12 +18,15 @@ export class ToastComponent implements OnInit {
   isVisible = false;
   private timeoutId: any;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   random_error: number = -1;
 
   ngOnInit() {
     this.random_error = Math.floor(Math.random() * 3);
     setTimeout(() => {
       this.isVisible = true;
+      this.cdr.detectChanges();
       this.startTimer();
     }, 250);
   }
@@ -43,6 +47,7 @@ export class ToastComponent implements OnInit {
 
   close() {
     this.isVisible = false;
+    this.cdr.detectChanges();
     setTimeout(() => {
       this.closeToast.emit();
     }, 500);

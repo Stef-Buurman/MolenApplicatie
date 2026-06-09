@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-custom-dropdown',
+  standalone: false,
   templateUrl: './custom-dropdown.component.html',
   styleUrls: ['./custom-dropdown.component.scss'],
 })

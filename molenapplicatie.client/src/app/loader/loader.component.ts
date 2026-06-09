@@ -9,6 +9,7 @@ import { SharedDataService } from '../../Services/SharedDataService';
 
 @Component({
   selector: 'app-loader',
+  standalone: false,
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss',
 })
@@ -44,8 +45,10 @@ export class LoaderComponent implements OnInit {
   }
 
   showLoader() {
-    this.isLoadingVisible = true;
-    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.isLoadingVisible = true;
+      this.cdr.detectChanges();
+    });
   }
 
   fadeOutLoader() {

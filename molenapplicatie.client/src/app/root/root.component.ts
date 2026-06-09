@@ -22,11 +22,13 @@ import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 
 @Component({
   selector: 'layout',
+  standalone: false,
   templateUrl: './root.component.html',
   styleUrl: './root.component.scss',
 })
 export class RootComponent {
   visible: boolean = false;
+  public molensWithImageAmount$!: Observable<number | undefined>;
   selectedTenBruggeNumber: string | undefined;
   selectedPlace!: Place;
 
@@ -59,7 +61,9 @@ export class RootComponent {
     private errors: ErrorService,
     private molenService: MolenService,
     private mapService: MapService
-  ) {}
+  ) {
+    this.molensWithImageAmount$ = this.molenService.molensWithImageAmount$;
+  }
 
   onPlaceChange(selectedPlace: Place) {
     if (!selectedPlace && this.selectedPlace) return;

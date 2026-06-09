@@ -21,6 +21,7 @@ import { merge, of } from 'rxjs';
 
 @Component({
   selector: 'app-image-selector',
+  standalone: false,
   templateUrl: './image-selector.component.html',
   styleUrl: './image-selector.component.scss',
 })

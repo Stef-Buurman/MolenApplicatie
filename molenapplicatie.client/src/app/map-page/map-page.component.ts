@@ -13,6 +13,7 @@ import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 
 @Component({
   selector: 'app-map-page',
+  standalone: false,
   templateUrl: './map-page.component.html',
   styleUrl: './map-page.component.scss',
 })
