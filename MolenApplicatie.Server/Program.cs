@@ -13,6 +13,11 @@ if (builder.Environment.IsProduction())
     builder.Environment.WebRootPath = "/var/www/app/wwwroot";
 }
 
+if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
+{
+    builder.Environment.WebRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+}
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
