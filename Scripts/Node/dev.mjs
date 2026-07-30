@@ -9,12 +9,12 @@ runCommand("dotnet ef database update", serverFolderName);
 runCommandAsync("dotnet watch run", serverFolderName);
 
 setTimeout(() => {
-    runCommandAsync("npm start", clientFolderName);
+  runCommandAsync("npm start", clientFolderName);
 }, 5000);
 
 if (shouldOpenBrowser) {
-    setTimeout(() => {
-        open("https://localhost:4200");
-        open("http://localhost:5247/swagger");
-    }, 7500);
+  setTimeout(() => {
+    open("https://localhost:4200");
+    open("http://localhost:5247/swagger");
+  }, 7500);
 }

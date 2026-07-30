@@ -15,18 +15,24 @@ import type {
   HttpValidationProblemDetails,
   MapClusterResponse,
   MapPointResponse,
+  MolenData,
   MolenDeleteMolenImageParams,
+  MolenFilters,
   MolenGetAllDisappearedMolensParams,
   MolenGetAllMolenMapDataParams,
   MolenGetAllMolensByProvincieParams,
   MolenGetMapItemsParams,
   MolenGetMolenDataByIdParams,
   MolenGetMolenTypesParams,
+  MolenMapSummaryResponse,
+  MolensResponseTypeOfMapData,
+  MolensResponseTypeOfMolenData,
   MolenUploadImageParams,
   MolenUploadImagePayload,
   MolenUploadMolensHtmlPayload,
   ProblemDetails,
   UploadDeleteImageReturnType,
+  ValueName,
 } from '../generated/data-contracts';
 import { handleApiResponse } from 'typedapi-client-helpers';
 import type { ApiMethodOptions, ApiResult } from 'typedapi-client-helpers';
@@ -46,7 +52,7 @@ import {
 export async function molenGetAllMolensByProvincie(
   pathParams: MolenGetAllMolensByProvincieParams,
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -54,19 +60,19 @@ export async function molenGetAllMolensByProvincie(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -74,6 +80,7 @@ export async function molenGetAllMolensByProvincie(
         ...params,
         path: `/api/molen/all/${encodeURIComponent(String(pathParams['provincie']))}`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -92,7 +99,7 @@ export async function molenGetAllMolensByProvincie(
  */
 export async function molenGetAllMolens(
   options: ApiMethodOptions<
-    void,
+    MolenData[],
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -100,19 +107,19 @@ export async function molenGetAllMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenData[],
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -120,6 +127,7 @@ export async function molenGetAllMolens(
         ...params,
         path: `/api/molen/all`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -139,7 +147,7 @@ export async function molenGetAllMolens(
 export async function molenGetAllMolenMapData(
   query: MolenGetAllMolenMapDataParams = {},
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMapData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -147,19 +155,19 @@ export async function molenGetAllMolenMapData(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMapData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMapData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMapData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -168,6 +176,7 @@ export async function molenGetAllMolenMapData(
         path: `/api/molen/mapdata`,
         method: 'GET',
         query: query,
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -186,7 +195,7 @@ export async function molenGetAllMolenMapData(
  */
 export async function molenGetAllActiveMolens(
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -194,19 +203,19 @@ export async function molenGetAllActiveMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -214,6 +223,7 @@ export async function molenGetAllActiveMolens(
         ...params,
         path: `/api/molen/active`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -232,7 +242,7 @@ export async function molenGetAllActiveMolens(
  */
 export async function molenGetAllExistingMolens(
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -240,19 +250,19 @@ export async function molenGetAllExistingMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -260,6 +270,7 @@ export async function molenGetAllExistingMolens(
         ...params,
         path: `/api/molen/existing`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -279,7 +290,7 @@ export async function molenGetAllExistingMolens(
 export async function molenGetAllDisappearedMolens(
   pathParams: MolenGetAllDisappearedMolensParams,
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -287,19 +298,19 @@ export async function molenGetAllDisappearedMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -307,6 +318,7 @@ export async function molenGetAllDisappearedMolens(
         ...params,
         path: `/api/molen/disappeared/${encodeURIComponent(String(pathParams['provincie']))}`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -325,7 +337,7 @@ export async function molenGetAllDisappearedMolens(
  */
 export async function molenGetAllRemainderMolens(
   options: ApiMethodOptions<
-    void,
+    MolensResponseTypeOfMolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -333,19 +345,19 @@ export async function molenGetAllRemainderMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolensResponseTypeOfMolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolensResponseTypeOfMolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -353,6 +365,7 @@ export async function molenGetAllRemainderMolens(
         ...params,
         path: `/api/molen/remainder`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -371,7 +384,7 @@ export async function molenGetAllRemainderMolens(
  */
 export async function molenGetAllMolenProvincies(
   options: ApiMethodOptions<
-    void,
+    ValueName[],
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -379,19 +392,19 @@ export async function molenGetAllMolenProvincies(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    ValueName[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    ValueName[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        ValueName[],
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -399,6 +412,7 @@ export async function molenGetAllMolenProvincies(
         ...params,
         path: `/api/molen/provincies`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -417,7 +431,7 @@ export async function molenGetAllMolenProvincies(
  */
 export async function molenGetMolenFilters(
   options: ApiMethodOptions<
-    void,
+    MolenFilters,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -425,19 +439,19 @@ export async function molenGetMolenFilters(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenFilters,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenFilters,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenFilters,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -445,6 +459,54 @@ export async function molenGetMolenFilters(
         ...params,
         path: `/api/molen/filters`,
         method: 'GET',
+        format: 'json',
+      }),
+    {
+      onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
+      onError: onError ?? typedApiDefaultErrorHandler,
+      fallbackErrorMessage: typedApiDefaultErrorMessage,
+    },
+  );
+}
+
+/**
+ * No description
+ *
+ * @tags Molen
+ * @name MolenGetMapSummary
+ * @request GET:/api/molen/map-summary
+ */
+export async function molenGetMapSummary(
+  options: ApiMethodOptions<
+    MolenMapSummaryResponse,
+    | HttpValidationProblemDetails
+    | ProblemDetails
+    | HttpValidationProblemDetails,
+    RequestParams
+  > = {},
+): Promise<
+  ApiResult<
+    MolenMapSummaryResponse,
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >
+> {
+  const { onSuccess, onError, params = {} } = options;
+
+  return handleApiResponse<
+    MolenMapSummaryResponse,
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >(
+    () =>
+      request<
+        MolenMapSummaryResponse,
+        | HttpValidationProblemDetails
+        | ProblemDetails
+        | HttpValidationProblemDetails
+      >({
+        ...params,
+        path: `/api/molen/map-summary`,
+        method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -464,7 +526,7 @@ export async function molenGetMolenFilters(
 export async function molenGetMolenDataById(
   pathParams: MolenGetMolenDataByIdParams,
   options: ApiMethodOptions<
-    void,
+    MolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -472,19 +534,19 @@ export async function molenGetMolenDataById(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -492,6 +554,7 @@ export async function molenGetMolenDataById(
         ...params,
         path: `/api/molen/${encodeURIComponent(String(pathParams['id']))}`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -605,10 +668,10 @@ export async function molenUploadMolensHtml(
  * No description
  *
  * @tags Molen
- * @name MolensendMolenHtml
+ * @name MolenSendMolenHtml
  * @request GET:/api/molen/uploadMolenHtml
  */
-export async function molensendMolenHtml(
+export async function molenSendMolenHtml(
   options: ApiMethodOptions<
     void,
     | HttpValidationProblemDetails
@@ -657,7 +720,7 @@ export async function molensendMolenHtml(
 export async function molenDeleteMolenImage(
   pathParams: MolenDeleteMolenImageParams,
   options: ApiMethodOptions<
-    void,
+    UploadDeleteImageReturnType,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -665,19 +728,19 @@ export async function molenDeleteMolenImage(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    UploadDeleteImageReturnType,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    UploadDeleteImageReturnType,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        UploadDeleteImageReturnType,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -685,6 +748,7 @@ export async function molenDeleteMolenImage(
         ...params,
         path: `/api/molen/molen_image/${encodeURIComponent(String(pathParams['tbNumber']))}/${encodeURIComponent(String(pathParams['imageName']))}`,
         method: 'DELETE',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -703,7 +767,7 @@ export async function molenDeleteMolenImage(
  */
 export async function molenUpdateOldestMolens(
   options: ApiMethodOptions<
-    void,
+    MolenData[],
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -711,19 +775,19 @@ export async function molenUpdateOldestMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenData[],
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -731,6 +795,7 @@ export async function molenUpdateOldestMolens(
         ...params,
         path: `/api/molen/update_oldest_molens`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -749,7 +814,7 @@ export async function molenUpdateOldestMolens(
  */
 export async function molenGetNewAddedMolens(
   options: ApiMethodOptions<
-    void,
+    MolenData[],
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -757,19 +822,19 @@ export async function molenGetNewAddedMolens(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenData[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenData[],
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -777,6 +842,7 @@ export async function molenGetNewAddedMolens(
         ...params,
         path: `/api/molen/search_for_new_molens`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -796,7 +862,7 @@ export async function molenGetNewAddedMolens(
 export async function molenGetMolenTypes(
   pathParams: MolenGetMolenTypesParams,
   options: ApiMethodOptions<
-    void,
+    MolenData,
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -804,19 +870,19 @@ export async function molenGetMolenTypes(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    MolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    MolenData,
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        MolenData,
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -824,6 +890,7 @@ export async function molenGetMolenTypes(
         ...params,
         path: `/api/molen/read_molen/${encodeURIComponent(String(pathParams['tbNumber']))}`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -842,7 +909,7 @@ export async function molenGetMolenTypes(
  */
 export async function molenGetAllMolen(
   options: ApiMethodOptions<
-    void,
+    Record<string, unknown>[],
     | HttpValidationProblemDetails
     | ProblemDetails
     | HttpValidationProblemDetails,
@@ -850,19 +917,19 @@ export async function molenGetAllMolen(
   > = {},
 ): Promise<
   ApiResult<
-    void,
+    Record<string, unknown>[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >
 > {
   const { onSuccess, onError, params = {} } = options;
 
   return handleApiResponse<
-    void,
+    Record<string, unknown>[],
     HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
   >(
     () =>
       request<
-        void,
+        Record<string, unknown>[],
         | HttpValidationProblemDetails
         | ProblemDetails
         | HttpValidationProblemDetails
@@ -870,6 +937,7 @@ export async function molenGetAllMolen(
         ...params,
         path: `/api/molen/read_all_molen`,
         method: 'GET',
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
@@ -887,7 +955,7 @@ export async function molenGetAllMolen(
  * @request GET:/api/molen/map-items
  */
 export async function molenGetMapItems(
-  query: MolenGetMapItemsParams = {},
+  query: MolenGetMapItemsParams,
   options: ApiMethodOptions<
     (MapPointResponse | MapClusterResponse)[],
     | HttpValidationProblemDetails

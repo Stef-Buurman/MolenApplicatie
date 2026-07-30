@@ -341,7 +341,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -383,7 +400,33 @@
         "operationId": "Molen_GetAllMolens_GET_api_molen_all",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -425,28 +468,28 @@
         "operationId": "Molen_GetAllMolenMapData_GET_api_molen_mapdata",
         "parameters": [
           {
-            "name": "MolenType",
+            "name": "molenType",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "Provincie",
+            "name": "provincie",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "MolenState",
+            "name": "molenState",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "Type",
+            "name": "type",
             "in": "query",
             "schema": {
               "type": "string",
@@ -456,7 +499,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMapData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMapData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMapData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -498,7 +558,24 @@
         "operationId": "Molen_GetAllActiveMolens_GET_api_molen_active",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -540,7 +617,24 @@
         "operationId": "Molen_GetAllExistingMolens_GET_api_molen_existing",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -592,7 +686,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -634,7 +745,24 @@
         "operationId": "Molen_GetAllRemainderMolens_GET_api_molen_remainder",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolensResponseTypeOfMolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -676,7 +804,33 @@
         "operationId": "Molen_GetAllMolenProvincies_GET_api_molen_provincies",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValueName"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValueName"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValueName"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -718,7 +872,24 @@
         "operationId": "Molen_GetMolenFilters_GET_api_molen_filters",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenFilters"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenFilters"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenFilters"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -754,6 +925,65 @@
         }
       }
     },
+    "/api/molen/map-summary": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMapSummary_GET_api_molen_map_summary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenMapSummaryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenMapSummaryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenMapSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMapSummary"
+        }
+      }
+    },
     "/api/molen/{id}": {
       "get": {
         "tags": ["Molen"],
@@ -771,7 +1001,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -825,6 +1072,7 @@
           "content": {
             "multipart/form-data": {
               "schema": {
+                "required": ["image"],
                 "type": "object",
                 "properties": {
                   "image": {
@@ -978,7 +1226,7 @@
     "/api/molen/uploadMolenHtml": {
       "get": {
         "tags": ["Molen"],
-        "operationId": "Molen_sendMolenHtml_GET_api_molen_uploadMolenHtml",
+        "operationId": "Molen_SendMolenHtml_GET_api_molen_uploadMolenHtml",
         "responses": {
           "200": {
             "description": "OK"
@@ -1013,7 +1261,7 @@
         },
         "x-typedapi-operation": {
           "controllerName": "Molen",
-          "actionName": "sendMolenHtml"
+          "actionName": "SendMolenHtml"
         }
       }
     },
@@ -1041,7 +1289,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -1083,7 +1348,33 @@
         "operationId": "Molen_UpdateOldestMolens_GET_api_molen_update_oldest_molens",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -1125,7 +1416,33 @@
         "operationId": "Molen_GetNewAddedMolens_GET_api_molen_search_for_new_molens",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -1177,7 +1494,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MolenData"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -1219,7 +1553,36 @@
         "operationId": "Molen_GetAllMolen_GET_api_molen_read_all_molen",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation error",
@@ -1263,7 +1626,10 @@
           {
             "name": "West",
             "in": "query",
+            "required": true,
             "schema": {
+              "maximum": 180,
+              "minimum": -180,
               "type": "number",
               "format": "double"
             }
@@ -1271,7 +1637,10 @@
           {
             "name": "South",
             "in": "query",
+            "required": true,
             "schema": {
+              "maximum": 90,
+              "minimum": -90,
               "type": "number",
               "format": "double"
             }
@@ -1279,7 +1648,10 @@
           {
             "name": "East",
             "in": "query",
+            "required": true,
             "schema": {
+              "maximum": 180,
+              "minimum": -180,
               "type": "number",
               "format": "double"
             }
@@ -1287,7 +1659,10 @@
           {
             "name": "North",
             "in": "query",
+            "required": true,
             "schema": {
+              "maximum": 90,
+              "minimum": -90,
               "type": "number",
               "format": "double"
             }
@@ -1295,9 +1670,40 @@
           {
             "name": "Zoom",
             "in": "query",
+            "required": true,
             "schema": {
+              "maximum": 19,
+              "minimum": 0,
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "MolenType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Provincie",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "MolenState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "HasImage",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -1645,6 +2051,20 @@
         },
         "additionalProperties": false
       },
+      "CountDisappearedMolens": {
+        "required": ["count", "provincie"],
+        "type": "object",
+        "properties": {
+          "provincie": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "DisappearedYearInfo": {
         "required": ["id", "molenData", "molenDataId", "year"],
         "type": "object",
@@ -1977,6 +2397,16 @@
             "type": "string",
             "nullable": true
           },
+          "opvolgerMolenId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "voorgangerMolenId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "verplaatstNaar": {
             "type": "string",
             "nullable": true
@@ -2192,6 +2622,31 @@
         },
         "additionalProperties": false
       },
+      "MolenFilters": {
+        "required": ["provincies", "toestanden", "types"],
+        "type": "object",
+        "properties": {
+          "provincies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueName"
+            }
+          },
+          "toestanden": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueName"
+            }
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueName"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "MolenImage": {
         "required": [
           "canBeDeleted",
@@ -2258,6 +2713,23 @@
         },
         "additionalProperties": false
       },
+      "MolenMapSummaryResponse": {
+        "required": ["recentAddedImages", "totalMolensWithImage"],
+        "type": "object",
+        "properties": {
+          "totalMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recentAddedImages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentAddedImages"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "MolenTBN": {
         "required": ["id", "molenData", "ten_Brugge_Nr"],
         "type": "object",
@@ -2316,6 +2788,134 @@
           },
           "molenType": {
             "$ref": "#/components/schemas/MolenType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolensResponseTypeOfMapData": {
+        "required": [
+          "activeMolensWithImage",
+          "molens",
+          "remainderMolensWithImage",
+          "totalCountActiveMolens",
+          "totalCountDisappearedMolens",
+          "totalCountExistingMolens",
+          "totalCountMolens",
+          "totalCountRemainderMolens",
+          "totalMolensWithImage"
+        ],
+        "type": "object",
+        "properties": {
+          "activeMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "remainderMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountActiveMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountRemainderMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountDisappearedMolens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDisappearedMolens"
+            }
+          },
+          "totalCountExistingMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "molens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapData"
+            }
+          },
+          "recentAddedImages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentAddedImages"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolensResponseTypeOfMolenData": {
+        "required": [
+          "activeMolensWithImage",
+          "molens",
+          "remainderMolensWithImage",
+          "totalCountActiveMolens",
+          "totalCountDisappearedMolens",
+          "totalCountExistingMolens",
+          "totalCountMolens",
+          "totalCountRemainderMolens",
+          "totalMolensWithImage"
+        ],
+        "type": "object",
+        "properties": {
+          "activeMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "remainderMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalMolensWithImage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountActiveMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountRemainderMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountDisappearedMolens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDisappearedMolens"
+            }
+          },
+          "totalCountExistingMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCountMolens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "molens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MolenData"
+            }
+          },
+          "recentAddedImages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentAddedImages"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2455,6 +3055,22 @@
         },
         "additionalProperties": {}
       },
+      "RecentAddedImages": {
+        "required": ["images", "molen"],
+        "type": "object",
+        "properties": {
+          "molen": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedImage"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "SearchModelOfMolenData": {
         "required": ["reference"],
         "type": "object",
@@ -2536,6 +3152,20 @@
           },
           "mapData": {
             "$ref": "#/components/schemas/MapData"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValueName": {
+        "required": ["count", "name"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

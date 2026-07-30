@@ -24,6 +24,12 @@ export interface AddedImage {
   molenDataId: string;
 }
 
+export interface CountDisappearedMolens {
+  provincie: string;
+  /** @format int32 */
+  count: number;
+}
+
 export interface DisappearedYearInfo {
   /** @format uuid */
   id: string;
@@ -125,6 +131,10 @@ export interface MolenData {
   plaatsaanduiding?: string | null;
   opvolger?: string | null;
   voorganger?: string | null;
+  /** @format uuid */
+  opvolgerMolenId?: string | null;
+  /** @format uuid */
+  voorgangerMolenId?: string | null;
   verplaatstNaar?: string | null;
   afkomstigVan?: string | null;
   literatuur?: string | null;
@@ -183,6 +193,12 @@ export interface MolenData {
   lastUpdated: string;
 }
 
+export interface MolenFilters {
+  provincies: ValueName[];
+  toestanden: ValueName[];
+  types: ValueName[];
+}
+
 export interface MolenImage {
   /** @format uuid */
   id: string;
@@ -204,6 +220,52 @@ export interface MolenMaker {
   molenData: MolenData;
   /** @format uuid */
   molenDataId: string;
+}
+
+export interface MolenMapSummaryResponse {
+  /** @format int32 */
+  totalMolensWithImage: number;
+  recentAddedImages: RecentAddedImages[];
+}
+
+export interface MolensResponseTypeOfMapData {
+  /** @format int32 */
+  activeMolensWithImage: number;
+  /** @format int32 */
+  remainderMolensWithImage: number;
+  /** @format int32 */
+  totalMolensWithImage: number;
+  /** @format int32 */
+  totalCountActiveMolens: number;
+  /** @format int32 */
+  totalCountRemainderMolens: number;
+  totalCountDisappearedMolens: CountDisappearedMolens[];
+  /** @format int32 */
+  totalCountExistingMolens: number;
+  /** @format int32 */
+  totalCountMolens: number;
+  molens: MapData[];
+  recentAddedImages?: RecentAddedImages[] | null;
+}
+
+export interface MolensResponseTypeOfMolenData {
+  /** @format int32 */
+  activeMolensWithImage: number;
+  /** @format int32 */
+  remainderMolensWithImage: number;
+  /** @format int32 */
+  totalMolensWithImage: number;
+  /** @format int32 */
+  totalCountActiveMolens: number;
+  /** @format int32 */
+  totalCountRemainderMolens: number;
+  totalCountDisappearedMolens: CountDisappearedMolens[];
+  /** @format int32 */
+  totalCountExistingMolens: number;
+  /** @format int32 */
+  totalCountMolens: number;
+  molens: MolenData[];
+  recentAddedImages?: RecentAddedImages[] | null;
 }
 
 export interface MolenTBN {
@@ -277,6 +339,11 @@ export interface ProblemDetails {
   [key: string]: unknown;
 }
 
+export interface RecentAddedImages {
+  molen: MolenData;
+  images: AddedImage[];
+}
+
 export interface SearchModelOfMolenData {
   reference: string;
   data?: MolenData;
@@ -307,6 +374,12 @@ export interface UploadDeleteImageReturnType {
   mapData: MapData;
 }
 
+export interface ValueName {
+  name: string;
+  /** @format int32 */
+  count: number;
+}
+
 export interface MolenGetAllMolensByProvincieParams {
   provincie: string;
 }
@@ -334,7 +407,7 @@ export interface MolenUploadImageParams {
 
 export interface MolenUploadImagePayload {
   /** @format binary */
-  image?: File;
+  image: File;
 }
 
 export interface MolenUploadMolensHtmlPayload {
@@ -352,15 +425,19 @@ export interface MolenGetMolenTypesParams {
 
 export interface MolenGetMapItemsParams {
   /** @format double */
-  west?: number;
+  west: number;
   /** @format double */
-  south?: number;
+  south: number;
   /** @format double */
-  east?: number;
+  east: number;
   /** @format double */
-  north?: number;
+  north: number;
   /** @format int32 */
-  zoom?: number;
+  zoom: number;
+  molenType?: string;
+  provincie?: string;
+  molenState?: string;
+  hasImage?: boolean;
 }
 
 export interface PlacesGetPlacesByInputParams {
