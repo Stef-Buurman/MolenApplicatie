@@ -24,6 +24,7 @@ import { CustomDropdownComponent } from './custom-dropdown/custom-dropdown.compo
 import { PortalModule } from '@angular/cdk/portal';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { PopupComponent } from './popup/popup.component';
+import { MolenClusteredMapComponent } from './molen-clustered-map/molen-clustered-map.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import { PopupComponent } from './popup/popup.component';
     FilterMapComponent,
     UploadImageDialogComponent,
     MapPageComponent,
+    MolenClusteredMapComponent,
     CustomDropdownComponent,
     PopupComponent,
   ],

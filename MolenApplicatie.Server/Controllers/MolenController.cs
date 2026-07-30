@@ -87,10 +87,10 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _MolenService.GetMolenFilters());
         }
 
-        [HttpGet("{tbNumber}")]
-        public async Task<IActionResult> GetMolenDataByTBNumber(string tbNumber)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMolenDataById(Guid id)
         {
-            return Ok(await _MolenService.GetMolenByTBN(tbNumber));
+            return Ok(await _MolenService.GetMolenById(id));
         }
 
         [FileUploadFilter]
@@ -225,6 +225,21 @@ namespace MolenApplicatie.Server.Controllers
         {
             var results = await _NewMolenDataService.GetAllMolenData();
             return Ok(results);
+        }
+
+        [HttpGet("map-items")]
+        public async Task<ActionResult<IReadOnlyList<MapItemResponse>>> GetMapItems([FromQuery] MolenMapFilter filter, CancellationToken token)
+        {
+            try
+            {
+                var result = await _MolenService.GetMapItemsAsync(filter, token);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetMapItems: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
     }
 }

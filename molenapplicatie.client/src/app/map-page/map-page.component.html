@@ -1,10 +1,21 @@
 <layout
-  [onFilterChange]="getMolens.bind(this)"
   [recentAddedImages]="recentAddedImages"
   [isPopupVisible]="isPopupVisible"
 >
   <section class="MapComponent">
-    <div [id]="mapPageId" class="map"></div>
+    <app-molen-clustered-map
+      title="Molens"
+      [showTitle]="false"
+      [initialLatitude]="52"
+      [initialLongitude]="4.4"
+      [initialZoom]="10"
+      [minimumZoom]="3"
+      [maximumZoom]="19"
+      [currentLocationZoom]="12"
+      [useCurrentLocation]="useCurrentLocation"
+      [showClusterOutlines]="true"
+    ></app-molen-clustered-map>
   </section>
+
   <router-outlet></router-outlet>
 </layout>

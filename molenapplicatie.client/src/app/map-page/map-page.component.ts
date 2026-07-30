@@ -1,14 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { ErrorService } from '../../Services/ErrorService';
-import { SharedDataService } from '../../Services/SharedDataService';
-import { Toasts } from '../../Utils/Toasts';
-import { MapData } from '../../Interfaces/Map/MapData';
-import { MapService } from '../../Services/MapService';
-import { MolenService } from '../../Services/MolenService';
-import { FilterFormValues } from '../../Interfaces/Filters/Filter';
-import { Place } from '../../Interfaces/Models/Place';
-import { catchError, Observable, tap } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { filter, startWith, Subject, takeUntil } from 'rxjs';
 import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 
 @Component({
@@ -17,78 +9,48 @@ import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
   templateUrl: './map-page.component.html',
   styleUrl: './map-page.component.scss',
 })
-export class MapPageComponent implements OnInit {
-  molens: MapData[] = [];
-  mapPageId: string = 'activeMolensMap';
-  visible: boolean = false;
-  selectedTenBruggeNumber: string | undefined;
-  selectedPlace!: Place;
-  isPopupVisible: boolean = false;
-  recentAddedImages: RecentAddedImages[] = [];
+export class MapPageComponent implements OnInit, OnDestroy {
+  public useCurrentLocation: boolean = false;
+  public isPopupVisible: boolean = false;
+  public recentAddedImages: RecentAddedImages[] = [];
 
-  get error(): boolean {
-    return this.errors.HasError;
-  }
-
-  get getMolenWithImageAmount(): number | undefined {
-    return this.molenService.molensWithImageAmount;
-  }
+  private readonly destroyed$ = new Subject<void>();
 
   constructor(
-    private toasts: Toasts,
-    private errors: ErrorService,
-    private molenService: MolenService,
-    private mapService: MapService,
-    private sharedData: SharedDataService,
     private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
-  ngOnInit() {
-    this.mapService.SelectedMapId = this.mapPageId;
-    this.getMolens().subscribe();
-    this.route.url.subscribe(() => {
-      const firstChild = this.route.firstChild;
-      if (!(
-        firstChild &&
-        firstChild.snapshot &&
-        firstChild.snapshot.paramMap.get('TenBruggeNumber')
-      )) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-          this.mapService.mapReady.then(() => {
-            this.mapService.setView([latitude, longitude], 12);
-          });
-        });
-      }
-    });
+  ngOnInit(): void {
+    this.router.events
+      .pipe(
+        filter(
+          (event): event is NavigationEnd => event instanceof NavigationEnd,
+        ),
+        startWith(null),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe(() => {
+        this.useCurrentLocation = !this.hasOpenMolenDetailRoute();
+      });
   }
 
-  getMolens(filters: FilterFormValues[] = []): Observable<MapData[]> {
-    this.sharedData.IsLoadingTrue();
-    return this.molenService.getMapData(filters).pipe(
-      tap((result) => {
-        this.molens = result;
-        this.mapService.initMap(result);
-      }),
-      catchError((error) => {
-        this.errors.AddError(error);
-        this.toasts.showError('De allMolens kunnen niet geladen worden!');
-        return [];
-      }),
-      tap({
-        complete: () => {
-          this.toasts.showSuccess('Molens zijn geladen!');
-          this.sharedData.IsLoadingFalse();
-          if (
-            this.molenService.recentAddedImages &&
-            this.molenService.recentAddedImages.length > 0
-          ) {
-            this.recentAddedImages = this.molenService.recentAddedImages;
-            this.isPopupVisible = true;
-          }
-        },
-      }),
-    );
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
+  private hasOpenMolenDetailRoute(): boolean {
+    let route: ActivatedRoute | null = this.route.firstChild;
+
+    while (route) {
+      if (route.snapshot.paramMap.has('TenBruggeNumber')) {
+        return true;
+      }
+
+      route = route.firstChild;
+    }
+
+    return false;
   }
 }

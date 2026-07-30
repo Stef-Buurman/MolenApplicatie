@@ -1,10 +1,13 @@
-﻿using MolenApplicatie.Server.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using MolenApplicatie.Server.Interfaces;
+using MolenApplicatie.Server.Models.MariaDB.EntityConfig;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MolenApplicatie.Server.Models.MariaDB
 {
     [Table("molen_data")]
+    [EntityTypeConfiguration(typeof(MolenDataConfig))]
     public class MolenData : DefaultModel, IEquatable<MolenData>
     {
         [Key]
@@ -82,6 +85,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public string? Wateras { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public double MercatorY { get; set; }
         public DateTime LastUpdated { get; set; }
 
         public bool Equals(MolenData? other)

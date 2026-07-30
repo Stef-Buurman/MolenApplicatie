@@ -13,11 +13,14 @@ import { ContentType, request } from '../generated/http-client';
 import type { RequestParams } from '../generated/http-client';
 import type {
   HttpValidationProblemDetails,
+  MapClusterResponse,
+  MapPointResponse,
   MolenDeleteMolenImageParams,
   MolenGetAllDisappearedMolensParams,
   MolenGetAllMolenMapDataParams,
   MolenGetAllMolensByProvincieParams,
-  MolenGetMolenDataByTBNumberParams,
+  MolenGetMapItemsParams,
+  MolenGetMolenDataByIdParams,
   MolenGetMolenTypesParams,
   MolenUploadImageParams,
   MolenUploadImagePayload,
@@ -455,11 +458,11 @@ export async function molenGetMolenFilters(
  * No description
  *
  * @tags Molen
- * @name MolenGetMolenDataByTBNumber
- * @request GET:/api/molen/{tbNumber}
+ * @name MolenGetMolenDataById
+ * @request GET:/api/molen/{id}
  */
-export async function molenGetMolenDataByTBNumber(
-  pathParams: MolenGetMolenDataByTBNumberParams,
+export async function molenGetMolenDataById(
+  pathParams: MolenGetMolenDataByIdParams,
   options: ApiMethodOptions<
     void,
     | HttpValidationProblemDetails
@@ -487,7 +490,7 @@ export async function molenGetMolenDataByTBNumber(
         | HttpValidationProblemDetails
       >({
         ...params,
-        path: `/api/molen/${encodeURIComponent(String(pathParams['tbNumber']))}`,
+        path: `/api/molen/${encodeURIComponent(String(pathParams['id']))}`,
         method: 'GET',
       }),
     {
@@ -867,6 +870,55 @@ export async function molenGetAllMolen(
         ...params,
         path: `/api/molen/read_all_molen`,
         method: 'GET',
+      }),
+    {
+      onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
+      onError: onError ?? typedApiDefaultErrorHandler,
+      fallbackErrorMessage: typedApiDefaultErrorMessage,
+    },
+  );
+}
+
+/**
+ * No description
+ *
+ * @tags Molen
+ * @name MolenGetMapItems
+ * @request GET:/api/molen/map-items
+ */
+export async function molenGetMapItems(
+  query: MolenGetMapItemsParams = {},
+  options: ApiMethodOptions<
+    (MapPointResponse | MapClusterResponse)[],
+    | HttpValidationProblemDetails
+    | ProblemDetails
+    | HttpValidationProblemDetails,
+    RequestParams
+  > = {},
+): Promise<
+  ApiResult<
+    (MapPointResponse | MapClusterResponse)[],
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >
+> {
+  const { onSuccess, onError, params = {} } = options;
+
+  return handleApiResponse<
+    (MapPointResponse | MapClusterResponse)[],
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >(
+    () =>
+      request<
+        (MapPointResponse | MapClusterResponse)[],
+        | HttpValidationProblemDetails
+        | ProblemDetails
+        | HttpValidationProblemDetails
+      >({
+        ...params,
+        path: `/api/molen/map-items`,
+        method: 'GET',
+        query: query,
+        format: 'json',
       }),
     {
       onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,

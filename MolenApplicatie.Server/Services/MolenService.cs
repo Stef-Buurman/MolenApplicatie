@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
+using MolenApplicatie.Server.Records;
 using MolenApplicatie.Server.Services.Database;
 using MolenApplicatie.Server.Utils;
 
@@ -16,13 +17,15 @@ namespace MolenApplicatie.Server.Services
         private readonly DBMolenDataService _dBMolenDataService;
         private readonly DBMolenAddedImageService _dBMolenAddedImageService;
         private readonly DBMolenImageService _dBMolenImageService;
+        private readonly MapClusterService _mapClusterService;
 
-        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenAddedImageService dBMolenAddedImageService, DBMolenImageService dBMolenImageService)
+        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenAddedImageService dBMolenAddedImageService, DBMolenImageService dBMolenImageService, MapClusterService mapClusterService)
         {
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
             _dBMolenAddedImageService = dBMolenAddedImageService;
             _dBMolenImageService = dBMolenImageService;
+            _mapClusterService = mapClusterService;
         }
 
         public static MolenData GetMolenData(MolenData molen)
@@ -323,6 +326,24 @@ namespace MolenApplicatie.Server.Services
             return GetMolenData(molen);
         }
 
+        public async Task<MolenData?> GetMolenById(Guid id)
+        {
+            var molen = await _dbContext.MolenData.AsNoTracking()
+                .Include(m => m.MolenTBN)
+                    .Where(m => m.Id == id)
+                .Include(m => m.Images)
+                .Include(m => m.AddedImages)
+                .Include(m => m.MolenTypeAssociations)
+                    .ThenInclude(a => a.MolenType)
+                .Include(m => m.MolenMakers)
+                .Include(m => m.DisappearedYearInfos)
+                .FirstOrDefaultAsync();
+
+            if (molen == null) return null;
+
+            return GetMolenData(molen);
+        }
+
         public async Task<MapData?> GetMapDataByTBN(string tbn)
         {
             var molen = await GetMolenByTBN(tbn);
@@ -533,6 +554,45 @@ namespace MolenApplicatie.Server.Services
                 TotalCountMolens = totalMolens,
                 RecentAddedImages = recentAddedImages
             };
+        }
+
+        public async Task<IReadOnlyList<MapItemResponse>> GetMapItemsAsync(MolenMapFilter filter, CancellationToken token)
+        {
+            var query = GetAllMolenDataCorrectTypes()
+                .Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Werkend);
+
+            return await _mapClusterService.GetMapItemsAsync(
+                query,
+                (queryWest, querySouth, queryEast, queryNorth) => molen =>
+                    molen.Latitude >= querySouth &&
+                    molen.Latitude <= queryNorth &&
+                    molen.Longitude >= queryWest &&
+                    molen.Longitude <= queryEast,
+                filteredQuery => MapQueryBuilder.Create(
+                    filteredQuery,
+                    filter.Zoom,
+                    molen => molen.Id,
+                    molen => molen.Name,
+                    molen => molen.Latitude,
+                    molen => molen.Longitude,
+                    molen => molen.MercatorY,
+                    molen => molen.Toestand,
+                    molen => molen.MolenTypeAssociations.Select(association => association.MolenType.Name),
+                    molen => molen.Images.Any() || molen.AddedImages.Any()),
+                (filteredQuery, pointIds) => MapQueryBuilder.CreateIndividualPointQuery(
+                    filteredQuery.Where(molen => pointIds.Contains(molen.Id)),
+                    molen => molen.Id,
+                    molen => molen.Name,
+                    molen => molen.Latitude,
+                    molen => molen.Longitude,
+                    molen => molen.Toestand,
+                    molen => molen.MolenTypeAssociations.Select(association => association.MolenType.Name),
+                    molen => molen.Images.Any() || molen.AddedImages.Any()),
+                new MapViewport(filter.West, filter.South, filter.East, filter.North, filter.Zoom),
+                point => $"/map/{point.Id}",
+                point => point.FriendlyView,
+                points => $"{points.Count:N0} molens at this location",
+                token);
         }
     }
 }

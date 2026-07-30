@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MolenApplicatie.Server.Data;
 
@@ -10,9 +11,11 @@ using MolenApplicatie.Server.Data;
 namespace MolenApplicatie.Server.Migrations
 {
     [DbContext(typeof(MolenDbContext))]
-    partial class MolenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730082458_AddedMercatorYToMolenData")]
+    partial class AddedMercatorYToMolenData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,21 +170,16 @@ namespace MolenApplicatie.Server.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double")
-                        .HasColumnName("latitude");
+                        .HasColumnType("double");
 
                     b.Property<string>("Literatuur")
                         .HasColumnType("longtext");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double")
-                        .HasColumnName("longitude");
+                        .HasColumnType("double");
 
                     b.Property<double>("MercatorY")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("double")
-                        .HasColumnName("mercator_y")
-                        .HasComputedColumnSql("CASE\n    WHEN latitude IS NOT NULL\n        AND longitude IS NOT NULL\n        AND latitude BETWEEN -90 AND 90\n        AND longitude BETWEEN -180 AND 180\n    THEN (\n        (\n            1 - LN(\n                TAN(\n                    LEAST(\n                        85.05112878,\n                        GREATEST(\n                            -85.05112878,\n                            latitude\n                        )\n                    ) * PI() / 180\n                ) +\n                1 / COS(\n                    LEAST(\n                        85.05112878,\n                        GREATEST(\n                            -85.05112878,\n                            latitude\n                        )\n                    ) * PI() / 180\n                )\n            ) / PI()\n        ) / 2\n    ) * 360\n    ELSE NULL\nEND", true);
+                        .HasColumnType("double");
 
                     b.Property<Guid>("MolenTBNId")
                         .HasColumnType("char(36)");
@@ -252,7 +250,7 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.Property<string>("Ten_Brugge_Nr")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Toegangsprijzen")
                         .HasColumnType("longtext");
@@ -304,20 +302,8 @@ namespace MolenApplicatie.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Ten_Brugge_Nr");
-
-                    b.HasIndex("Latitude")
-                        .HasDatabaseName("ix_charge_point_latitude")
-                        .HasFilter("\"latitude\" IS NOT NULL");
-
-                    b.HasIndex("Longitude")
-                        .HasDatabaseName("ix_charge_point_longitude")
-                        .HasFilter("\"longitude\" IS NOT NULL");
-
                     b.HasIndex("MolenTBNId")
                         .IsUnique();
-
-                    b.HasIndex("Latitude", "Longitude");
 
                     b.ToTable("molen_data");
                 });

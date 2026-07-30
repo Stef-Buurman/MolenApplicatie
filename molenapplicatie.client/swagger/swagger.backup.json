@@ -754,17 +754,18 @@
         }
       }
     },
-    "/api/molen/{tbNumber}": {
+    "/api/molen/{id}": {
       "get": {
         "tags": ["Molen"],
-        "operationId": "Molen_GetMolenDataByTBNumber_GET_api_molen_tbNumber",
+        "operationId": "Molen_GetMolenDataById_GET_api_molen_id",
         "parameters": [
           {
-            "name": "tbNumber",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -802,7 +803,7 @@
         },
         "x-typedapi-operation": {
           "controllerName": "Molen",
-          "actionName": "GetMolenDataByTBNumber"
+          "actionName": "GetMolenDataById"
         }
       }
     },
@@ -1254,6 +1255,137 @@
         }
       }
     },
+    "/api/molen/map-items": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMapItems_GET_api_molen_map_items",
+        "parameters": [
+          {
+            "name": "West",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "South",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "East",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "North",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "Zoom",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/MapPointResponse"
+                      },
+                      {
+                        "$ref": "#/components/schemas/MapClusterResponse"
+                      }
+                    ]
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/MapPointResponse"
+                      },
+                      {
+                        "$ref": "#/components/schemas/MapClusterResponse"
+                      }
+                    ]
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/MapPointResponse"
+                      },
+                      {
+                        "$ref": "#/components/schemas/MapClusterResponse"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMapItems"
+        }
+      }
+    },
     "/api/read_all_netherlands_places": {
       "get": {
         "tags": ["Places"],
@@ -1582,6 +1714,56 @@
         },
         "additionalProperties": false
       },
+      "MapClusterResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MapItemResponse"
+          },
+          {
+            "required": ["clusterId", "expansionZoom", "pointCount"],
+            "type": "object",
+            "properties": {
+              "clusterId": {
+                "type": "string"
+              },
+              "pointCount": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "expansionZoom": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "popupData": {
+                "$ref": "#/components/schemas/PopupData"
+              },
+              "outline": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MapCoordinateResponse"
+                },
+                "nullable": true
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "MapCoordinateResponse": {
+        "required": ["latitude", "longitude"],
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "MapData": {
         "required": [
           "hasImage",
@@ -1623,6 +1805,65 @@
         },
         "additionalProperties": false
       },
+      "MapItemResponse": {
+        "required": ["latitude", "longitude", "type"],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false,
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "point": "#/components/schemas/MapPointResponse",
+            "cluster": "#/components/schemas/MapClusterResponse"
+          }
+        }
+      },
+      "MapPointResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MapItemResponse"
+          },
+          {
+            "required": ["hasImage", "types", "url"],
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "popupText": {
+                "type": "string",
+                "nullable": true
+              },
+              "toestand": {
+                "type": "string",
+                "nullable": true
+              },
+              "types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hasImage": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
       "MolenData": {
         "required": [
           "addedImages",
@@ -1634,6 +1875,7 @@
           "lastUpdated",
           "latitude",
           "longitude",
+          "mercatorY",
           "molenMakers",
           "molenTBN",
           "molenTBNId",
@@ -1939,6 +2181,10 @@
             "type": "number",
             "format": "double"
           },
+          "mercatorY": {
+            "type": "number",
+            "format": "double"
+          },
           "lastUpdated": {
             "type": "string",
             "format": "date-time"
@@ -2148,6 +2394,36 @@
               "$ref": "#/components/schemas/Place"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PointData": {
+        "required": ["url"],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "popupText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PopupData": {
+        "required": ["pointData", "title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "pointData": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PointData"
+            }
           }
         },
         "additionalProperties": false

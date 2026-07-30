@@ -32,6 +32,63 @@ namespace MolenApplicatie.Server.Models.MariaDB.EntityConfig
             builder.HasOne(md => md.MolenTBN)
                 .WithOne(mtbn => mtbn.MolenData)
                 .HasForeignKey<MolenData>(mtbn => mtbn.MolenTBNId);
+
+            builder.Property(x => x.Latitude).HasColumnName("latitude");
+            builder.Property(x => x.Longitude).HasColumnName("longitude");
+            builder.HasIndex(x => new
+            {
+                x.Latitude,
+                x.Longitude
+            });
+
+            builder.HasIndex(x => x.Latitude)
+                .HasDatabaseName("ix_charge_point_latitude")
+                .HasFilter("\"latitude\" IS NOT NULL");
+
+            builder.HasIndex(x => x.Longitude)
+                .HasDatabaseName("ix_charge_point_longitude")
+                .HasFilter("\"longitude\" IS NOT NULL");
+
+            builder.Property(x => x.MercatorY)
+                .HasColumnName("mercator_y")
+                .HasComputedColumnSql(
+                    MercatorYComputedColumnSql,
+                    stored: true);
         }
+
+        private static readonly string MercatorYComputedColumnSql =
+            """
+            CASE
+                WHEN latitude IS NOT NULL
+                    AND longitude IS NOT NULL
+                    AND latitude BETWEEN -90 AND 90
+                    AND longitude BETWEEN -180 AND 180
+                THEN (
+                    (
+                        1 - LN(
+                            TAN(
+                                LEAST(
+                                    85.05112878,
+                                    GREATEST(
+                                        -85.05112878,
+                                        latitude
+                                    )
+                                ) * PI() / 180
+                            ) +
+                            1 / COS(
+                                LEAST(
+                                    85.05112878,
+                                    GREATEST(
+                                        -85.05112878,
+                                        latitude
+                                    )
+                                ) * PI() / 180
+                            )
+                        ) / PI()
+                    ) / 2
+                ) * 360
+                ELSE NULL
+            END
+            """.ReplaceLineEndings("\n");
     }
 }

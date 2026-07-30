@@ -27,6 +27,7 @@ builder.Services.AddTransient<PlacesService>();
 builder.Services.AddTransient<PlaceTypeService>();
 builder.Services.AddTransient<MolenService>();
 builder.Services.AddTransient<SearchService>();
+builder.Services.AddTransient<MapClusterService>();
 
 builder.Services.AddScoped<DBMolenAddedImageService>();
 builder.Services.AddScoped<DBMolenDissappearedYearsService>();

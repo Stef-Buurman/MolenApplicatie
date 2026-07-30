@@ -46,6 +46,25 @@ export interface KeyValuePairOfStringAndListOfSearchModelOfPlace {
   value: SearchModelOfPlace[];
 }
 
+export type MapClusterResponse = MapItemResponseBase & {
+  clusterId: string;
+  /** @format int32 */
+  pointCount: number;
+  /** @format int32 */
+  expansionZoom: number;
+  popupData?: PopupData;
+  outline?: MapCoordinateResponse[] | null;
+} & {
+  type: 'cluster';
+};
+
+export interface MapCoordinateResponse {
+  /** @format double */
+  latitude: number;
+  /** @format double */
+  longitude: number;
+}
+
 export interface MapData {
   reference: string;
   /** @format double */
@@ -57,6 +76,26 @@ export interface MapData {
   type: string;
   types: string[];
 }
+
+export interface MapItemResponseBase {
+  type: string;
+  /** @format double */
+  latitude: number;
+  /** @format double */
+  longitude: number;
+}
+
+export type MapItemResponse = MapPointResponse | MapClusterResponse;
+
+export type MapPointResponse = MapItemResponseBase & {
+  url: string;
+  popupText?: string | null;
+  toestand?: string | null;
+  types: string[];
+  hasImage: boolean;
+} & {
+  type: 'point';
+};
 
 export interface MolenData {
   /** @format uuid */
@@ -138,6 +177,8 @@ export interface MolenData {
   latitude: number;
   /** @format double */
   longitude: number;
+  /** @format double */
+  mercatorY: number;
   /** @format date-time */
   lastUpdated: string;
 }
@@ -216,6 +257,16 @@ export interface PlaceType {
   places?: Place[] | null;
 }
 
+export interface PointData {
+  url: string;
+  popupText?: string | null;
+}
+
+export interface PopupData {
+  title: string;
+  pointData: PointData[];
+}
+
 export interface ProblemDetails {
   type?: string | null;
   title?: string | null;
@@ -272,8 +323,9 @@ export interface MolenGetAllDisappearedMolensParams {
   provincie: string;
 }
 
-export interface MolenGetMolenDataByTBNumberParams {
-  tbNumber: string;
+export interface MolenGetMolenDataByIdParams {
+  /** @format uuid */
+  id: string;
 }
 
 export interface MolenUploadImageParams {
@@ -296,6 +348,19 @@ export interface MolenDeleteMolenImageParams {
 
 export interface MolenGetMolenTypesParams {
   tbNumber: string;
+}
+
+export interface MolenGetMapItemsParams {
+  /** @format double */
+  west?: number;
+  /** @format double */
+  south?: number;
+  /** @format double */
+  east?: number;
+  /** @format double */
+  north?: number;
+  /** @format int32 */
+  zoom?: number;
 }
 
 export interface PlacesGetPlacesByInputParams {

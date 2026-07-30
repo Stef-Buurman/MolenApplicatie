@@ -1,0 +1,14 @@
+<section class="molen-clustered-map-content">
+  <header *ngIf="showTitle" class="molen-clustered-map-header">
+    <h2 class="molen-clustered-map-title">
+      {{ title }}
+    </h2>
+  </header>
+
+  <div
+    #mapContainer
+    class="molen-clustered-map-container"
+    role="application"
+    [attr.aria-label]="title"
+  ></div>
+</section>
