@@ -3,8 +3,10 @@ import {
   Component,
   Input,
   NgZone,
+  OnDestroy,
   OnInit,
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { SharedDataService } from '../../Services/SharedDataService';
 
 @Component({
@@ -13,10 +15,14 @@ import { SharedDataService } from '../../Services/SharedDataService';
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss',
 })
-export class LoaderComponent implements OnInit {
-  isLoadingVisible: boolean = true;
-  isLoading: boolean = true;
-  @Input() TimeToWait!: number;
+export class LoaderComponent implements OnInit, OnDestroy {
+  isLoadingVisible: boolean = false;
+  isLoading: boolean = false;
+  @Input() TimeToWait?: number;
+
+  private loadingSubscription?: Subscription;
+  private hideTimeout?: ReturnType<typeof setTimeout>;
+  private maximumWaitTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     public sharedData: SharedDataService,
@@ -24,11 +30,10 @@ export class LoaderComponent implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit() {
-    this.sharedData.IsLoading$.subscribe({
+  ngOnInit(): void {
+    this.loadingSubscription = this.sharedData.IsLoading$.subscribe({
       next: (value) => {
-        this.isLoading = value;
-        if (this.isLoading) {
+        if (value) {
           this.showLoader();
         } else {
           this.fadeOutLoader();
@@ -36,25 +41,51 @@ export class LoaderComponent implements OnInit {
       },
     });
 
-    if (this.TimeToWait) {
-      setTimeout(() => {
-        this.isLoadingVisible = false;
-        this.cdr.detectChanges();
-      }, this.TimeToWait + 500);
+    if (this.TimeToWait && this.TimeToWait > 0) {
+      this.maximumWaitTimeout = setTimeout(() => {
+        this.sharedData.IsLoadingFalse();
+      }, this.TimeToWait);
     }
   }
 
-  showLoader() {
-    setTimeout(() => {
-      this.isLoadingVisible = true;
-      this.cdr.detectChanges();
-    });
+  ngOnDestroy(): void {
+    this.loadingSubscription?.unsubscribe();
+
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout);
+    }
+
+    if (this.maximumWaitTimeout) {
+      clearTimeout(this.maximumWaitTimeout);
+    }
   }
 
-  fadeOutLoader() {
-    setTimeout(() => {
+  private showLoader(): void {
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout);
+      this.hideTimeout = undefined;
+    }
+
+    this.isLoading = true;
+    this.isLoadingVisible = true;
+    this.cdr.detectChanges();
+  }
+
+  private fadeOutLoader(): void {
+    this.isLoading = false;
+
+    if (!this.isLoadingVisible) {
+      return;
+    }
+
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout);
+    }
+
+    this.hideTimeout = setTimeout(() => {
       this.ngZone.run(() => {
         this.isLoadingVisible = false;
+        this.hideTimeout = undefined;
         this.cdr.detectChanges();
       });
     }, 500);

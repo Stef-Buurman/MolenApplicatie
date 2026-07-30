@@ -9,7 +9,6 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { ConfirmationDialogData } from '../../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../../Utils/Toasts';
 import { DialogReturnType } from '../../../Interfaces/DialogReturnType';
-import { HttpClient } from '@angular/common/http';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 
 @Component({
@@ -25,7 +24,6 @@ export class ImageDialogComponent {
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog,
     private toast: Toasts,
-    private http: HttpClient,
   ) {}
 
   get image(): MolenImage {
@@ -70,15 +68,11 @@ export class ImageDialogComponent {
     }
   }
 
-  downloadImage(image: MolenImage) {
-    this.http
-      .get(image.filePath, { responseType: 'blob' })
-      .subscribe((blob) => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = image.name;
-        link.click();
-        URL.revokeObjectURL(link.href);
-      });
+  downloadImage(image: MolenImage): void {
+    const link = document.createElement('a');
+    link.href = image.filePath;
+    link.download = image.name;
+    link.rel = 'noopener';
+    link.click();
   }
 }

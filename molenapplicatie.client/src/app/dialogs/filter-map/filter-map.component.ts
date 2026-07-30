@@ -1,7 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FilterFormValues } from '../../../Interfaces/Filters/Filter';
-import { Toasts } from '../../../Utils/Toasts';
 import { MolenFilterList } from '../../../Interfaces/Filters/MolenFilterList';
 import { MolenFilters } from '../../../Interfaces/Filters/MolenFilters';
 import { MolenService } from '../../../Services/MolenService';
@@ -15,145 +14,143 @@ import { MolenService } from '../../../Services/MolenService';
 export class FilterMapComponent implements OnInit {
   selectedFilter: MolenFilters = {
     provincie: '',
-    toestand: '',
+    toestand: 'Werkend',
     type: '',
+    hasImage: '',
   };
-  provincie: string = '';
-  molenFilters: MolenFilterList = { provincies: [], toestanden: [], types: [] };
-  filters: { [name: string]: FilterFormValues } = {};
+
+  molenFilters: MolenFilterList = {
+    provincies: [],
+    toestanden: [],
+    types: [],
+  };
+
+  imageOptions: { name: string }[] = [
+    { name: 'Met foto' },
+    { name: 'Zonder foto' },
+  ];
+
+  private filters: Record<string, FilterFormValues> = {};
+
   constructor(
     private dialogRef: MatDialogRef<FilterMapComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { filters: FilterFormValues[] },
-    private toasts: Toasts,
     private molenService: MolenService,
   ) {}
 
-  ngOnInit() {
-    let filters = this.data.filters || [];
-    filters.forEach((filter) => {
-      this.filters[filter.filterName] = filter;
-    });
-    if (this.filters['Provincie']) {
-      const provincieValue = this.filters['Provincie'].value;
-      this.selectedFilter.provincie =
-        typeof provincieValue === 'string' ? provincieValue : '';
+  ngOnInit(): void {
+    for (const filter of this.data.filters ?? []) {
+      this.filters[filter.filterName] = { ...filter };
     }
-    if (this.filters['MolenState']) {
-      const toestandValue = this.filters['MolenState'].value;
-      this.selectedFilter.toestand =
-        typeof toestandValue === 'string' ? toestandValue : '';
+
+    this.selectedFilter.provincie = this.getStringFilterValue('Provincie');
+    this.selectedFilter.toestand =
+      this.getStringFilterValue('MolenState') || 'Werkend';
+
+    if (!this.filters['MolenState']) {
+      this.filters['MolenState'] = this.createWerkendFilter();
     }
-    if (this.filters['MolenType']) {
-      const molenTypeValue = this.filters['MolenType'].value;
-      this.selectedFilter.type =
-        typeof molenTypeValue === 'string' ? molenTypeValue : '';
-    }
+    this.selectedFilter.type = this.getStringFilterValue('MolenType');
+
+    const hasImage = this.filters['HasImage']?.value;
+    this.selectedFilter.hasImage =
+      hasImage === true ? 'Met foto' : hasImage === false ? 'Zonder foto' : '';
+
     this.molenService.getAllMolenFilters().subscribe({
-      next: (filters: MolenFilterList) => {
+      next: (filters) => {
         this.molenFilters = filters;
       },
     });
   }
 
-  onClose(filters: FilterFormValues[] | undefined = undefined) {
+  onClose(filters?: FilterFormValues[]): void {
     this.dialogRef.close(filters);
   }
 
-  filterMap() {
-    if (this.selectedFilter.toestand) {
-      if (!this.filters['MolenState']) {
-        this.filters['MolenState'] = {
-          filterName: 'MolenState',
-          value: this.selectedFilter.toestand || '',
-          type: 'string',
-          isAList: false,
-          name: 'Molen state',
-        };
-      } else {
-        this.filters['MolenState'].value = this.selectedFilter.toestand || '';
-      }
+  filterMap(): void {
+    this.setStringFilter(
+      'MolenState',
+      'Toestand',
+      this.selectedFilter.toestand,
+    );
+    this.setStringFilter(
+      'Provincie',
+      'Provincie',
+      this.selectedFilter.provincie,
+    );
+    this.setStringFilter('MolenType', 'Molentype', this.selectedFilter.type);
+
+    if (this.selectedFilter.hasImage === 'Met foto') {
+      this.setBooleanFilter('HasImage', 'Foto', true);
+    } else if (this.selectedFilter.hasImage === 'Zonder foto') {
+      this.setBooleanFilter('HasImage', 'Foto', false);
     } else {
-      delete this.filters['MolenState'];
-    }
-
-    if (this.selectedFilter.provincie) {
-      if (!this.filters['Provincie']) {
-        this.filters['Provincie'] = {
-          filterName: 'Provincie',
-          value: this.selectedFilter.provincie || '',
-          type: 'string',
-          isAList: false,
-          name: 'Provincie',
-        };
-      } else {
-        this.filters['Provincie'].value = this.selectedFilter.provincie || '';
-      }
-    } else {
-      delete this.filters['Provincie'];
-    }
-
-    if (this.selectedFilter.type) {
-      if (!this.filters['MolenType']) {
-        this.filters['MolenType'] = {
-          filterName: 'MolenType',
-          value: this.selectedFilter.type || '',
-          type: 'string',
-          isAList: false,
-          name: 'Molen type',
-        };
-      } else {
-        this.filters['MolenType'].value = this.selectedFilter.type || '';
-      }
-
-      if (
-        !this.selectedFilter.provincie &&
-        !this.selectedFilter.toestand &&
-        (this.molenFilters.types.find(
-          (t) =>
-            t.name.toLowerCase() ===
-            this.selectedFilter.type.toLocaleLowerCase(),
-        )?.count ?? 0) > 1100
-      ) {
-        this.filters['MolenState'] = {
-          filterName: 'MolenState',
-          value: 'werkend',
-          type: 'string',
-          isAList: false,
-          name: 'Molen state',
-        };
-      }
-    } else {
-      delete this.filters['MolenType'];
-    }
-
-    if (
-      this.filters['MolenState'] &&
-      !this.filters['Provincie'] &&
-      (!this.filters['MolenType'] ||
-        (this.molenFilters.types.find(
-          (t) =>
-            t.name.toLowerCase() ===
-            this.selectedFilter.type.toLocaleLowerCase(),
-        )?.count ?? 0) > 1100) &&
-      (this.selectedFilter.toestand.toLocaleLowerCase() === 'verdwenen' ||
-        (typeof this.filters['MolenState']?.value === 'string' &&
-          this.filters['MolenState']?.value.toLocaleLowerCase() ===
-            'verdwenen'))
-    ) {
-      this.toasts.showInfo('Je hebt geen provincie gekozen!');
-      return;
+      delete this.filters['HasImage'];
     }
 
     this.onClose(Object.values(this.filters));
   }
 
-  removeFilters() {
+  removeFilters(): void {
+    const werkendFilter = this.createWerkendFilter();
+
     this.selectedFilter = {
       provincie: '',
-      toestand: '',
+      toestand: 'Werkend',
       type: '',
+      hasImage: '',
     };
-    this.filters = {};
-    this.onClose(Object.values(this.filters));
+    this.filters = {
+      MolenState: werkendFilter,
+    };
+    this.onClose([werkendFilter]);
+  }
+
+  private createWerkendFilter(): FilterFormValues {
+    return {
+      filterName: 'MolenState',
+      value: 'Werkend',
+      type: 'string',
+      isAList: false,
+      name: 'Toestand',
+    };
+  }
+
+  private getStringFilterValue(filterName: string): string {
+    const value = this.filters[filterName]?.value;
+    return typeof value === 'string' ? value : '';
+  }
+
+  private setStringFilter(
+    filterName: string,
+    name: string,
+    value: string,
+  ): void {
+    if (!value) {
+      delete this.filters[filterName];
+      return;
+    }
+
+    this.filters[filterName] = {
+      filterName,
+      value,
+      type: 'string',
+      isAList: false,
+      name,
+    };
+  }
+
+  private setBooleanFilter(
+    filterName: string,
+    name: string,
+    value: boolean,
+  ): void {
+    this.filters[filterName] = {
+      filterName,
+      value,
+      type: 'boolean',
+      isAList: false,
+      name,
+    };
   }
 }

@@ -1,24 +1,27 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
+import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { MolenData } from '../../Interfaces/Models/MolenData';
+import { MolenType } from '../../Interfaces/Models/MolenType';
 import { Place } from '../../Interfaces/Models/Place';
+import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
+import { SearchModelWithCount } from '../../Interfaces/SearchResultModel';
 import { ErrorService } from '../../Services/ErrorService';
+import { MolenService } from '../../Services/MolenService';
+import { getTypedApiErrorMessage } from '../../Utils/TypedApiObservable';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
 import { FilterMapComponent } from '../dialogs/filter-map/filter-map.component';
-import { FilterFormValues } from '../../Interfaces/Filters/Filter';
-import { MapService } from '../../Services/MapService';
-import { MolenService } from '../../Services/MolenService';
-import { MolenType } from '../../Interfaces/Models/MolenType';
-import { Observable, of } from 'rxjs';
-import { MapData } from '../../Interfaces/Map/MapData';
-import { SearchModelWithCount } from '../../Interfaces/SearchResultModel';
-import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
+
+export interface MapLocation {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
 
 @Component({
   selector: 'layout',
@@ -28,157 +31,89 @@ import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 })
 export class RootComponent {
   visible: boolean = false;
-  public molensWithImageAmount$!: Observable<number | undefined>;
-  selectedTenBruggeNumber: string | undefined;
   selectedPlace!: Place;
 
-  private NewMolensLastExecutionTime: number | null = null;
-  private UpdateLastExecutionTime: number | null = null;
-  private readonly cooldownTime = 10 * 60 * 1000;
-  private currentFilters: FilterFormValues[] = [];
-
-  @Input() recentAddedImages!: RecentAddedImages[];
+  @Input() recentAddedImages: RecentAddedImages[] = [];
   @Input() isPopupVisible: boolean = false;
+  @Input() molensWithImageAmount: number = 0;
+
+  @Output() filtersChange = new EventEmitter<FilterFormValues[]>();
+  @Output() mapLocationChange = new EventEmitter<MapLocation>();
+
+  private newMolensLastExecutionTime: number | null = null;
+  private updateLastExecutionTime: number | null = null;
+  private readonly updateCooldownTime = 30 * 60 * 1000;
+  private readonly newMolensCooldownTime = 60 * 60 * 1000;
+  private currentFilters: FilterFormValues[] = [
+    {
+      filterName: 'MolenState',
+      value: 'Werkend',
+      isAList: false,
+      type: 'string',
+      name: 'Toestand',
+    },
+  ];
 
   get error(): boolean {
     return this.errors.HasError;
   }
 
-  get getMolenWithImageAmount(): number | undefined {
-    return this.molenService.molensWithImageAmount;
-  }
-
-  @Input() onFilterChange!: (
-    filters: FilterFormValues[],
-  ) => Observable<MapData[]>;
-
   constructor(
-    private route: ActivatedRoute,
     private router: Router,
     private toasts: Toasts,
-    private http: HttpClient,
     private dialog: MatDialog,
     private errors: ErrorService,
     private molenService: MolenService,
-    private mapService: MapService,
-  ) {
-    this.molensWithImageAmount$ = this.molenService.molensWithImageAmount$;
+  ) {}
+
+  onPlaceChange(selectedPlace: Place): void {
+    if (!selectedPlace) return;
+
+    this.selectedPlace = selectedPlace;
+    this.mapLocationChange.emit({
+      latitude: selectedPlace.latitude,
+      longitude: selectedPlace.longitude,
+      zoom: selectedPlace.population === 0 ? 15 : 13,
+    });
   }
 
-  onPlaceChange(selectedPlace: Place) {
-    if (!selectedPlace && this.selectedPlace) return;
-    else if (!selectedPlace) selectedPlace = this.selectedPlace;
-    var zoom: number = 13;
-    if (selectedPlace.population == 0) zoom = 15;
-    this.mapService.setView(
-      [selectedPlace.latitude, selectedPlace.longitude],
-      zoom,
-    );
-  }
+  onMolenChange(selectedMolen: MolenData, navigate: boolean = true): void {
+    if (!selectedMolen) return;
 
-  onMolenChange(
-    selectedMolen: MolenData,
-    navigate: boolean = true,
-  ): Observable<MapData[]> {
-    if (!selectedMolen) return of([]);
+    this.mapLocationChange.emit({
+      latitude: selectedMolen.latitude,
+      longitude: selectedMolen.longitude,
+      zoom: 14,
+    });
+
     if (navigate) {
-      this.router.navigate([selectedMolen.ten_Brugge_Nr], {
-        relativeTo: this.route,
-      });
+      void this.router.navigate(['/map', selectedMolen.id]);
     }
-    if (
-      !this.mapService.doesTenBruggeNumberExist(selectedMolen.ten_Brugge_Nr)
-    ) {
-      let newMolenState: string = '';
-      if (
-        selectedMolen.toestand?.toLowerCase() === 'restant' ||
-        selectedMolen.toestand?.toLowerCase() === 'in aanbouw'
-      ) {
-        newMolenState = 'Bestaande';
-      } else if (selectedMolen.toestand?.toLowerCase() === 'werkend') {
-        newMolenState = 'Werkend';
-        if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
-          this.currentFilters = this.currentFilters.filter(
-            (f) => f.filterName !== 'MolenType',
-          );
-        }
-        if (this.currentFilters.find((f) => f.filterName === 'Provincie')) {
-          this.currentFilters = this.currentFilters.filter(
-            (f) => f.filterName !== 'Provincie',
-          );
-        }
-      }
-      if (this.currentFilters.find((f) => f.filterName === 'MolenState')) {
-        this.currentFilters = this.currentFilters.filter(
-          (f) => f.filterName !== 'MolenState',
-        );
-        this.currentFilters.push({
-          filterName: 'MolenState',
-          value: newMolenState,
-          isAList: false,
-          type: 'string',
-          name: 'MolenState',
-        });
-      } else {
-        this.currentFilters.push({
-          filterName: 'MolenState',
-          value: newMolenState,
-          isAList: false,
-          type: 'string',
-          name: 'MolenState',
-        });
-      }
-      if (navigate) this.onFilterChange(this.currentFilters).subscribe();
-    }
+
     this.visible = false;
-    if (!navigate) return this.onFilterChange(this.currentFilters);
-    return of();
   }
 
-  onTypeChange(selectedType: SearchModelWithCount<MolenType>) {
-    if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
-      this.currentFilters = this.currentFilters.filter(
-        (f) => f.filterName !== 'MolenType',
-      );
-      this.currentFilters.push({
-        filterName: 'MolenType',
-        value: selectedType.data.name,
-        isAList: false,
-        type: 'string',
-        name: 'MolenType',
-      });
-    } else {
-      this.currentFilters.push({
-        filterName: 'MolenType',
-        value: selectedType.data.name,
-        isAList: false,
-        type: 'string',
-        name: 'MolenType',
-      });
-    }
+  onTypeChange(selectedType: SearchModelWithCount<MolenType>): void {
+    this.currentFilters = this.currentFilters.filter(
+      (filter) => filter.filterName !== 'MolenType',
+    );
 
-    if (
-      !this.currentFilters.find((f) => f.filterName === 'MolenState') &&
-      (selectedType.count ?? 0) > 1100
-    ) {
-      this.currentFilters.push({
-        filterName: 'MolenState',
-        value: 'Werkend',
-        isAList: false,
-        type: 'string',
-        name: 'MolenState',
-      });
-    }
+    this.currentFilters.push({
+      filterName: 'MolenType',
+      value: selectedType.data.name,
+      isAList: false,
+      type: 'string',
+      name: 'MolenType',
+    });
 
     this.changeFilters();
   }
 
-  openInfoMenu() {
-    console.log('Info menu opened');
+  openInfoMenu(): void {
     this.visible = !this.visible;
   }
 
-  filterMap() {
+  filterMap(): void {
     const dialogRef = this.dialog.open(FilterMapComponent, {
       panelClass: 'filter-map',
       data: {
@@ -188,7 +123,7 @@ export class RootComponent {
 
     dialogRef.afterClosed().subscribe({
       next: (result: FilterFormValues[] | undefined) => {
-        if (result) {
+        if (result !== undefined) {
           this.currentFilters = result;
           this.changeFilters();
         }
@@ -196,46 +131,12 @@ export class RootComponent {
     });
   }
 
-  changeFilters() {
-    this.onFilterChange(this.currentFilters).subscribe({
-      next: (mapData: MapData[]) => {
-        if (mapData.length === 0) {
-          if (
-            this.currentFilters.find((f) => f.filterName === 'MolenState') ==
-              null ||
-            (typeof this.currentFilters.find(
-              (f) => f.filterName === 'MolenState',
-            )?.value === 'string' &&
-              (
-                this.currentFilters.find((f) => f.filterName === 'MolenState')
-                  ?.value as string
-              ).toLowerCase() !== 'verdwenen')
-          ) {
-            this.currentFilters = this.currentFilters.filter(
-              (f) => f.filterName !== 'MolenState',
-            );
-            this.currentFilters.push({
-              filterName: 'MolenState',
-              value: 'Verdwenen',
-              isAList: false,
-              type: 'string',
-              name: 'MolenState',
-            });
-          } else if (
-            this.currentFilters.find((f) => f.filterName === 'Provincie') !==
-            null
-          ) {
-            this.currentFilters = this.currentFilters.filter(
-              (f) => f.filterName !== 'Provincie',
-            );
-          }
-          this.changeFilters();
-        }
-      },
-    });
+  changeFilters(): void {
+    this.filtersChange.emit([...this.currentFilters]);
+    this.visible = false;
   }
 
-  updateMolens() {
+  updateMolens(): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       panelClass: 'update-molens-dialog',
       data: {
@@ -247,76 +148,63 @@ export class RootComponent {
 
     dialogRef.afterClosed().subscribe({
       next: (result: DialogReturnType) => {
-        var previousLastExcecutionTime = this.UpdateLastExecutionTime;
-        if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
-          const headers = new HttpHeaders({
-            Authorization: result.api_key,
-          });
+        if (result.status !== DialogReturnStatus.Confirmed) return;
 
-          const currentTime = Date.now();
-          if (
-            this.UpdateLastExecutionTime &&
-            currentTime - this.UpdateLastExecutionTime < this.cooldownTime
-          ) {
-            this.toasts.showWarning('Dit kan eens elke 30 minuten!');
-            return;
-          }
-
-          var isDone: boolean = false;
-
-          this.toasts.showInfo(
-            'Molens worden geupdate... (Dit kan even duren)',
-          );
-
-          this.http
-            .get<MolenData[]>('/api/molen/update_oldest_molens', { headers })
-            .subscribe({
-              next: (result) => {
-                this.toasts.showSuccess(
-                  'Er zijn ' + result.length + ' molens geupdate.',
-                );
-              },
-              error: (error) => {
-                isDone = true;
-                if (error.status == 401) {
-                  this.toasts.showError(
-                    'Je hebt een verkeerde api_key ingevuld!',
-                  );
-                } else if (error) {
-                  this.toasts.showError(error.error);
-                }
-
-                this.UpdateLastExecutionTime = previousLastExcecutionTime;
-              },
-              complete: () => {
-                isDone = true;
-              },
-            });
-
-          setTimeout(() => {
-            if (!isDone) {
-              this.toasts.showInfo('Jaja, ik ben nog bezig voor je.');
-            }
-          }, 15000);
-
-          this.UpdateLastExecutionTime = currentTime;
-        } else if (
-          result.status == DialogReturnStatus.Confirmed &&
-          !result.api_key
-        ) {
+        if (!result.api_key) {
           this.toasts.showWarning(
-            'Er is geen api key ingevuld, er is niets gebeurt!',
+            'Er is geen api key ingevuld, er is niets gebeurd!',
           );
-        } else if (result.status == DialogReturnStatus.Error) {
-          this.toasts.showError(
-            'Er is iets fout gegaan met het updaten van de molens!',
-          );
+          return;
         }
+
+        const currentTime = Date.now();
+        if (
+          this.updateLastExecutionTime &&
+          currentTime - this.updateLastExecutionTime < this.updateCooldownTime
+        ) {
+          this.toasts.showWarning('Dit kan eens elke 30 minuten!');
+          return;
+        }
+
+        const previousExecutionTime = this.updateLastExecutionTime;
+        this.updateLastExecutionTime = currentTime;
+        this.toasts.showInfo(
+          'Molens worden bijgewerkt... (Dit kan even duren)',
+        );
+
+        let isDone = false;
+        this.molenService.updateOldestMolens(result.api_key).subscribe({
+          next: (molens) => {
+            this.toasts.showSuccess(
+              `Er zijn ${molens.length} molens bijgewerkt.`,
+            );
+          },
+          error: (error) => {
+            isDone = true;
+            this.updateLastExecutionTime = previousExecutionTime;
+
+            if (error.status === 401) {
+              this.toasts.showError('Je hebt een verkeerde api key ingevuld!');
+              return;
+            }
+
+            this.toasts.showError(getTypedApiErrorMessage(error));
+          },
+          complete: () => {
+            isDone = true;
+          },
+        });
+
+        setTimeout(() => {
+          if (!isDone) {
+            this.toasts.showInfo('De molens worden nog bijgewerkt.');
+          }
+        }, 15000);
       },
     });
   }
 
-  searchForNewMolens() {
+  searchForNewMolens(): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       panelClass: 'search-new-molens-dialog',
       data: {
@@ -328,82 +216,70 @@ export class RootComponent {
 
     dialogRef.afterClosed().subscribe({
       next: (result: DialogReturnType) => {
-        if (result.status == DialogReturnStatus.Confirmed && result.api_key) {
-          const headers = new HttpHeaders({
-            Authorization: result.api_key,
-          });
+        if (result.status !== DialogReturnStatus.Confirmed) return;
 
-          const currentTime = Date.now();
-          if (
-            this.NewMolensLastExecutionTime &&
-            currentTime - this.NewMolensLastExecutionTime < this.cooldownTime
-          ) {
-            this.toasts.showWarning('Dit kan eens elke 60 minuten!');
-            return;
-          }
-
-          var isDone: boolean = false;
-
-          this.toasts.showInfo(
-            'Nieuwe molens worden gezocht... (Dit kan even duren)',
-          );
-
-          this.http
-            .get<MolenData[]>('/api/molen/search_for_new_molens', { headers })
-            .subscribe({
-              next: (result: MolenData[]) => {
-                if (result.length == 0) {
-                  this.toasts.showInfo('Er zijn geen nieuwe molens gevonden!');
-                } else if (result.length == 1) {
-                  this.toasts.showSuccess(
-                    'Er is ' + result.length + ' nieuwe molen gevonden!',
-                  );
-                  this.mapService.setView(
-                    [result[0].latitude, result[0].longitude],
-                    13,
-                  );
-                } else {
-                  this.toasts.showSuccess(
-                    'Er zijn ' + result.length + ' nieuwe molens gevonden!',
-                  );
-                }
-              },
-              error: (error) => {
-                isDone = true;
-                if (error.status == 401) {
-                  this.toasts.showError(
-                    'Je hebt een verkeerde api_key ingevuld!',
-                  );
-                } else if (error) {
-                  this.toasts.showError(error.error);
-                }
-
-                this.UpdateLastExecutionTime = currentTime;
-              },
-              complete: () => {
-                isDone = true;
-              },
-            });
-
-          setTimeout(() => {
-            if (!isDone) {
-              this.toasts.showInfo('Jaja, ik ben nog bezig voor je.');
-            }
-          }, 15000);
-
-          this.NewMolensLastExecutionTime = currentTime;
-        } else if (
-          result.status == DialogReturnStatus.Confirmed &&
-          !result.api_key
-        ) {
+        if (!result.api_key) {
           this.toasts.showWarning(
-            'Er is geen api key ingevuld, er is niets gebeurt!',
+            'Er is geen api key ingevuld, er is niets gebeurd!',
           );
-        } else if (result.status == DialogReturnStatus.Error) {
-          this.toasts.showError(
-            'Er is iets fout gegaan met het updaten van de molens!',
-          );
+          return;
         }
+
+        const currentTime = Date.now();
+        if (
+          this.newMolensLastExecutionTime &&
+          currentTime - this.newMolensLastExecutionTime <
+            this.newMolensCooldownTime
+        ) {
+          this.toasts.showWarning('Dit kan eens per 60 minuten!');
+          return;
+        }
+
+        const previousExecutionTime = this.newMolensLastExecutionTime;
+        this.newMolensLastExecutionTime = currentTime;
+        this.toasts.showInfo(
+          'Nieuwe molens worden gezocht... (Dit kan even duren)',
+        );
+
+        let isDone = false;
+        this.molenService.searchForNewMolens(result.api_key).subscribe({
+          next: (molens) => {
+            if (molens.length === 0) {
+              this.toasts.showInfo('Er zijn geen nieuwe molens gevonden!');
+            } else if (molens.length === 1) {
+              this.toasts.showSuccess('Er is 1 nieuwe molen gevonden!');
+              this.mapLocationChange.emit({
+                latitude: molens[0].latitude,
+                longitude: molens[0].longitude,
+                zoom: 13,
+              });
+            } else {
+              this.toasts.showSuccess(
+                `Er zijn ${molens.length} nieuwe molens gevonden!`,
+              );
+            }
+          },
+          error: (error) => {
+            isDone = true;
+            this.newMolensLastExecutionTime = previousExecutionTime;
+
+            if (error.status === 401) {
+              this.toasts.showError('Je hebt een verkeerde api key ingevuld!');
+              return;
+            }
+
+            this.toasts.showError(getTypedApiErrorMessage(error));
+          },
+          complete: () => {
+            isDone = true;
+          },
+        });
+
+        setTimeout(() => {
+          if (!isDone) {
+            this.toasts.showInfo('Er wordt nog naar nieuwe molens gezocht.');
+          }
+        }, 15000);
       },
     });
   }

@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
   MatDialog,
 } from '@angular/material/dialog';
-import { filter, map, Observable, of, switchMap } from 'rxjs';
+import { EMPTY, Observable } from 'rxjs';
 import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
@@ -12,9 +12,6 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
 import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
-import { MapService } from '../../../Services/MapService';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
-import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -22,23 +19,11 @@ import { ImageDialogComponent } from '../image-dialog/image-dialog.component';
   templateUrl: './molen-dialog.component.html',
   styleUrl: './molen-dialog.component.scss',
 })
-export class MolenDialogComponent implements OnDestroy {
+export class MolenDialogComponent {
   public molen?: MolenData;
-  public status: 'initial' | 'uploading' | 'success' | 'fail' = 'initial';
-  public file: File | null = null;
-  public imagePreview: string | null = null;
-  public APIKey: string = '';
   public molenImages: MolenImage[] = [];
   public selectedImage?: MolenImage;
-
-  public imagesAdded: boolean = false;
-  get HasImagesLeft(): boolean {
-    if (this.molen == undefined || this.molen.addedImages == undefined)
-      return false;
-    return this.molen.addedImages.length > 0;
-  }
-
-  goToMolenTBN!: string;
+  goToMolenId?: string;
 
   isExpanded = false;
 
@@ -48,40 +33,34 @@ export class MolenDialogComponent implements OnDestroy {
     private toasts: Toasts,
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
-    private mapService: MapService,
     private dialogRef: MatDialogRef<MolenDialogComponent>,
     private dialog: MatDialog,
 
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA)
-    public data: { tenBruggeNr: string; molen?: MolenData },
+    public data: { molenId?: string; molen?: MolenData },
   ) {}
 
   ngOnInit(): void {
-    if (!this.data.tenBruggeNr && !this.data.molen) {
+    if (!this.data.molenId && !this.data.molen) {
       this.onClose();
       return;
     }
 
     if (this.data.molen) {
-      setTimeout(() => {
-        this.setMolen(this.data.molen!);
-        this.centerMapOnMolen();
-      });
+      this.setMolen(this.data.molen);
       return;
     }
 
-    this.molenService.getMolen(this.data.tenBruggeNr).subscribe({
-      next: (molen: MolenData) => {
-        setTimeout(() => {
-          this.setMolen(molen);
-        });
+    this.molenService.getMolenById(this.data.molenId!).subscribe({
+      next: (molen) => {
+        this.setMolen(molen);
       },
       error: (error) => {
-        this.toasts.showError(error.error.message);
-      },
-      complete: () => {
-        this.centerMapOnMolen();
+        this.toasts.showError(
+          error.message ?? 'Molen kon niet worden geladen.',
+        );
+        this.onClose();
       },
     });
   }
@@ -93,19 +72,10 @@ export class MolenDialogComponent implements OnDestroy {
     this.cdr.detectChanges();
   }
 
-  private centerMapOnMolen(): void {
-    this.mapService.mapReady.then(() => {
-      if (this.molen) {
-        this.mapService.setView(
-          [this.molen.latitude, this.molen.longitude],
-          14,
-        );
-      }
-    });
-  }
+  GoToMolen(molenId?: string | null): void {
+    if (!molenId) return;
 
-  GoToMolen(TBN: string) {
-    this.goToMolenTBN = TBN;
+    this.goToMolenId = molenId;
     this.onClose();
   }
 
@@ -143,45 +113,27 @@ export class MolenDialogComponent implements OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.onClose();
-  }
-
   onClose(): void {
-    this.dialogRef.close(this.goToMolenTBN);
+    this.dialogRef.close(this.goToMolenId);
   }
 
   expandDetails() {
     this.isExpanded = !this.isExpanded;
   }
 
-  removeImg(): void {
-    this.file = null;
-  }
-
   deleteImage(imgName: string, api_key: string): Observable<any> {
-    if (!this.molen || !this.molen.ten_Brugge_Nr) {
-      return of();
+    if (!this.molen) {
+      return EMPTY;
     }
     return this.molenService.deleteImage(
-      this.molen.ten_Brugge_Nr,
+      this.getMolenImageReference(this.molen),
       imgName,
       api_key,
     );
   }
 
-  onFileSelected(event: any): void {
-    const uploadedFile: File = event.target.files[0];
-
-    if (uploadedFile) {
-      this.status = 'initial';
-      this.file = uploadedFile;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.imagePreview = e.target?.result as string;
-      };
-      reader.readAsDataURL(this.file);
-    }
+  private getMolenImageReference(molen: MolenData): string {
+    return molen.ten_Brugge_Nr?.trim() || molen.id;
   }
 
   uploadImage() {
@@ -209,44 +161,6 @@ export class MolenDialogComponent implements OnDestroy {
         }
       }
     });
-  }
-
-  onSubmit(): void {
-    if (this.file && this.molen) {
-      this.status = 'uploading';
-
-      const formData = new FormData();
-      formData.append('images', this.file, this.file.name);
-
-      var previousMolenImages: MolenImage[] = this.getAllMolenImages();
-
-      this.molenService
-        .uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey)
-        .subscribe({
-          next: (molen: MolenData) => {
-            this.molen = molen;
-            this.cdr.detectChanges();
-          },
-          error: (error) => {
-            this.status = 'fail';
-            if (error.status == 401) {
-              this.toasts.showError('Er is een verkeerde api key ingevuld!');
-            } else {
-              this.toasts.showError(error.error.message);
-            }
-          },
-          complete: () => {
-            this.removeImg();
-            this.molenImages = this.getAllMolenImages();
-            this.selectedImage = this.molenImages.find(
-              (x) => !previousMolenImages.find((y) => y.name == x.name),
-            );
-            this.toasts.showSuccess('Image is saved successfully!');
-            this.imagesAdded = true;
-          },
-        });
-      this.APIKey = '';
-    }
   }
 
   getAllMolenImages(): MolenImage[] {

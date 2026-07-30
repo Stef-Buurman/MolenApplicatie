@@ -1,4 +1,3 @@
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -25,6 +24,7 @@ import { PortalModule } from '@angular/cdk/portal';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { PopupComponent } from './popup/popup.component';
 import { MolenClusteredMapComponent } from './molen-clustered-map/molen-clustered-map.component';
+import { ImageRouteComponent } from './image-route/image-route.component';
 
 @NgModule({
   declarations: [
@@ -45,11 +45,11 @@ import { MolenClusteredMapComponent } from './molen-clustered-map/molen-clustere
     MolenClusteredMapComponent,
     CustomDropdownComponent,
     PopupComponent,
+    ImageRouteComponent,
   ],
   imports: [
     BrowserAnimationsModule,
     BrowserModule,
-    HttpClientModule,
     AppRoutingModule,
     MatDialogModule,
     FormsModule,

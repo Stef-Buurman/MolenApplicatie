@@ -9,8 +9,8 @@ import {
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { Toasts } from '../../../Utils/Toasts';
-import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
+import { getTypedApiErrorMessage } from '../../../Utils/TypedApiObservable';
 
 @Component({
   selector: 'app-upload-image-dialog',
@@ -48,10 +48,6 @@ export class UploadImageDialogComponent implements AfterViewInit {
     this.fileUpload.nativeElement.click();
   }
 
-  ngOnDestroy(): void {
-    this.onClose();
-  }
-
   onClose(): void {
     this.dialogRef.close(this.molen);
   }
@@ -82,10 +78,12 @@ export class UploadImageDialogComponent implements AfterViewInit {
     if (this.file && this.molen) {
       this.status = 'uploading';
 
-      const formData = new FormData();
-      formData.append('image', this.file, this.file.name);
       this.molenService
-        .uploadImage(this.molen.ten_Brugge_Nr, formData, this.APIKey)
+        .uploadImage(
+          this.molen.ten_Brugge_Nr?.trim() || this.molen.id,
+          this.file,
+          this.APIKey,
+        )
         .subscribe({
           next: (molen: MolenData) => {
             this.molen = molen;
@@ -99,7 +97,7 @@ export class UploadImageDialogComponent implements AfterViewInit {
             if (error.status == 401) {
               this.toasts.showError('Er is een verkeerde api key ingevuld!');
             } else {
-              this.toasts.showError(error.error);
+              this.toasts.showError(getTypedApiErrorMessage(error));
             }
           },
         });

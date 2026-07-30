@@ -4,20 +4,20 @@ import {
   distinctUntilChanged,
   filter,
   map,
+  merge,
   Observable,
-  skip,
+  of,
   Subject,
-  Subscription,
   switchMap,
   takeUntil,
 } from 'rxjs';
 import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { Toasts } from '../../Utils/Toasts';
+import { getTypedApiErrorMessage } from '../../Utils/TypedApiObservable';
 import { ImageDialogComponent } from '../dialogs/image-dialog/image-dialog.component';
 import { MolenImage } from '../../Interfaces/Models/MolenImage';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { merge, of } from 'rxjs';
 
 @Component({
   selector: 'app-image-selector',
@@ -30,7 +30,7 @@ export class ImageSelectorComponent implements OnInit {
   @Output() imagesChange = new EventEmitter<MolenImage[]>();
   @Input() selectedImage?: MolenImage;
   @Output() selectedImageChange = new EventEmitter<MolenImage>();
-  @Input() tbNr: string = '';
+  @Input() molenId: string = '';
   @Input() deleteFunction!: (
     imgName: string,
     api_key: string,
@@ -88,22 +88,6 @@ export class ImageSelectorComponent implements OnInit {
     return child;
   }
 
-  openImageDialog(imageName: string): void {
-    const dialogRef = this.dialog.open(ImageDialogComponent, {
-      data: {
-        selectedImage: this.getImageByName(imageName),
-        canBeDeleted: true,
-        tenBruggeNumber: this.route.snapshot.paramMap.get('TenBruggeNumber'),
-      },
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      const tenBruggeNumber =
-        this.route.snapshot.paramMap.get('TenBruggeNumber');
-      this.router.navigate(['/map', tenBruggeNumber]);
-    });
-  }
-
   getImageByName(name: string): MolenImage | undefined {
     return this.images.find((x) => x.name == name);
   }
@@ -123,7 +107,7 @@ export class ImageSelectorComponent implements OnInit {
 
   routeToImage(): void {
     if (this.selectedImage) {
-      this.router.navigate([`/map/${this.tbNr}`, this.selectedImage.name]);
+      this.router.navigate(['/map', this.molenId, this.selectedImage.name]);
     }
   }
 
@@ -141,7 +125,7 @@ export class ImageSelectorComponent implements OnInit {
       });
 
       dialogRef.afterClosed().subscribe((result: DialogReturnType) => {
-        this.router.navigate(['/map', this.tbNr]);
+        this.router.navigate(['/map', this.molenId]);
         if (
           result &&
           result.status == DialogReturnStatus.Deleted &&
@@ -153,7 +137,7 @@ export class ImageSelectorComponent implements OnInit {
               if (error.status == 401) {
                 this.toast.showError('Er is een verkeerde api key ingevuld!');
               } else {
-                this.toast.showError(error.error.message);
+                this.toast.showError(getTypedApiErrorMessage(error));
               }
             },
             complete: () => {

@@ -2,9 +2,7 @@
   <div class="{{ visible ? 'responsive' : '' }} topInfo" id="mytopInfo">
     <div class="topInfoContent">
       <section class="logo-div">
-        <span class="MolenImageCountPhone">{{
-          (molensWithImageAmount$ | async) ?? 0
-        }}</span>
+        <span class="MolenImageCountPhone">{{ molensWithImageAmount }}</span>
         <img
           class="logo"
           src="Assets/Background/Buurman-Buurman-logo.webp"
@@ -52,9 +50,7 @@
     </div>
     <div class="topInfoContent">
       <section class="logo-div">
-        <span class="MolenImageCountPhone">{{
-          (molensWithImageAmount$ | async) ?? 0
-        }}</span>
+        <span class="MolenImageCountPhone">{{ molensWithImageAmount }}</span>
         <img
           class="logo"
           src="Assets/Background/Buurman-Buurman-logo.webp"
@@ -94,7 +90,7 @@
     </div>
     <div class="topButton" (click)="filterMap()">Filter map</div>
     <div class="MolenImageCount">
-      {{ (molensWithImageAmount$ | async) ?? 0 }} molens met een foto
+      {{ molensWithImageAmount }} molens met een foto
     </div>
   </div>
   <div class="mapContainer">

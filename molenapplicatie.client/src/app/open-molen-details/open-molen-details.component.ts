@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MolenDialogComponent } from '../dialogs/molen-dialog/molen-dialog.component';
-import { MolenService } from '../../Services/MolenService';
+import { Subject, takeUntil } from 'rxjs';
 import { MolenData } from '../../Interfaces/Models/MolenData';
+import { MolenService } from '../../Services/MolenService';
+import { Toasts } from '../../Utils/Toasts';
+import { MolenDialogComponent } from '../dialogs/molen-dialog/molen-dialog.component';
 
 @Component({
   selector: 'app-open-molen-details',
@@ -11,46 +13,57 @@ import { MolenData } from '../../Interfaces/Models/MolenData';
   templateUrl: './open-molen-details.component.html',
   styleUrl: './open-molen-details.component.scss',
 })
-export class OpenMolenDetailsComponent implements OnInit {
-  selectedTenBruggeNumber: string | undefined;
+export class OpenMolenDetailsComponent implements OnInit, OnDestroy {
+  private readonly destroyed$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private molenService: MolenService,
+    private toasts: Toasts,
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      this.selectedTenBruggeNumber = params.get('TenBruggeNumber') || '';
-      console.log('Selected TenBruggeNumber:', this.selectedTenBruggeNumber);
-      if (this.selectedTenBruggeNumber) {
-        this.molenService.selectedMolenTenBruggeNumber =
-          this.selectedTenBruggeNumber;
-        this.molenService
-          .getMolenByTBN(this.selectedTenBruggeNumber)
-          .subscribe({
-            next: (molen) => {
-              setTimeout(() => this.OpenMolenDialog(molen));
-            },
-          });
+    this.route.paramMap.pipe(takeUntil(this.destroyed$)).subscribe((params) => {
+      const molenId = params.get('MolenId');
+
+      if (!molenId) {
+        this.goBack();
+        return;
       }
+
+      this.molenService.getMolenById(molenId).subscribe({
+        next: (molen) => {
+          this.openMolenDialog(molen);
+        },
+        error: (error) => {
+          this.toasts.showError(
+            error.message ?? 'De molen kon niet worden geladen.',
+          );
+          this.goBack();
+        },
+      });
     });
   }
 
-  private OpenMolenDialog(tbn: MolenData): void {
-    console.log('Opening Molen Dialog for TenBruggeNumber:', tbn);
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
+  private openMolenDialog(molen: MolenData): void {
     const dialogRef = this.dialog.open(MolenDialogComponent, {
-      data: { tenBruggeNr: tbn.ten_Brugge_Nr, molen: tbn },
+      data: { molenId: molen.id, molen },
       panelClass: 'molen-details',
     });
 
     dialogRef.afterClosed().subscribe({
-      next: (goToMolen: string | undefined) => {
+      next: (nextMolenId: string | undefined) => {
         this.molenService.removeSelectedMolen();
-        if (goToMolen) {
-          this.goToMolen(goToMolen);
+
+        if (nextMolenId) {
+          void this.router.navigate(['/map', nextMolenId]);
         } else {
           this.goBack();
         }
@@ -58,13 +71,7 @@ export class OpenMolenDetailsComponent implements OnInit {
     });
   }
 
-  goToMolen(TBN: string) {
-    const currentUrl = this.router.url.split('/').slice(0, -1).join('/');
-    const targetUrl = `${currentUrl}/${TBN}`;
-    this.router.navigateByUrl(targetUrl);
-  }
-
-  goBack() {
-    this.router.navigate(['../'], { relativeTo: this.route });
+  private goBack(): void {
+    void this.router.navigate(['/map']);
   }
 }

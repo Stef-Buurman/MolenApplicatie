@@ -7,7 +7,6 @@ import {
   Output,
 } from '@angular/core';
 import { Place } from '../../Interfaces/Models/Place';
-import { HttpClient } from '@angular/common/http';
 import { Toasts } from '../../Utils/Toasts';
 import {
   SearchModel,
@@ -23,7 +22,14 @@ import {
   distinctUntilChanged,
   tap,
   switchMap,
+  of,
+  map,
 } from 'rxjs';
+import { search as searchApi } from '../../api/methods/Search.api';
+import {
+  fromTypedApi,
+  getTypedApiErrorMessage,
+} from '../../Utils/TypedApiObservable';
 
 @Component({
   selector: 'app-search-bar',
@@ -60,7 +66,6 @@ export class SearchBarComponent {
 
   isDropdownVisible: boolean = false;
   constructor(
-    private http: HttpClient,
     private toastService: Toasts,
     private eRef: ElementRef,
   ) {}
@@ -77,52 +82,57 @@ export class SearchBarComponent {
           this.isDropdownVisible = true;
         }),
         switchMap((term) => {
-          if (term.length <= 2) return [];
-          const encodedQuery = encodeURIComponent(term);
-          return this.http.get<SearchResultsModel>(
-            `/api/search?query=${encodedQuery}`,
+          if (term.length <= 2) {
+            return of({
+              molens: [],
+              places: [],
+              molenTypes: [],
+            } as SearchResultsModel);
+          }
+
+          return fromTypedApi(searchApi({ query: term })).pipe(
+            map((result) => result as unknown as SearchResultsModel),
+            tap({
+              error: () => {
+                this.isloading = false;
+              },
+            }),
           );
         }),
       )
       .subscribe({
-        next: (result: any) => {
+        next: (result: SearchResultsModel) => {
           const term = this.searchTerm;
 
           if (result.molens) {
-            result.molens = result.molens.map(
-              (item: { reference: string }) => ({
-                ...item,
-                reference: this.highlightReference(item.reference, term),
-              }),
-            );
+            result.molens = result.molens.map((item) => ({
+              ...item,
+              reference: this.highlightReference(item.reference, term),
+            }));
           }
 
           if (result.places) {
-            result.places = result.places.map(
-              (placeGroup: { key: any; value: any[] }) => ({
-                key: placeGroup.key,
-                value: placeGroup.value.map((item: { reference: string }) => ({
-                  ...item,
-                  reference: this.highlightReference(item.reference, term),
-                })),
-              }),
-            );
+            result.places = result.places.map((placeGroup) => ({
+              key: placeGroup.key,
+              value: placeGroup.value.map((item) => ({
+                ...item,
+                reference: this.highlightReference(item.reference, term),
+              })),
+            }));
           }
 
           if (result.molenTypes) {
-            result.molenTypes = result.molenTypes.map(
-              (item: { reference: string }) => ({
-                ...item,
-                reference: this.highlightReference(item.reference, term),
-              }),
-            );
+            result.molenTypes = result.molenTypes.map((item) => ({
+              ...item,
+              reference: this.highlightReference(item.reference, term),
+            }));
           }
 
           this.searchResult = result;
           this.isloading = false;
         },
         error: (err) => {
-          this.toastService.showError(err.error);
+          this.toastService.showError(getTypedApiErrorMessage(err));
         },
       });
   }
@@ -161,7 +171,7 @@ export class SearchBarComponent {
 
     return (
       'Assets/Icons/Molens/' +
-      GetMolenIcon(molen.toestand, types, molen.hasImage)
+      GetMolenIcon(molen.toestand ?? undefined, types, molen.hasImage)
     );
   }
 

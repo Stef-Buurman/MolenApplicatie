@@ -32,12 +32,19 @@
       [selected]="selectedFilter.provincie"
       (selectedChange)="selectedFilter.provincie = $event"
     ></app-custom-dropdown>
-    <label for="toestand-select">Molentype</label>
+    <label>Molentype</label>
     <app-custom-dropdown
       [placeholder]="'Alle types'"
       [options]="molenFilters.types"
       [selected]="selectedFilter.type"
       (selectedChange)="selectedFilter.type = $event"
+    ></app-custom-dropdown>
+    <label>Foto</label>
+    <app-custom-dropdown
+      [placeholder]="'Met en zonder foto'"
+      [options]="imageOptions"
+      [selected]="selectedFilter.hasImage"
+      (selectedChange)="selectedFilter.hasImage = $event"
     ></app-custom-dropdown>
   </div>
 

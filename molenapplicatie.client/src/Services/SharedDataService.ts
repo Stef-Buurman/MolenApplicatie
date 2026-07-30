@@ -5,7 +5,7 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root',
 })
 export class SharedDataService {
-  private _IsLoading = new BehaviorSubject<boolean>(true);
+  private _IsLoading = new BehaviorSubject<boolean>(false);
   public IsLoading$ = this._IsLoading.asObservable();
 
   public get IsLoading() {

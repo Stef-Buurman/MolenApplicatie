@@ -1,6 +1,6 @@
 export interface MolenMaker {
-  id: number;
+  id: string;
   name: string;
   year: string;
-  molenDataId: number;
+  molenDataId: string;
 }

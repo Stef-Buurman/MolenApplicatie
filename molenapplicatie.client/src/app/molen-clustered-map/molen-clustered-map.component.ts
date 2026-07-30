@@ -10,6 +10,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import * as L from 'leaflet';
 
 import {
@@ -18,8 +19,9 @@ import {
   MapPointResponse,
   MolenGetMapItemsParams,
 } from '../../api/generated/data-contracts';
-import { ErrorService } from '../../Services/ErrorService';
 import { SharedDataService } from '../../Services/SharedDataService';
+import { MolenService } from '../../Services/MolenService';
+import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { Toasts } from '../../Utils/Toasts';
 import { GetMolenIcon } from '../../Utils/GetMolenIcon';
 import { molenGetMapItems } from '../../api/methods/Molen.api';
@@ -59,6 +61,7 @@ export class MolenClusteredMapComponent
   @Input() minimumZoom: number = 3;
   @Input() maximumZoom: number = 19;
   @Input() showClusterOutlines: boolean = true;
+  @Input() filters: FilterFormValues[] = [];
 
   private map?: L.Map;
   private mapItemsLayer?: L.LayerGroup;
@@ -67,6 +70,7 @@ export class MolenClusteredMapComponent
   private resizeObserver?: ResizeObserver;
   private reloadTimeout?: ReturnType<typeof setTimeout>;
   private abortController?: AbortController;
+  private mapRefreshSubscription?: Subscription;
 
   private requestSequence: number = 0;
   private currentRequestKey?: string;
@@ -75,15 +79,21 @@ export class MolenClusteredMapComponent
   private mapHasUsableSize: boolean = false;
   private hasLoadedOnce: boolean = false;
   private hasShownLoadedToast: boolean = false;
+  private readonly initialRequestTimeoutMs: number = 30000;
 
   constructor(
     private router: Router,
     private sharedData: SharedDataService,
-    private errors: ErrorService,
+    private molenService: MolenService,
     private toasts: Toasts,
   ) {}
 
   ngAfterViewInit(): void {
+    this.mapRefreshSubscription = this.molenService.mapRefresh$.subscribe(
+      () => {
+        this.reload();
+      },
+    );
     this.initializeMap();
   }
 
@@ -96,14 +106,22 @@ export class MolenClusteredMapComponent
     ) {
       this.goToCurrentLocation();
     }
+
+    if (changes['filters'] && !changes['filters'].firstChange && this.map) {
+      this.reload();
+    }
   }
 
   ngOnDestroy(): void {
+    const initialLoadWasPending =
+      !this.hasLoadedOnce && !!this.currentRequestKey;
+
     if (this.reloadTimeout) {
       clearTimeout(this.reloadTimeout);
     }
 
     this.abortController?.abort();
+    this.mapRefreshSubscription?.unsubscribe();
     this.resizeObserver?.disconnect();
 
     this.map?.off();
@@ -112,6 +130,10 @@ export class MolenClusteredMapComponent
     this.map = undefined;
     this.mapItemsLayer = undefined;
     this.outlineLayer = undefined;
+
+    if (initialLoadWasPending) {
+      this.sharedData.IsLoadingFalse();
+    }
   }
 
   public setView(
@@ -309,6 +331,10 @@ export class MolenClusteredMapComponent
       east,
       north,
       zoom,
+      molenType: this.getStringFilterValue('MolenType'),
+      provincie: this.getStringFilterValue('Provincie'),
+      molenState: this.getStringFilterValue('MolenState'),
+      hasImage: this.getBooleanFilterValue('HasImage'),
     };
 
     const requestKey = this.createRequestKey(query);
@@ -337,6 +363,7 @@ export class MolenClusteredMapComponent
       const result = await molenGetMapItems(query, {
         params: {
           signal: abortController.signal,
+          timeoutMs: this.initialRequestTimeoutMs,
         },
       });
 
@@ -373,8 +400,7 @@ export class MolenClusteredMapComponent
 
       console.error('De kaartitems konden niet worden geladen.', error);
 
-      this.errors.AddError(this.getErrorMessage(error));
-      this.toasts.showError('De kaartitems konden niet geladen worden!');
+      this.toasts.showError(this.getErrorMessage(error));
     } finally {
       if (requestSequence === this.requestSequence) {
         this.currentRequestKey = undefined;
@@ -415,22 +441,7 @@ export class MolenClusteredMapComponent
     });
 
     marker.on('click', () => {
-      if (!this.map) return;
-
-      if (!point.popupText) {
-        this.navigateToUrl(point.url);
-        return;
-      }
-
-      L.popup({
-        closeButton: true,
-        autoPan: true,
-        maxWidth: 360,
-        className: 'molen-map-popup',
-      })
-        .setLatLng([point.latitude, point.longitude])
-        .setContent(this.createPointPopup(point))
-        .openOn(this.map);
+      this.navigateToUrl(point.url);
     });
 
     marker.addTo(this.mapItemsLayer);
@@ -478,29 +489,14 @@ export class MolenClusteredMapComponent
   }
 
   private handleSingleMolenClusterClick(cluster: MapClusterResponse): void {
-    if (!this.map) return;
-
     const point = cluster.popupData?.pointData?.[0];
 
-    if (!point) {
-      this.handleClusterClick(cluster);
-      return;
-    }
-
-    if (!point.popupText) {
+    if (point?.url) {
       this.navigateToUrl(point.url);
       return;
     }
 
-    L.popup({
-      closeButton: true,
-      autoPan: true,
-      maxWidth: 360,
-      className: 'molen-map-popup',
-    })
-      .setLatLng([cluster.latitude, cluster.longitude])
-      .setContent(this.createSingleClusterPopup(point.url, point.popupText))
-      .openOn(this.map);
+    this.handleClusterClick(cluster);
   }
 
   private handleClusterClick(cluster: MapClusterResponse): void {
@@ -713,7 +709,27 @@ export class MolenClusteredMapComponent
       query.east?.toFixed(5),
       query.north?.toFixed(5),
       query.zoom,
+      query.molenType ?? '',
+      query.provincie ?? '',
+      query.molenState ?? '',
+      query.hasImage?.toString() ?? '',
     ].join('|');
+  }
+
+  private getStringFilterValue(filterName: string): string | undefined {
+    const value = this.filters.find(
+      (filter) => filter.filterName === filterName,
+    )?.value;
+
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  }
+
+  private getBooleanFilterValue(filterName: string): boolean | undefined {
+    const value = this.filters.find(
+      (filter) => filter.filterName === filterName,
+    )?.value;
+
+    return typeof value === 'boolean' ? value : undefined;
   }
 
   private isCluster(mapItem: MapItemResponse): mapItem is MapClusterResponse {

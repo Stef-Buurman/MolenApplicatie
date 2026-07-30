@@ -1,6 +1,9 @@
 <layout
   [recentAddedImages]="recentAddedImages"
   [isPopupVisible]="isPopupVisible"
+  [molensWithImageAmount]="molensWithImageAmount"
+  (filtersChange)="onFiltersChange($event)"
+  (mapLocationChange)="onMapLocationChange($event)"
 >
   <section class="MapComponent">
     <app-molen-clustered-map
@@ -14,6 +17,7 @@
       [currentLocationZoom]="12"
       [useCurrentLocation]="useCurrentLocation"
       [showClusterOutlines]="true"
+      [filters]="filters"
     ></app-molen-clustered-map>
   </section>
 

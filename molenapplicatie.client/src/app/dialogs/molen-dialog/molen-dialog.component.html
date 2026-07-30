@@ -17,7 +17,7 @@
     <app-image-selector
       [(images)]="molenImages"
       [(selectedImage)]="selectedImage"
-      [tbNr]="molen.ten_Brugge_Nr"
+      [molenId]="molen.id"
       [deleteFunction]="deleteImageFunction"
     >
     </app-image-selector>
@@ -119,27 +119,33 @@
 
       <p *ngIf="molen.opvolger">
         <strong>Opvolger: </strong>
-        <button class="urlButton" (click)="GoToMolen(molen.opvolger)">
+        <button
+          *ngIf="molen.opvolgerMolenId; else opvolgerText"
+          class="urlButton"
+          (click)="GoToMolen(molen.opvolgerMolenId)"
+        >
           {{ molen.opvolger }}
         </button>
+        <ng-template #opvolgerText>{{ molen.opvolger }}</ng-template>
       </p>
       <p *ngIf="molen.voorganger">
         <strong>Voorganger: </strong>
-        <button class="urlButton" (click)="GoToMolen(molen.voorganger)">
+        <button
+          *ngIf="molen.voorgangerMolenId; else voorgangerText"
+          class="urlButton"
+          (click)="GoToMolen(molen.voorgangerMolenId)"
+        >
           {{ molen.voorganger }}
         </button>
+        <ng-template #voorgangerText>{{ molen.voorganger }}</ng-template>
       </p>
       <p *ngIf="molen.verplaatstNaar">
         <strong>Verplaatst naar: </strong>
-        <button class="urlButton" (click)="GoToMolen(molen.verplaatstNaar)">
-          {{ molen.verplaatstNaar }}
-        </button>
+        {{ molen.verplaatstNaar }}
       </p>
       <p *ngIf="molen.afkomstigVan">
         <strong>Afkomstig van: </strong>
-        <button class="urlButton" (click)="GoToMolen(molen.afkomstigVan)">
-          {{ molen.afkomstigVan }}
-        </button>
+        {{ molen.afkomstigVan }}
       </p>
 
       <p *ngIf="molen.wiekvorm">

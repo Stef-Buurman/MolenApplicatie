@@ -1,10 +1,11 @@
 export interface MolenImage {
-  id: number;
+  id: string;
   filePath: string;
   name: string;
   canBeDeleted: boolean;
-  dateTaken: Date | undefined;
-  description: string;
-  molenDataId: number;
-  isAddedImage: boolean;
+  dateTaken?: string | Date | null;
+  description?: string | null;
+  molenDataId: string;
+  externalUrl?: string;
+  isAddedImage?: boolean;
 }
