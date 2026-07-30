@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Interfaces;
 using MolenApplicatie.Server.Models.MariaDB.EntityConfig;
 using System.ComponentModel.DataAnnotations;
@@ -34,6 +34,10 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public string? Plaatsaanduiding { get; set; }
         public string? Opvolger { get; set; }
         public string? Voorganger { get; set; }
+        [NotMapped]
+        public Guid? OpvolgerMolenId { get; set; }
+        [NotMapped]
+        public Guid? VoorgangerMolenId { get; set; }
         public string? VerplaatstNaar { get; set; }
         public string? AfkomstigVan { get; set; }
         public string? Literatuur { get; set; }

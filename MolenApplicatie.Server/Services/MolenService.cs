@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using MolenApplicatie.Server.Data;
@@ -30,7 +30,7 @@ namespace MolenApplicatie.Server.Services
 
         public static MolenData GetMolenData(MolenData molen)
         {
-            molen.HasImage = molen.AddedImages.Count > 0;
+            molen.HasImage = (molen.Images?.Count ?? 0) > 0 || (molen.AddedImages?.Count ?? 0) > 0;
             return molen;
         }
 
@@ -88,78 +88,28 @@ namespace MolenApplicatie.Server.Services
         }
 
         public List<MapData> GetMapData(
-            string? MolenType,
-            string? Provincie,
-            string? MolenState = null)
+            string? molenType,
+            string? provincie,
+            string? molenState = null)
         {
-            List<string> allowedMolenTypes = Globals.AllowedMolenTypes.Select(t => t.ToLower()).ToList();
-
-            IQueryable<MolenData> mapData = _dbContext.MolenData
-                .Include(m => m.AddedImages)
-                .Include(m => m.MolenTypeAssociations)
-                    .ThenInclude(a => a.MolenType);
-
-            if (!string.IsNullOrWhiteSpace(MolenState))
-            {
-                MolenState = MolenToestand.From(MolenState);
-            }
-            else
-            {
-                MolenState = null;
-            }
-
-            if (MolenState == null && string.IsNullOrWhiteSpace(MolenType))
-            {
-                MolenState = MolenToestand.Werkend;
-            }
-
-            if (!string.IsNullOrWhiteSpace(MolenState))
-            {
-                if (MolenToestand.Equals(MolenState, MolenToestand.Bestaande))
+            var mapData = ApplyMapFilters(
+                GetAllMolenDataCorrectTypes().AsNoTracking(),
+                new MolenMapFilter
                 {
-                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand != MolenToestand.Verdwenen);
-                }
-                else if (MolenToestand.Equals(MolenState, MolenToestand.Verdwenen))
-                {
-                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand == MolenToestand.Verdwenen);
-                    if (!string.IsNullOrWhiteSpace(Provincie) && _dbContext.MolenData.Any(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower()))
-                    {
-                        mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower());
-                    }
-                    else if (string.IsNullOrWhiteSpace(MolenType))
-                    {
-                        mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == "zuid-holland");
-                    }
-                }
-                else
-                {
-                    mapData = mapData.Where(m => m.Toestand != null && m.Toestand.ToLower() == MolenState.ToLower());
-                }
-            }
+                    MolenType = molenType,
+                    Provincie = provincie,
+                    MolenState = molenState
+                });
 
-            if (!string.IsNullOrWhiteSpace(MolenType))
+            return mapData.Select(molen => new MapData
             {
-                mapData = mapData.Where(m => m.MolenTypeAssociations.Any(mt => mt.MolenType.Name.ToLower() == MolenType.ToLower()));
-            }
-            else
-            {
-                mapData = mapData.Where(m => m.MolenTypeAssociations.Any(mt => allowedMolenTypes.Contains(mt.MolenType.Name.ToLower())));
-            }
-
-            if (!string.IsNullOrWhiteSpace(Provincie))
-            {
-                mapData = mapData.Where(m => m.Provincie != null && m.Provincie.ToLower() == Provincie.ToLower());
-            }
-
-            return mapData.Select(m => new MapData
-            {
-                Reference = m.Ten_Brugge_Nr,
-                Latitude = m.Latitude,
-                Longitude = m.Longitude,
-                HasImage = m.AddedImages.Count > 0,
-                Toestand = m.Toestand,
+                Reference = molen.Ten_Brugge_Nr,
+                Latitude = molen.Latitude,
+                Longitude = molen.Longitude,
+                HasImage = molen.Images.Any() || molen.AddedImages.Any(),
+                Toestand = molen.Toestand,
                 Type = "Molens",
-                Types = m.MolenTypeAssociations.Select(mt => mt.MolenType.Name).ToList(),
+                Types = molen.MolenTypeAssociations.Select(association => association.MolenType.Name).ToList(),
             }).ToList();
         }
 
@@ -310,58 +260,119 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenData?> GetMolenByTBN(string tbn)
         {
+            if (string.IsNullOrWhiteSpace(tbn)) return null;
+
+            var normalizedTbn = tbn.Trim().ToLower();
+
             var molen = await _dbContext.MolenData.AsNoTracking()
                 .Include(m => m.MolenTBN)
-                    .Where(m => m.MolenTBN.Ten_Brugge_Nr.ToLower() == tbn.ToLower())
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
                 .Include(m => m.MolenTypeAssociations)
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(m => m.Ten_Brugge_Nr != null && m.Ten_Brugge_Nr.ToLower() == normalizedTbn);
 
             if (molen == null) return null;
 
+            await PopulateLinkedMolenIdsAsync(molen);
             return GetMolenData(molen);
+        }
+
+        public async Task<MolenData?> GetMolenByReference(string reference)
+        {
+            if (string.IsNullOrWhiteSpace(reference)) return null;
+
+            if (Guid.TryParse(reference, out var molenId))
+            {
+                var molenById = await GetMolenById(molenId);
+                if (molenById != null) return molenById;
+            }
+
+            return await GetMolenByTBN(reference);
         }
 
         public async Task<MolenData?> GetMolenById(Guid id)
         {
             var molen = await _dbContext.MolenData.AsNoTracking()
                 .Include(m => m.MolenTBN)
-                    .Where(m => m.Id == id)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
                 .Include(m => m.MolenTypeAssociations)
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (molen == null) return null;
 
+            await PopulateLinkedMolenIdsAsync(molen);
             return GetMolenData(molen);
+        }
+
+        private async Task PopulateLinkedMolenIdsAsync(MolenData molen)
+        {
+            var references = new[] { molen.Voorganger, molen.Opvolger }
+                .Where(reference => !string.IsNullOrWhiteSpace(reference))
+                .Select(reference => reference!.Trim().ToLower())
+                .Distinct()
+                .ToList();
+
+            if (references.Count == 0) return;
+
+            var linkedMolens = await _dbContext.MolenData
+                .AsNoTracking()
+                .Where(linkedMolen => references.Contains(linkedMolen.Ten_Brugge_Nr.ToLower()))
+                .Select(linkedMolen => new
+                {
+                    Reference = linkedMolen.Ten_Brugge_Nr,
+                    linkedMolen.Id
+                })
+                .ToListAsync();
+
+            if (!string.IsNullOrWhiteSpace(molen.Voorganger))
+            {
+                molen.VoorgangerMolenId = linkedMolens
+                    .FirstOrDefault(linkedMolen => linkedMolen.Reference.Equals(molen.Voorganger.Trim(), StringComparison.OrdinalIgnoreCase))
+                    ?.Id;
+            }
+
+            if (!string.IsNullOrWhiteSpace(molen.Opvolger))
+            {
+                molen.OpvolgerMolenId = linkedMolens
+                    .FirstOrDefault(linkedMolen => linkedMolen.Reference.Equals(molen.Opvolger.Trim(), StringComparison.OrdinalIgnoreCase))
+                    ?.Id;
+            }
         }
 
         public async Task<MapData?> GetMapDataByTBN(string tbn)
         {
             var molen = await GetMolenByTBN(tbn);
-            if (molen == null) return null;
+            return molen == null ? null : CreateMapData(molen);
+        }
 
+        public async Task<MapData?> GetMapDataByReference(string reference)
+        {
+            var molen = await GetMolenByReference(reference);
+            return molen == null ? null : CreateMapData(molen);
+        }
+
+        private static MapData CreateMapData(MolenData molen)
+        {
             return new MapData
             {
-                Reference = molen.Ten_Brugge_Nr,
+                Reference = string.IsNullOrWhiteSpace(molen.Ten_Brugge_Nr) ? molen.Id.ToString() : molen.Ten_Brugge_Nr,
                 Latitude = molen.Latitude,
                 Longitude = molen.Longitude,
-                HasImage = molen.AddedImages.Count > 0,
+                HasImage = molen.Images.Count > 0 || molen.AddedImages.Count > 0,
                 Toestand = molen.Toestand,
                 Type = "Molens",
                 Types = molen.MolenTypeAssociations.Select(mt => mt.MolenType.Name).ToList(),
             };
         }
 
-        public async Task<(IFormFile? file, string errorMessage, HttpStatusCode statusCode)> SaveMolenImage(Guid id, string TBN, IFormFile file)
+        public async Task<(IFormFile? file, string errorMessage, HttpStatusCode statusCode)> SaveMolenImage(Guid id, string imageFolderKey, IFormFile file)
         {
             var maxSavedFilesCount = 5;
             using (var memoryStream = new MemoryStream())
@@ -373,11 +384,11 @@ namespace MolenApplicatie.Server.Services
                     Directory.CreateDirectory(folderName);
                 }
 
-                folderName = Path.Combine(folderName, TBN);
+                folderName = Path.Combine(folderName, imageFolderKey);
 
                 if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesCount)
                 {
-                    return (null, "Er zijn al te veel foto's opgeslagen voor de molen met ten bruggencate nummer: " + TBN, HttpStatusCode.BadRequest);
+                    return (null, "Er zijn al te veel foto's opgeslagen voor deze molen.", HttpStatusCode.BadRequest);
                 }
 
                 var fileExtension = Path.GetExtension(file.FileName);
@@ -443,9 +454,9 @@ namespace MolenApplicatie.Server.Services
             }
         }
 
-        public async Task<(bool status, string message)> DeleteImageFromMolen(string tbNummer, string imgName)
+        public async Task<(bool status, string message)> DeleteImageFromMolen(string molenReference, string imgName)
         {
-            MolenData? molen = await GetMolenByTBN(tbNummer);
+            MolenData? molen = await GetMolenByReference(molenReference);
             if (molen == null) return (false, "Molen not found");
             var molenImageToDelete = molen.Images.Find(x => x.Name == imgName);
             var molenAddedImageToDelete = molen.AddedImages.Find(x => x.Name == imgName);
@@ -463,13 +474,11 @@ namespace MolenApplicatie.Server.Services
         }
 
         private async Task<int> GetCountOfActiveMolensWithImages() => await _dbContext.MolenData
-            .Include(m => m.AddedImages)
-            .Where(m => m.Toestand == MolenToestand.Werkend && (m.AddedImages.Count > 0))
+            .Where(m => m.Toestand == MolenToestand.Werkend && m.AddedImages.Any())
             .CountAsync();
 
         private async Task<int> GetCountOfRemainderMolensWithImage() => await _dbContext.MolenData
-            .Include(m => m.AddedImages)
-            .Where(m => m.Toestand == MolenToestand.Restant && (m.AddedImages.Count > 0))
+            .Where(m => m.Toestand == MolenToestand.Restant && m.AddedImages.Any())
             .CountAsync();
 
         private async Task<int> GetCountOfActiveMolens() => await _dbContext.MolenData
@@ -556,10 +565,76 @@ namespace MolenApplicatie.Server.Services
             };
         }
 
+        public async Task<MolenMapSummaryResponse> GetMapSummaryAsync(CancellationToken token)
+        {
+            var totalMolensWithImage = await _dbContext.MolenData
+                .AsNoTracking()
+                .CountAsync(molen => molen.AddedImages.Any(), token);
+
+            var now = DateTime.Now;
+            var recentImageStart = now.AddDays(-7);
+
+            var recentImages = await _dbContext.AddedImages
+                .AsNoTracking()
+                .Where(image => image.DateTaken >= recentImageStart && image.DateTaken <= now)
+                .OrderByDescending(image => image.DateTaken)
+                .ToListAsync(token);
+
+            var molenIds = recentImages
+                .Select(image => image.MolenDataId)
+                .Distinct()
+                .ToList();
+
+            List<MolenData> molens = molenIds.Count == 0
+                ? []
+                : await _dbContext.MolenData
+                    .AsNoTracking()
+                    .Include(molen => molen.Images)
+                    .Include(molen => molen.AddedImages)
+                    .Include(molen => molen.MolenTypeAssociations)
+                        .ThenInclude(association => association.MolenType)
+                    .Where(molen => molenIds.Contains(molen.Id))
+                    .ToListAsync(token);
+
+            var molensById = molens
+                .Select(GetMolenData)
+                .ToDictionary(molen => molen.Id);
+
+            var recentAddedImages = recentImages
+                .GroupBy(image => image.MolenDataId)
+                .Where(group => molensById.ContainsKey(group.Key))
+                .Select(group => new RecentAddedImages
+                {
+                    molen = molensById[group.Key],
+                    Images = group.ToList()
+                })
+                .OrderByDescending(group => group.Images.Max(image => image.DateTaken))
+                .ToList();
+
+            return new MolenMapSummaryResponse
+            {
+                TotalMolensWithImage = totalMolensWithImage,
+                RecentAddedImages = recentAddedImages
+            };
+        }
+
         public async Task<IReadOnlyList<MapItemResponse>> GetMapItemsAsync(MolenMapFilter filter, CancellationToken token)
         {
-            var query = GetAllMolenDataCorrectTypes()
-                .Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Werkend);
+            var allowedMolenTypes = Globals.AllowedMolenTypes
+                .Select(type => type.ToLower())
+                .ToList();
+
+            var query = _dbContext.MolenData
+                .AsNoTracking()
+                .Where(molen =>
+                    molen.Latitude >= -90d &&
+                    molen.Latitude <= 90d &&
+                    molen.Longitude >= -180d &&
+                    molen.Longitude <= 180d &&
+                    molen.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())));
+
+            query = ApplyMapFilters(query, filter);
 
             return await _mapClusterService.GetMapItemsAsync(
                 query,
@@ -591,8 +666,43 @@ namespace MolenApplicatie.Server.Services
                 new MapViewport(filter.West, filter.South, filter.East, filter.North, filter.Zoom),
                 point => $"/map/{point.Id}",
                 point => point.FriendlyView,
-                points => $"{points.Count:N0} molens at this location",
+                points => $"{points.Count:N0} molens op deze locatie",
                 token);
+        }
+
+        private IQueryable<MolenData> ApplyMapFilters(IQueryable<MolenData> query, MolenMapFilter filter)
+        {
+            var molenState = MolenToestand.From(filter.MolenState);
+
+            if (MolenToestand.Equals(molenState, MolenToestand.Bestaande))
+            {
+                query = query.Where(molen => molen.Toestand != null && molen.Toestand != MolenToestand.Verdwenen);
+            }
+            else if (!string.IsNullOrWhiteSpace(molenState))
+            {
+                query = query.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == molenState.ToLower());
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.MolenType))
+            {
+                var molenType = filter.MolenType.Trim().ToLower();
+                query = query.Where(molen => molen.MolenTypeAssociations.Any(association => association.MolenType.Name.ToLower() == molenType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Provincie))
+            {
+                var provincie = filter.Provincie.Trim().ToLower();
+                query = query.Where(molen => molen.Provincie != null && molen.Provincie.ToLower() == provincie);
+            }
+
+            if (filter.HasImage.HasValue)
+            {
+                query = filter.HasImage.Value
+                    ? query.Where(molen => molen.Images.Any() || molen.AddedImages.Any())
+                    : query.Where(molen => !molen.Images.Any() && !molen.AddedImages.Any());
+            }
+
+            return query;
         }
     }
 }

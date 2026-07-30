@@ -4,7 +4,7 @@ namespace MolenApplicatie.Server.Models
 {
     public class UploadDeleteImageReturnType
     {
-        public MolenData Molen { get; set; }
-        public MapData MapData { get; set; }
+        public required MolenData Molen { get; set; }
+        public required MapData MapData { get; set; }
     }
 }

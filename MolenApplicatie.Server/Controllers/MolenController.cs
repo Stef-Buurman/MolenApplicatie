@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using MolenApplicatie.Server.Filters;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
@@ -10,236 +11,220 @@ namespace MolenApplicatie.Server.Controllers
     [Route("api/molen")]
     public class MolenController : ControllerBase
     {
-        private readonly MolenService _MolenService;
-        private readonly NewMolenDataService _NewMolenDataService;
+        private readonly MolenService _molenService;
+        private readonly NewMolenDataService _newMolenDataService;
 
         public MolenController(MolenService molenService, NewMolenDataService newMolenDataService)
         {
-            _MolenService = molenService;
-            _NewMolenDataService = newMolenDataService;
+            _molenService = molenService;
+            _newMolenDataService = newMolenDataService;
         }
 
         [HttpGet("all/{provincie}")]
-        public async Task<IActionResult> GetAllMolensByProvincie(string provincie)
+        public async Task<ActionResult<MolensResponseType<MolenData>>> GetAllMolensByProvincie(string provincie)
         {
-            var molenData = _MolenService.GetAllMolenDataByProvincie(provincie);
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetAllMolenDataByProvincie(provincie);
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
         [FileUploadFilter]
         [HttpGet("all")]
-        public IActionResult GetAllMolens()
+        public ActionResult<List<MolenData>> GetAllMolens()
         {
-            var molenData = _MolenService.GetAllMolenData();
-            return Ok(molenData);
+            return Ok(_molenService.GetAllMolenData());
         }
 
         [HttpGet("mapdata")]
-        public async Task<IActionResult> GetAllMolenMapData(
-            [FromQuery] string? MolenType,
-            [FromQuery] string? Provincie,
-            [FromQuery] string? MolenState,
-            [FromQuery] string Type = "molens")
+        public async Task<ActionResult<MolensResponseType<MapData>>> GetAllMolenMapData(
+            [FromQuery] string? molenType,
+            [FromQuery] string? provincie,
+            [FromQuery] string? molenState,
+            [FromQuery] string type = "molens")
         {
-            var molenData = _MolenService.GetMapData(MolenType, Provincie, MolenState);
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetMapData(molenType, provincie, molenState);
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
         [HttpGet("active")]
-        public async Task<IActionResult> GetAllActiveMolens()
+        public async Task<ActionResult<MolensResponseType<MolenData>>> GetAllActiveMolens()
         {
-            var molenData = _MolenService.GetAllActiveMolenData();
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetAllActiveMolenData();
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
         [HttpGet("existing")]
-        public async Task<IActionResult> GetAllExistingMolens()
+        public async Task<ActionResult<MolensResponseType<MolenData>>> GetAllExistingMolens()
         {
-            var molenData = _MolenService.GetAllExistingMolens();
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetAllExistingMolens();
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
-
         [HttpGet("disappeared/{provincie}")]
-        public async Task<IActionResult> GetAllDisappearedMolens(string provincie)
+        public async Task<ActionResult<MolensResponseType<MolenData>>> GetAllDisappearedMolens(string provincie)
         {
-            var molenData = _MolenService.GetAllDisappearedMolens(provincie);
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetAllDisappearedMolens(provincie);
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
         [HttpGet("remainder")]
-        public async Task<IActionResult> GetAllRemainderMolens()
+        public async Task<ActionResult<MolensResponseType<MolenData>>> GetAllRemainderMolens()
         {
-            var molenData = _MolenService.GetAllRemainderMolens();
-            return Ok(await _MolenService.MolensResponse(molenData));
+            var molenData = _molenService.GetAllRemainderMolens();
+            return Ok(await _molenService.MolensResponse(molenData));
         }
 
         [HttpGet("provincies")]
-        public async Task<IActionResult> GetAllMolenProvincies()
+        public async Task<ActionResult<List<ValueName>>> GetAllMolenProvincies()
         {
-            var provincies = await _MolenService.GetAllMolenProvincies();
-            return Ok(provincies);
+            return Ok(await _molenService.GetAllMolenProvincies());
         }
 
         [HttpGet("filters")]
-        public async Task<IActionResult> GetMolenFilters()
+        public async Task<ActionResult<MolenFilters>> GetMolenFilters()
         {
-            return Ok(await _MolenService.GetMolenFilters());
+            return Ok(await _molenService.GetMolenFilters());
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetMolenDataById(Guid id)
+        [HttpGet("map-summary")]
+        public async Task<ActionResult<MolenMapSummaryResponse>> GetMapSummary(CancellationToken token)
         {
-            return Ok(await _MolenService.GetMolenById(id));
+            return Ok(await _molenService.GetMapSummaryAsync(token));
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<MolenData>> GetMolenDataById(Guid id)
+        {
+            var molen = await _molenService.GetMolenById(id);
+            return molen == null ? NotFound("Molen niet gevonden!") : Ok(molen);
         }
 
         [FileUploadFilter]
-        [HttpPost]
-        [Route("molen_image/{tbNumber}")]
-        public async Task<ActionResult<UploadDeleteImageReturnType>> UploadImage(string tbNumber, IFormFile image)
+        [HttpPost("molen_image/{tbNumber}")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<UploadDeleteImageReturnType>> UploadImage(string tbNumber, [Required] IFormFile image)
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Geen foto meegestuurd!");
 
-            MolenData? molen = await _MolenService.GetMolenByTBN(tbNumber);
+            var molen = await _molenService.GetMolenByReference(tbNumber);
             if (molen == null) return NotFound("Molen niet gevonden!");
-            var result = await _MolenService.SaveMolenImage(molen.Id, tbNumber, image);
-            IFormFile savedImage = result.file;
-            if (!molen.CanAddImages)
+            if (!molen.CanAddImages) return BadRequest("Voor deze molen kan geen foto worden opgeslagen!");
+
+            var imageFolderKey = string.IsNullOrWhiteSpace(molen.Ten_Brugge_Nr) ? molen.Id.ToString() : molen.Ten_Brugge_Nr;
+            var result = await _molenService.SaveMolenImage(molen.Id, imageFolderKey, image);
+            if (result.file == null)
             {
-                return BadRequest("Voor deze molen kan geen foto worden opgeslagen!");
+                return string.IsNullOrWhiteSpace(result.errorMessage)
+                    ? BadRequest("Er is iets misgegaan met het opslaan van de foto!")
+                    : StatusCode((int)result.statusCode, result.errorMessage);
             }
-            if (savedImage == null)
-            {
-                if (result.errorMessage == null || result.errorMessage == "")
-                {
-                    return BadRequest("Er is iets misgegaan met het opslaan van de foto!");
-                }
-                else
-                {
-                    return StatusCode((int)result.statusCode, result.errorMessage);
-                }
-            }
+
+            var updatedMolen = await _molenService.GetMolenByReference(tbNumber);
+            if (updatedMolen == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "De bijgewerkte molen kon niet opnieuw worden geladen.");
+
+            var updatedMapData = await _molenService.GetMapDataByReference(tbNumber);
+            if (updatedMapData == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "De bijgewerkte kaartgegevens konden niet opnieuw worden geladen.");
 
             return Ok(new UploadDeleteImageReturnType
             {
-                Molen = await _MolenService.GetMolenByTBN(tbNumber),
-                MapData = await _MolenService.GetMapDataByTBN(tbNumber),
+                Molen = updatedMolen,
+                MapData = updatedMapData,
             });
         }
 
-        [HttpPost]
-        [Route("uploadMolensHtml")]
+        [HttpPost("uploadMolensHtml")]
         public async Task<ActionResult> UploadMolensHtml(Dictionary<string, Dictionary<string, string>> molenResponses)
         {
             if (molenResponses == null || molenResponses.Count == 0)
                 return BadRequest("Geen molens meegestuurd!");
 
-            var result = await _NewMolenDataService.SaveMolensByResponses(molenResponses);
-            return Ok(result);
+            return Ok(await _newMolenDataService.SaveMolensByResponses(molenResponses));
         }
 
         [FileUploadFilter]
-        [HttpGet]
-        [Route("uploadMolenHtml")]
-        public async Task<ActionResult> sendMolenHtml()
+        [HttpGet("uploadMolenHtml")]
+        public async Task<ActionResult> SendMolenHtml()
         {
-            await _NewMolenDataService.SendMolenByResponses();
+            await _newMolenDataService.SendMolenByResponses();
             return Ok();
         }
 
         [FileUploadFilter]
         [HttpDelete("molen_image/{tbNumber}/{imageName}")]
-        public async Task<IActionResult> DeleteMolenImage(string tbNumber, string imageName)
+        public async Task<ActionResult<UploadDeleteImageReturnType>> DeleteMolenImage(string tbNumber, string imageName)
         {
-            var result = await _MolenService.DeleteImageFromMolen(tbNumber, imageName);
-            if (result.status)
+            var result = await _molenService.DeleteImageFromMolen(tbNumber, imageName);
+            if (!result.status) return BadRequest(result.message);
+
+            var updatedMolen = await _molenService.GetMolenByReference(tbNumber);
+            if (updatedMolen == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "De bijgewerkte molen kon niet opnieuw worden geladen.");
+
+            var updatedMapData = await _molenService.GetMapDataByReference(tbNumber);
+            if (updatedMapData == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "De bijgewerkte kaartgegevens konden niet opnieuw worden geladen.");
+
+            return Ok(new UploadDeleteImageReturnType
             {
-                return Ok(new UploadDeleteImageReturnType
-                {
-                    Molen = await _MolenService.GetMolenByTBN(tbNumber),
-                    MapData = await _MolenService.GetMapDataByTBN(tbNumber),
-                });
-            }
-            else
-            {
-                return BadRequest(result.message);
-            }
+                Molen = updatedMolen,
+                MapData = updatedMapData,
+            });
         }
 
         [FileUploadFilter]
         [HttpGet("update_oldest_molens")]
-        public async Task<IActionResult> UpdateOldestMolens()
+        public async Task<ActionResult<List<MolenData>>> UpdateOldestMolens()
         {
-            var result = await _NewMolenDataService.UpdateDataOfLastUpdatedMolens();
-            if (!result.isDone && result.timeToWait == null && result.MolenData == null)
-            {
-                return BadRequest("Er zijn te veel aanvragen gedaan, probeer het later nog eens!");
-            }
-            if (result.isDone)
-            {
-                return Ok(result.MolenData);
-            }
-            if (result.timeToWait.HasValue)
-            {
-                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.Value.TotalMinutes)} minuten nog een keer proberen!");
-            }
-            return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets misgegaan bij het updaten van de molens.");
+            var result = await _newMolenDataService.UpdateDataOfLastUpdatedMolens();
 
+            if (!result.isDone && result.timeToWait == null && result.MolenData == null)
+                return BadRequest("Er zijn te veel aanvragen gedaan, probeer het later nog eens!");
+
+            if (result.isDone)
+                return Ok(result.MolenData ?? []);
+
+            if (result.timeToWait.HasValue)
+                return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.Value.TotalMinutes)} minuten nog een keer proberen!");
+
+            return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets misgegaan bij het updaten van de molens.");
         }
 
         [FileUploadFilter]
         [HttpGet("search_for_new_molens")]
-        public async Task<IActionResult> GetNewAddedMolens()
+        public async Task<ActionResult<List<MolenData>>> GetNewAddedMolens()
         {
-            var result = await _NewMolenDataService.SearchForNewMolens();
+            var result = await _newMolenDataService.SearchForNewMolens();
+
             if (result.MolenData == null && result.timeToWait.HasValue)
-            {
                 return BadRequest($"Kan dit niet uitvoeren, je kan dit na {Convert.ToInt32(result.timeToWait.Value.TotalMinutes)} minuten nog een keer proberen!");
-            }
-            else if (result.MolenData != null)
-            {
+
+            if (result.MolenData != null)
                 return Ok(result.MolenData);
-            }
+
             return StatusCode(StatusCodes.Status500InternalServerError, "Er is iets fout gegaan bij het zoeken naar nieuwe molens.");
         }
 
-
         [FileUploadFilter]
-        [HttpGet]
-        [Route("read_molen/{tbNumber}")]
-        public async Task<IActionResult> GetMolenTypes(string tbNumber)
+        [HttpGet("read_molen/{tbNumber}")]
+        public async Task<ActionResult<MolenData>> GetMolenTypes(string tbNumber)
         {
-            var results = await _NewMolenDataService.GetMolenDataByTBNumber(tbNumber);
-            if (results.HasValue)
-            {
-                return Ok(results.Value.Item1);
-            }
-            return NotFound("Molen niet gevonden!");
+            var results = await _newMolenDataService.GetMolenDataByTBNumber(tbNumber);
+            return results.HasValue ? Ok(results.Value.molen) : NotFound("Molen niet gevonden!");
         }
 
         [FileUploadFilter]
-        [HttpGet]
-        [Route("read_all_molen")]
-        public async Task<IActionResult> GetAllMolen()
+        [HttpGet("read_all_molen")]
+        public async Task<ActionResult<List<Dictionary<string, object>>>> GetAllMolen()
         {
-            var results = await _NewMolenDataService.GetAllMolenData();
-            return Ok(results);
+            return Ok(await _newMolenDataService.GetAllMolenData());
         }
 
         [HttpGet("map-items")]
         public async Task<ActionResult<IReadOnlyList<MapItemResponse>>> GetMapItems([FromQuery] MolenMapFilter filter, CancellationToken token)
         {
-            try
-            {
-                var result = await _MolenService.GetMapItemsAsync(filter, token);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in GetMapItems: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
-            }
+            return Ok(await _molenService.GetMapItemsAsync(filter, token));
         }
     }
 }
