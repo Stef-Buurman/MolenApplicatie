@@ -1,8 +1,4 @@
-import {
-  ComponentRef,
-  Injectable,
-  ViewContainerRef,
-} from '@angular/core';
+import { ComponentRef, Injectable, ViewContainerRef } from '@angular/core';
 import { ToastType } from '../Enums/ToastType';
 import { ToastComponent } from '../app/toast/toast.component';
 
@@ -19,7 +15,7 @@ export class Toasts {
   showSuccess(
     message: string,
     title?: string,
-    duration: number = this.defaultToastTime
+    duration: number = this.defaultToastTime,
   ) {
     this.showToast(title || 'Success', message, ToastType.Success, duration);
   }
@@ -27,7 +23,7 @@ export class Toasts {
   showError(
     message: string,
     title?: string,
-    duration: number = this.defaultToastTime
+    duration: number = this.defaultToastTime,
   ) {
     this.showToast(title || 'Error', message, ToastType.Error, duration);
   }
@@ -35,7 +31,7 @@ export class Toasts {
   showInfo(
     message: string,
     title?: string,
-    duration: number = this.defaultToastTime
+    duration: number = this.defaultToastTime,
   ) {
     this.showToast(title || 'Informatie', message, ToastType.Info, duration);
   }
@@ -43,13 +39,13 @@ export class Toasts {
   showWarning(
     message: string,
     title?: string,
-    duration: number = this.defaultToastTime
+    duration: number = this.defaultToastTime,
   ) {
     this.showToast(
       title || 'Waarschuwing!',
       message,
       ToastType.Warning,
-      duration
+      duration,
     );
   }
 
@@ -61,7 +57,7 @@ export class Toasts {
     title: string,
     message: string,
     type: ToastType,
-    duration: number = this.defaultToastTime
+    duration: number = this.defaultToastTime,
   ) {
     const toastContainer = document.getElementById('toast-container');
 

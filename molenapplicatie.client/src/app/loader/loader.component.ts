@@ -21,7 +21,7 @@ export class LoaderComponent implements OnInit {
   constructor(
     public sharedData: SharedDataService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {

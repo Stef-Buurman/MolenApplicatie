@@ -9,7 +9,16 @@
     "test": "ng test",
     "prestart": "node aspnetcore-https",
     "start:windows": "ng serve --ssl --ssl-cert \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.pem\" --ssl-key \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.key\" --host=127.0.0.1 --proxy-config src/proxy.conf.js",
-    "start:default": "ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1 --proxy-config src/proxy.conf.js"
+    "start:default": "ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1 --proxy-config src/proxy.conf.js",
+    "generate:api": "typedapi-generate"
+  },
+  "config": {
+    "typedApiDefaultFunctionsPath": "src/Utils/DefaultApiFunctions",
+    "swaggerUrl": "http://localhost:5247/swagger/v1/swagger.json",
+    "apiOutput": "src/api",
+    "typedApiUseFilterFormValues": true,
+    "typedApiMethodNameStyle": "action",
+    "typedApiPrefixMethodNamesWithController": true
   },
   "private": true,
   "dependencies": {
@@ -29,9 +38,11 @@
     "run-script-os": "*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "typedapi-client-helpers": "^0.3.5",
     "zone.js": "~0.14.10"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^21.2.19",
     "@angular/build": "^21.0.0",
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
@@ -40,12 +51,12 @@
     "@types/leaflet.markercluster": "^1.5.4",
     "@types/node": "^22.9.0",
     "jasmine-core": "~5.2.0",
-    "karma": "~6.4.0",
+    "karma": "^6.4.4",
     "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
-    "schematics-scss-migrate": "^2.3.17",
+    "karma-coverage": "^2.2.1",
+    "karma-jasmine": "^4.0.2",
+    "karma-jasmine-html-reporter": "^1.7.0",
+    "schematics-scss-migrate": "^1.3.13",
     "typescript": "~5.9.0"
   }
 }

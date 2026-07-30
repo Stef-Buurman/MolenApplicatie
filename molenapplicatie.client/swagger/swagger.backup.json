@@ -1,0 +1,2274 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "MolenApplicatie.Server",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/DB/all": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_GetAllDataForDB_GET_api_DB_all",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "GetAllDataForDB"
+        }
+      }
+    },
+    "/api/DB/places": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_GetPlacesDB_GET_api_DB_places",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "GetPlacesDB"
+        }
+      }
+    },
+    "/api/DB/GetMolens": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_GetMolens_GET_api_DB_GetMolens",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MolenData"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "GetMolens"
+        }
+      }
+    },
+    "/api/DB/CallMolenResponses": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_CallMolenResponses_GET_api_DB_CallMolenResponses",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "CallMolenResponses"
+        }
+      }
+    },
+    "/api/DB/SaveMolenResponses": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_SaveMolenResponses_GET_api_DB_SaveMolenResponses",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "SaveMolenResponses"
+        }
+      }
+    },
+    "/api/DB/test": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_test_GET_api_DB_test",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "test"
+        }
+      }
+    },
+    "/api/DB/test2": {
+      "get": {
+        "tags": ["DB"],
+        "operationId": "DB_test2_GET_api_DB_test2",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "DB",
+          "actionName": "test2"
+        }
+      }
+    },
+    "/api/molen/all/{provincie}": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllMolensByProvincie_GET_api_molen_all_provincie",
+        "parameters": [
+          {
+            "name": "provincie",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllMolensByProvincie"
+        }
+      }
+    },
+    "/api/molen/all": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllMolens_GET_api_molen_all",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllMolens"
+        }
+      }
+    },
+    "/api/molen/mapdata": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllMolenMapData_GET_api_molen_mapdata",
+        "parameters": [
+          {
+            "name": "MolenType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Provincie",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "MolenState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "molens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllMolenMapData"
+        }
+      }
+    },
+    "/api/molen/active": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllActiveMolens_GET_api_molen_active",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllActiveMolens"
+        }
+      }
+    },
+    "/api/molen/existing": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllExistingMolens_GET_api_molen_existing",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllExistingMolens"
+        }
+      }
+    },
+    "/api/molen/disappeared/{provincie}": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllDisappearedMolens_GET_api_molen_disappeared_provincie",
+        "parameters": [
+          {
+            "name": "provincie",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllDisappearedMolens"
+        }
+      }
+    },
+    "/api/molen/remainder": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllRemainderMolens_GET_api_molen_remainder",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllRemainderMolens"
+        }
+      }
+    },
+    "/api/molen/provincies": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllMolenProvincies_GET_api_molen_provincies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllMolenProvincies"
+        }
+      }
+    },
+    "/api/molen/filters": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMolenFilters_GET_api_molen_filters",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMolenFilters"
+        }
+      }
+    },
+    "/api/molen/{tbNumber}": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMolenDataByTBNumber_GET_api_molen_tbNumber",
+        "parameters": [
+          {
+            "name": "tbNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMolenDataByTBNumber"
+        }
+      }
+    },
+    "/api/molen/molen_image/{tbNumber}": {
+      "post": {
+        "tags": ["Molen"],
+        "operationId": "Molen_UploadImage_POST_api_molen_molen_image_tbNumber",
+        "parameters": [
+          {
+            "name": "tbNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDeleteImageReturnType"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "UploadImage"
+        }
+      }
+    },
+    "/api/molen/uploadMolensHtml": {
+      "post": {
+        "tags": ["Molen"],
+        "operationId": "Molen_UploadMolensHtml_POST_api_molen_uploadMolensHtml",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "UploadMolensHtml"
+        }
+      }
+    },
+    "/api/molen/uploadMolenHtml": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_sendMolenHtml_GET_api_molen_uploadMolenHtml",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "sendMolenHtml"
+        }
+      }
+    },
+    "/api/molen/molen_image/{tbNumber}/{imageName}": {
+      "delete": {
+        "tags": ["Molen"],
+        "operationId": "Molen_DeleteMolenImage_DELETE_api_molen_molen_image_tbNumber_imageName",
+        "parameters": [
+          {
+            "name": "tbNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "DeleteMolenImage"
+        }
+      }
+    },
+    "/api/molen/update_oldest_molens": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_UpdateOldestMolens_GET_api_molen_update_oldest_molens",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "UpdateOldestMolens"
+        }
+      }
+    },
+    "/api/molen/search_for_new_molens": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetNewAddedMolens_GET_api_molen_search_for_new_molens",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetNewAddedMolens"
+        }
+      }
+    },
+    "/api/molen/read_molen/{tbNumber}": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMolenTypes_GET_api_molen_read_molen_tbNumber",
+        "parameters": [
+          {
+            "name": "tbNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMolenTypes"
+        }
+      }
+    },
+    "/api/molen/read_all_molen": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetAllMolen_GET_api_molen_read_all_molen",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetAllMolen"
+        }
+      }
+    },
+    "/api/read_all_netherlands_places": {
+      "get": {
+        "tags": ["Places"],
+        "operationId": "Places_ReadAllNetherlandsPlaces_GET_api_read_all_netherlands_places",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Places",
+          "actionName": "ReadAllNetherlandsPlaces"
+        }
+      }
+    },
+    "/api/get_all_netherlands_places": {
+      "get": {
+        "tags": ["Places"],
+        "operationId": "Places_GetAllNetherlandsPlaces_GET_api_get_all_netherlands_places",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Places",
+          "actionName": "GetAllNetherlandsPlaces"
+        }
+      }
+    },
+    "/api/get_places_by_input/{input}": {
+      "get": {
+        "tags": ["Places"],
+        "operationId": "Places_GetPlacesByInput_GET_api_get_places_by_input_input",
+        "parameters": [
+          {
+            "name": "input",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Places",
+          "actionName": "GetPlacesByInput"
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "tags": ["Search"],
+        "operationId": "Search_Search_GET_api_search",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultsModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultsModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultsModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Search",
+          "actionName": "Search"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddedImage": {
+        "required": [
+          "canBeDeleted",
+          "filePath",
+          "id",
+          "molenData",
+          "molenDataId",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canBeDeleted": {
+            "type": "boolean"
+          },
+          "dateTaken": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "molenDataId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DisappearedYearInfo": {
+        "required": ["id", "molenData", "molenDataId", "year"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status_before": {
+            "type": "string",
+            "nullable": true
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status_after": {
+            "type": "string",
+            "nullable": true
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "molenDataId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HttpValidationProblemDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProblemDetails"
+          },
+          {
+            "required": ["errors"],
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "additionalProperties": {}
+          }
+        ]
+      },
+      "KeyValuePairOfStringAndListOfSearchModelOfPlace": {
+        "required": ["key", "value"],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchModelOfPlace"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MapData": {
+        "required": [
+          "hasImage",
+          "latitude",
+          "longitude",
+          "reference",
+          "toestand",
+          "type",
+          "types"
+        ],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "toestand": {
+            "type": "string"
+          },
+          "hasImage": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenData": {
+        "required": [
+          "addedImages",
+          "canAddImages",
+          "disappearedYearInfos",
+          "hasImage",
+          "id",
+          "images",
+          "lastUpdated",
+          "latitude",
+          "longitude",
+          "molenMakers",
+          "molenTBN",
+          "molenTBNId",
+          "molenTypeAssociations",
+          "name",
+          "openOpAfspraak",
+          "openOpZaterdag",
+          "openOpZondag",
+          "openVoorPubliek",
+          "ten_Brugge_Nr"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "molenTBN": {
+            "$ref": "#/components/schemas/MolenTBN"
+          },
+          "molenTBNId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ten_Brugge_Nr": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "toelichtingNaam": {
+            "type": "string",
+            "nullable": true
+          },
+          "bouwjaar": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "herbouwdJaar": {
+            "type": "string",
+            "nullable": true
+          },
+          "bouwjaarStart": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "bouwjaarEinde": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "functie": {
+            "type": "string",
+            "nullable": true
+          },
+          "doel": {
+            "type": "string",
+            "nullable": true
+          },
+          "toestand": {
+            "type": "string",
+            "nullable": true
+          },
+          "bedrijfsvaardigheid": {
+            "type": "string",
+            "nullable": true
+          },
+          "plaats": {
+            "type": "string",
+            "nullable": true
+          },
+          "adres": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincie": {
+            "type": "string",
+            "nullable": true
+          },
+          "gemeente": {
+            "type": "string",
+            "nullable": true
+          },
+          "streek": {
+            "type": "string",
+            "nullable": true
+          },
+          "plaatsaanduiding": {
+            "type": "string",
+            "nullable": true
+          },
+          "opvolger": {
+            "type": "string",
+            "nullable": true
+          },
+          "voorganger": {
+            "type": "string",
+            "nullable": true
+          },
+          "verplaatstNaar": {
+            "type": "string",
+            "nullable": true
+          },
+          "afkomstigVan": {
+            "type": "string",
+            "nullable": true
+          },
+          "literatuur": {
+            "type": "string",
+            "nullable": true
+          },
+          "plaatsenVoorheen": {
+            "type": "string",
+            "nullable": true
+          },
+          "wiekvorm": {
+            "type": "string",
+            "nullable": true
+          },
+          "wiekVerbeteringen": {
+            "type": "string",
+            "nullable": true
+          },
+          "monument": {
+            "type": "string",
+            "nullable": true
+          },
+          "plaatsBediening": {
+            "type": "string",
+            "nullable": true
+          },
+          "bedieningKruiwerk": {
+            "type": "string",
+            "nullable": true
+          },
+          "plaatsKruiwerk": {
+            "type": "string",
+            "nullable": true
+          },
+          "kruiwerk": {
+            "type": "string",
+            "nullable": true
+          },
+          "vlucht": {
+            "type": "string",
+            "nullable": true
+          },
+          "openingstijden": {
+            "type": "string",
+            "nullable": true
+          },
+          "openVoorPubliek": {
+            "type": "boolean"
+          },
+          "openOpZaterdag": {
+            "type": "boolean"
+          },
+          "openOpZondag": {
+            "type": "boolean"
+          },
+          "openOpAfspraak": {
+            "type": "boolean"
+          },
+          "krachtbron": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "winkelInformatie": {
+            "type": "string",
+            "nullable": true
+          },
+          "bouwbestek": {
+            "type": "string",
+            "nullable": true
+          },
+          "bijzonderheden": {
+            "type": "string",
+            "nullable": true
+          },
+          "museuminformatie": {
+            "type": "string",
+            "nullable": true
+          },
+          "molenaar": {
+            "type": "string",
+            "nullable": true
+          },
+          "eigendomshistorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "molenerf": {
+            "type": "string",
+            "nullable": true
+          },
+          "trivia": {
+            "type": "string",
+            "nullable": true
+          },
+          "geschiedenis": {
+            "type": "string",
+            "nullable": true
+          },
+          "wetenswaardigheden": {
+            "type": "string",
+            "nullable": true
+          },
+          "wederopbouw": {
+            "type": "string",
+            "nullable": true
+          },
+          "as": {
+            "type": "string",
+            "nullable": true
+          },
+          "wieken": {
+            "type": "string",
+            "nullable": true
+          },
+          "toegangsprijzen": {
+            "type": "string",
+            "nullable": true
+          },
+          "uniekeEigenschap": {
+            "type": "string",
+            "nullable": true
+          },
+          "landschappelijkeWaarde": {
+            "type": "string",
+            "nullable": true
+          },
+          "kadastraleAanduiding": {
+            "type": "string",
+            "nullable": true
+          },
+          "canAddImages": {
+            "type": "boolean"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MolenImage"
+            }
+          },
+          "molenTypeAssociations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MolenTypeAssociation"
+            }
+          },
+          "addedImages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedImage"
+            }
+          },
+          "molenMakers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MolenMaker"
+            }
+          },
+          "disappearedYearInfos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DisappearedYearInfo"
+            }
+          },
+          "hasImage": {
+            "type": "boolean"
+          },
+          "eigenaar": {
+            "type": "string",
+            "nullable": true
+          },
+          "recenteWerkzaamheden": {
+            "type": "string",
+            "nullable": true
+          },
+          "rad": {
+            "type": "string",
+            "nullable": true
+          },
+          "radDiameter": {
+            "type": "string",
+            "nullable": true
+          },
+          "wateras": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenImage": {
+        "required": [
+          "canBeDeleted",
+          "externalUrl",
+          "filePath",
+          "id",
+          "molenData",
+          "molenDataId",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "canBeDeleted": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "externalUrl": {
+            "type": "string"
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "molenDataId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenMaker": {
+        "required": ["id", "molenData", "molenDataId", "name", "year"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "year": {
+            "type": "string"
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "molenDataId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenTBN": {
+        "required": ["id", "molenData", "ten_Brugge_Nr"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ten_Brugge_Nr": {
+            "type": "string"
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenType": {
+        "required": ["id", "name"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MolenTypeAssociation": {
+        "required": [
+          "id",
+          "molenData",
+          "molenDataId",
+          "molenType",
+          "molenTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "molenDataId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "molenTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "molenData": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "molenType": {
+            "$ref": "#/components/schemas/MolenType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Place": {
+        "required": [
+          "country",
+          "id",
+          "latitude",
+          "longitude",
+          "name",
+          "population",
+          "province"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "population": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "placeTypeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/PlaceType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaceType": {
+        "required": ["group", "id", "name", "nameEn", "nameMV"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameMV": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Place"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {}
+      },
+      "SearchModelOfMolenData": {
+        "required": ["reference"],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MolenData"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchModelOfPlace": {
+        "required": ["reference"],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Place"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchModelWithCountOfMolenType": {
+        "required": ["count", "reference"],
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MolenType"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchResultsModel": {
+        "required": ["hasResults", "molens", "molenTypes", "places"],
+        "type": "object",
+        "properties": {
+          "molens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchModelOfMolenData"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KeyValuePairOfStringAndListOfSearchModelOfPlace"
+            }
+          },
+          "molenTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchModelWithCountOfMolenType"
+            }
+          },
+          "hasResults": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UploadDeleteImageReturnType": {
+        "required": ["mapData", "molen"],
+        "type": "object",
+        "properties": {
+          "molen": {
+            "$ref": "#/components/schemas/MolenData"
+          },
+          "mapData": {
+            "$ref": "#/components/schemas/MapData"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "x-typedapi": {
+    "contractVersion": 2,
+    "producer": "TypedApi.Swagger",
+    "producerVersion": "0.3.2"
+  }
+}

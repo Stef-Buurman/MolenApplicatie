@@ -30,14 +30,14 @@ export class MapService {
 
   doesTenBruggeNumberExist(
     tbn: string,
-    mapId: string | undefined = undefined
+    mapId: string | undefined = undefined,
   ): boolean {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
       return (
         this.maps[indexOfMap].Markers.find(
-          (marker) => marker.tenBruggeNumber == tbn
+          (marker) => marker.tenBruggeNumber == tbn,
         ) != null
       );
     }
@@ -47,18 +47,18 @@ export class MapService {
   updateMarker(
     tbn: string,
     molen: MapData,
-    mapId: string | undefined = undefined
+    mapId: string | undefined = undefined,
   ) {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);
     if (indexOfMap != -1) {
       var marker = this.maps[indexOfMap].Markers.find(
-        (marker) => marker.tenBruggeNumber == tbn
+        (marker) => marker.tenBruggeNumber == tbn,
       );
       if (marker) {
         marker.marker.remove();
         this.maps[indexOfMap].Markers = this.maps[indexOfMap].Markers.filter(
-          (mark) => mark.tenBruggeNumber != tbn
+          (mark) => mark.tenBruggeNumber != tbn,
         );
         this.addMarker(molen);
       }
@@ -68,7 +68,7 @@ export class MapService {
   setView(
     coords: L.LatLngExpression,
     zoom: number,
-    mapId: string | undefined = undefined
+    mapId: string | undefined = undefined,
   ): void {
     if (!mapId) mapId = this.SelectedMapId;
     var indexOfMap: number = this.maps.findIndex((map) => map.MapId == mapId);

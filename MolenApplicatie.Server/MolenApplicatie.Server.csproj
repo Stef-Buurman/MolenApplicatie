@@ -22,7 +22,8 @@
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0" />
 		<PackageReference Include="Reinforced.Typings" Version="1.6.3" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
+		<PackageReference Include="TypedApi.Swagger" Version="0.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>

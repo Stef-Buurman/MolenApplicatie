@@ -54,7 +54,7 @@ export class MolenDialogComponent implements OnDestroy {
 
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA)
-    public data: { tenBruggeNr: string; molen?: MolenData }
+    public data: { tenBruggeNr: string; molen?: MolenData },
   ) {}
 
   ngOnInit(): void {
@@ -96,7 +96,10 @@ export class MolenDialogComponent implements OnDestroy {
   private centerMapOnMolen(): void {
     this.mapService.mapReady.then(() => {
       if (this.molen) {
-        this.mapService.setView([this.molen.latitude, this.molen.longitude], 14);
+        this.mapService.setView(
+          [this.molen.latitude, this.molen.longitude],
+          14,
+        );
       }
     });
   }
@@ -163,7 +166,7 @@ export class MolenDialogComponent implements OnDestroy {
     return this.molenService.deleteImage(
       this.molen.ten_Brugge_Nr,
       imgName,
-      api_key
+      api_key,
     );
   }
 
@@ -198,7 +201,7 @@ export class MolenDialogComponent implements OnDestroy {
         this.molenImages = this.getAllMolenImages();
         for (var i = 0; i < this.molenImages.length; i++) {
           var foundImage = previousImages.find(
-            (x) => x.name == this.molenImages[i].name
+            (x) => x.name == this.molenImages[i].name,
           );
           if (foundImage == undefined) {
             this.selectedImage = this.molenImages[i];
@@ -236,7 +239,7 @@ export class MolenDialogComponent implements OnDestroy {
             this.removeImg();
             this.molenImages = this.getAllMolenImages();
             this.selectedImage = this.molenImages.find(
-              (x) => !previousMolenImages.find((y) => y.name == x.name)
+              (x) => !previousMolenImages.find((y) => y.name == x.name),
             );
             this.toasts.showSuccess('Image is saved successfully!');
             this.imagesAdded = true;

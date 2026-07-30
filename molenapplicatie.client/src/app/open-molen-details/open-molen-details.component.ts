@@ -18,7 +18,7 @@ export class OpenMolenDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
-    private molenService: MolenService
+    private molenService: MolenService,
   ) {}
 
   ngOnInit(): void {
@@ -28,11 +28,13 @@ export class OpenMolenDetailsComponent implements OnInit {
       if (this.selectedTenBruggeNumber) {
         this.molenService.selectedMolenTenBruggeNumber =
           this.selectedTenBruggeNumber;
-        this.molenService.getMolenByTBN(this.selectedTenBruggeNumber).subscribe({
-          next: (molen) => {
-            setTimeout(() => this.OpenMolenDialog(molen));
-          },
-        });
+        this.molenService
+          .getMolenByTBN(this.selectedTenBruggeNumber)
+          .subscribe({
+            next: (molen) => {
+              setTimeout(() => this.OpenMolenDialog(molen));
+            },
+          });
       }
     });
   }

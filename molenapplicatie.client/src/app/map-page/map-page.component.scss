@@ -65,7 +65,9 @@ header,
   padding: 14px 16px;
   text-decoration: none;
   font-size: 17px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   cursor: pointer;
   border-radius: 10px;
   margin: 5px;

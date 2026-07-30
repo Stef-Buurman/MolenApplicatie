@@ -33,7 +33,10 @@ export class CustomDropdownComponent implements AfterViewInit, OnDestroy {
   isOpen = false;
   private backdropSub!: Subscription;
 
-  constructor(private overlay: Overlay, private vcr: ViewContainerRef) {}
+  constructor(
+    private overlay: Overlay,
+    private vcr: ViewContainerRef,
+  ) {}
 
   ngAfterViewInit(): void {}
 
@@ -60,7 +63,7 @@ export class CustomDropdownComponent implements AfterViewInit, OnDestroy {
 
       const dropdownPortal = new TemplatePortal(
         this.dropdownTemplate,
-        this.vcr
+        this.vcr,
       );
       this.overlayRef.attach(dropdownPortal);
 

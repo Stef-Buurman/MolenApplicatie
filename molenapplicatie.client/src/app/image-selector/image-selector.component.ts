@@ -33,7 +33,7 @@ export class ImageSelectorComponent implements OnInit {
   @Input() tbNr: string = '';
   @Input() deleteFunction!: (
     imgName: string,
-    api_key: string
+    api_key: string,
   ) => Observable<any>;
   private destroy$ = new Subject<void>();
 
@@ -41,27 +41,27 @@ export class ImageSelectorComponent implements OnInit {
     private dialog: MatDialog,
     private toast: Toasts,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     if (this.images.length > 0) this.selectedImageChange.emit(this.images[0]);
 
     const initialParams = of(
-      this.getDeepestChild(this.route).snapshot.paramMap
+      this.getDeepestChild(this.route).snapshot.paramMap,
     );
 
     const paramsOnNavigation = this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
       map(() => this.getDeepestChild(this.route)),
-      switchMap((route) => route.paramMap)
+      switchMap((route) => route.paramMap),
     );
 
     merge(initialParams, paramsOnNavigation)
       .pipe(
         map((paramMap) => paramMap.get('imageName')),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
       )
       .subscribe((imageName) => {
         if (
@@ -158,7 +158,7 @@ export class ImageSelectorComponent implements OnInit {
             },
             complete: () => {
               this.images = this.images.filter(
-                (x) => x.name != selectedImage.name
+                (x) => x.name != selectedImage.name,
               );
               this.imagesChange.emit(this.images);
               this.selectedImage = this.images[0];
@@ -172,11 +172,11 @@ export class ImageSelectorComponent implements OnInit {
           !result.api_key
         ) {
           this.toast.showWarning(
-            'Er is geen api key ingevuld, de foto is niet verwijderd!'
+            'Er is geen api key ingevuld, de foto is niet verwijderd!',
           );
         } else if (result && result.status == DialogReturnStatus.Error) {
           this.toast.showError(
-            'Er is iets fout gegaan met het verwijderen van de foto!'
+            'Er is iets fout gegaan met het verwijderen van de foto!',
           );
         }
       });

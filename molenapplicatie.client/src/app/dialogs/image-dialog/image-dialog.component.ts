@@ -25,7 +25,7 @@ export class ImageDialogComponent {
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog,
     private toast: Toasts,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   get image(): MolenImage {

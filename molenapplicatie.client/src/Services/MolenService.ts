@@ -1,6 +1,14 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, map, Observable, of, tap, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  map,
+  Observable,
+  of,
+  tap,
+  throwError,
+} from 'rxjs';
 import { SavedMolens } from '../Class/SavedMolens';
 import { MolenData } from '../Interfaces/Models/MolenData';
 import {
@@ -27,7 +35,9 @@ export class MolenService {
   public remainderMolens?: SavedMolens;
   private allMolenProvincies: string[] = [];
   private _molensWithImageAmount: number | undefined;
-  public molensWithImageAmount$ = new BehaviorSubject<number | undefined>(undefined);
+  public molensWithImageAmount$ = new BehaviorSubject<number | undefined>(
+    undefined,
+  );
 
   private set molensWithImageAmount(value: number | undefined) {
     this._molensWithImageAmount = value;
@@ -39,7 +49,10 @@ export class MolenService {
   }
 
   public recentAddedImages?: RecentAddedImages[];
-  constructor(private http: HttpClient, private mapService: MapService) {}
+  constructor(
+    private http: HttpClient,
+    private mapService: MapService,
+  ) {}
 
   public getMolenFromBackend(ten_Brugge_Nr: string): Observable<MolenData> {
     return this.http.get<MolenData>('/api/molen/' + ten_Brugge_Nr);
@@ -51,7 +64,7 @@ export class MolenService {
 
   public getMolen(ten_Brugge_Nr: string): Observable<MolenData> {
     var molen = this.allMolens?.Molens.find(
-      (molen) => molen.ten_Brugge_Nr == ten_Brugge_Nr
+      (molen) => molen.ten_Brugge_Nr == ten_Brugge_Nr,
     );
     if (molen == undefined) {
       return this.getMolenFromBackend(ten_Brugge_Nr);
@@ -66,7 +79,7 @@ export class MolenService {
       return this.http.get<string[]>('/api/molen/provincies').pipe(
         tap((activeMolens: string[]) => {
           this.allMolenProvincies = activeMolens;
-        })
+        }),
       );
     } else {
       return of(this.allMolenProvincies);
@@ -76,16 +89,17 @@ export class MolenService {
   public getMapData(filters: FilterFormValues[]): Observable<MapData[]> {
     return this.http
       .get<MolensResponseType<MapData>>(
-        '/api/molen/mapdata' + BuildFilterQuery(filters)
+        '/api/molen/mapdata' + BuildFilterQuery(filters),
       )
       .pipe(
         tap((molensResponseType) => {
           setTimeout(() => {
             this.recentAddedImages = molensResponseType.recentAddedImages;
-            this.molensWithImageAmount = molensResponseType.totalMolensWithImage;
+            this.molensWithImageAmount =
+              molensResponseType.totalMolensWithImage;
           });
         }),
-        map((molensResponseType) => molensResponseType.molens)
+        map((molensResponseType) => molensResponseType.molens),
       );
   }
 
@@ -97,7 +111,7 @@ export class MolenService {
   public deleteImage(
     tbNr: string,
     imageName: string,
-    APIKey: string
+    APIKey: string,
   ): Observable<any> {
     const headers = new HttpHeaders({
       Authorization: APIKey,
@@ -108,7 +122,7 @@ export class MolenService {
         '/api/molen/molen_image/' + tbNr + '/' + imageName,
         {
           headers,
-        }
+        },
       )
       .pipe(
         tap((updatedMolen: UploadDeleteImageReturnType) => {
@@ -118,7 +132,7 @@ export class MolenService {
         catchError((error) => {
           return throwError(error);
         }),
-        map((result) => result.molen)
+        map((result) => result.molen),
       );
   }
 
@@ -136,20 +150,20 @@ export class MolenService {
         image,
         {
           headers,
-        }
+        },
       )
       .pipe(
         tap((updatedMolen: UploadDeleteImageReturnType) => {
           this.updateMolen(updatedMolen.molen);
           this.mapService.updateMarker(
             updatedMolen.molen.ten_Brugge_Nr,
-            updatedMolen.mapData
+            updatedMolen.mapData,
           );
         }),
         catchError((error) => {
           return throwError(error);
         }),
-        map((result) => result.molen)
+        map((result) => result.molen),
       );
   }
 
@@ -157,7 +171,7 @@ export class MolenService {
     if (this.allMolens) {
       var indexOfMolen: number =
         this.allMolens.Molens.findIndex(
-          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr
+          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr,
         ) ?? -1;
       if (indexOfMolen != -1) {
         var prevMolen = this.allMolens.Molens[indexOfMolen];
@@ -165,14 +179,14 @@ export class MolenService {
         this.markerUpdate(
           updatedMolen,
           prevMolen.hasImage,
-          updatedMolen.hasImage
+          updatedMolen.hasImage,
         );
       }
     }
     if (this.activeMolens) {
       var indexOfMolen: number =
         this.activeMolens.Molens.findIndex(
-          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr
+          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr,
         ) ?? -1;
       if (indexOfMolen != -1) {
         var prevMolen = this.activeMolens.Molens[indexOfMolen];
@@ -180,14 +194,14 @@ export class MolenService {
         this.markerUpdate(
           updatedMolen,
           prevMolen.hasImage,
-          updatedMolen.hasImage
+          updatedMolen.hasImage,
         );
       }
     }
     if (this.existingMolens) {
       var indexOfMolen: number =
         this.existingMolens.Molens.findIndex(
-          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr
+          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr,
         ) ?? -1;
       if (indexOfMolen != -1) {
         var prevMolen = this.existingMolens.Molens[indexOfMolen];
@@ -195,7 +209,7 @@ export class MolenService {
         this.markerUpdate(
           updatedMolen,
           prevMolen.hasImage,
-          updatedMolen.hasImage
+          updatedMolen.hasImage,
         );
       }
     }
@@ -203,7 +217,7 @@ export class MolenService {
       for (const provincie in this.disappearedMolens) {
         var indexOfMolen: number =
           this.disappearedMolens[provincie].Molens.findIndex(
-            (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr
+            (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr,
           ) ?? -1;
         if (indexOfMolen != -1) {
           var prevMolen =
@@ -212,7 +226,7 @@ export class MolenService {
           this.markerUpdate(
             updatedMolen,
             prevMolen.hasImage,
-            updatedMolen.hasImage
+            updatedMolen.hasImage,
           );
         }
       }
@@ -220,7 +234,7 @@ export class MolenService {
     if (this.remainderMolens) {
       var indexOfMolen: number =
         this.remainderMolens.Molens.findIndex(
-          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr
+          (molen) => molen.ten_Brugge_Nr == updatedMolen.ten_Brugge_Nr,
         ) ?? -1;
       if (indexOfMolen != -1) {
         var prevMolen = this.remainderMolens.Molens[indexOfMolen];
@@ -228,7 +242,7 @@ export class MolenService {
         this.markerUpdate(
           updatedMolen,
           prevMolen.hasImage,
-          updatedMolen.hasImage
+          updatedMolen.hasImage,
         );
       }
     }

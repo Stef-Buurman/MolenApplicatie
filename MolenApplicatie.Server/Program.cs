@@ -5,6 +5,7 @@ using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 using MolenApplicatie.Server.Services.Database;
+using TypedApi.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +19,8 @@ if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
     builder.Environment.WebRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
 }
 
-builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.AddTypedApiSwagger();
+builder.Services.AddControllers().AddTypedApiJsonOptions();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();

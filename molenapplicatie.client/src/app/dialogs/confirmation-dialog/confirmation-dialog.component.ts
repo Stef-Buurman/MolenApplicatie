@@ -20,7 +20,7 @@ export class ConfirmationDialogComponent implements OnDestroy {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: ConfirmationDialogData,
     private dialogRef: MatDialogRef<ConfirmationDialogComponent>,
-    private toasts: Toasts
+    private toasts: Toasts,
   ) {}
 
   onClose(isSure: boolean | undefined = undefined): void {

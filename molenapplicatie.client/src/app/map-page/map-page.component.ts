@@ -40,7 +40,7 @@ export class MapPageComponent implements OnInit {
     private molenService: MolenService,
     private mapService: MapService,
     private sharedData: SharedDataService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
@@ -48,13 +48,11 @@ export class MapPageComponent implements OnInit {
     this.getMolens().subscribe();
     this.route.url.subscribe(() => {
       const firstChild = this.route.firstChild;
-      if (
-        !(
-          firstChild &&
-          firstChild.snapshot &&
-          firstChild.snapshot.paramMap.get('TenBruggeNumber')
-        )
-      ) {
+      if (!(
+        firstChild &&
+        firstChild.snapshot &&
+        firstChild.snapshot.paramMap.get('TenBruggeNumber')
+      )) {
         navigator.geolocation.getCurrentPosition((position) => {
           const latitude = position.coords.latitude;
           const longitude = position.coords.longitude;
@@ -90,7 +88,7 @@ export class MapPageComponent implements OnInit {
             this.isPopupVisible = true;
           }
         },
-      })
+      }),
     );
   }
 }

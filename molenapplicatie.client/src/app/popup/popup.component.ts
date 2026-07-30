@@ -18,12 +18,15 @@ export class PopupComponent implements OnInit {
   @Output() visibleChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() onMolenChange?: (
     selectedMolen: MolenData,
-    navigate?: boolean
+    navigate?: boolean,
   ) => Observable<MapData[]>;
 
   currentIndex: number = 0;
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   dismiss() {
     this.visible = false;

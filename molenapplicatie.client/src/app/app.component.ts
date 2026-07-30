@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
     private toasts: Toasts,
     private vcr: ViewContainerRef,
     private errors: ErrorService,
-    private sharedData: SharedDataService
+    private sharedData: SharedDataService,
   ) {}
 
   ngOnInit() {

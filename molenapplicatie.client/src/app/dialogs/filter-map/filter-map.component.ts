@@ -25,7 +25,7 @@ export class FilterMapComponent implements OnInit {
     private dialogRef: MatDialogRef<FilterMapComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { filters: FilterFormValues[] },
     private toasts: Toasts,
-    private molenService: MolenService
+    private molenService: MolenService,
   ) {}
 
   ngOnInit() {
@@ -111,7 +111,7 @@ export class FilterMapComponent implements OnInit {
         (this.molenFilters.types.find(
           (t) =>
             t.name.toLowerCase() ===
-            this.selectedFilter.type.toLocaleLowerCase()
+            this.selectedFilter.type.toLocaleLowerCase(),
         )?.count ?? 0) > 1100
       ) {
         this.filters['MolenState'] = {
@@ -133,7 +133,7 @@ export class FilterMapComponent implements OnInit {
         (this.molenFilters.types.find(
           (t) =>
             t.name.toLowerCase() ===
-            this.selectedFilter.type.toLocaleLowerCase()
+            this.selectedFilter.type.toLocaleLowerCase(),
         )?.count ?? 0) > 1100) &&
       (this.selectedFilter.toestand.toLocaleLowerCase() === 'verdwenen' ||
         (typeof this.filters['MolenState']?.value === 'string' &&

@@ -40,7 +40,7 @@ export class UploadImageDialogComponent implements AfterViewInit {
     private cdr: ChangeDetectorRef,
     private molenService: MolenService,
     private dialogRef: MatDialogRef<UploadImageDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { molen: MolenData }
+    @Inject(MAT_DIALOG_DATA) public data: { molen: MolenData },
   ) {}
 
   ngAfterViewInit(): void {

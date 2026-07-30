@@ -1,7 +1,7 @@
 export function GetMolenIcon(
   toestand?: string,
   types?: string[],
-  hasImage: boolean = false
+  hasImage: boolean = false,
 ): string {
   var icon = 'windmolen_verdwenen';
 
@@ -31,7 +31,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
     icon = 'torenmolen';
   } else if (
     types?.some(
-      (m) => m.toLowerCase() === 'wipmolen' || m.toLowerCase() === 'spinnenkop'
+      (m) => m.toLowerCase() === 'wipmolen' || m.toLowerCase() === 'spinnenkop',
     )
   ) {
     icon = 'wipmolen';
@@ -48,7 +48,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
       (m) =>
         m.toLowerCase() === 'watermolen' ||
         m.toLowerCase() === 'schipmolen' ||
-        m.toLowerCase() === 'watervluchtmolen'
+        m.toLowerCase() === 'watervluchtmolen',
     )
   ) {
     icon = 'watermolen';
@@ -57,7 +57,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
       (m) =>
         m.toLowerCase() === 'rosmolen' ||
         m.toLowerCase() === 'horizontale tredmolen' ||
-        m.toLowerCase() === 'geupel'
+        m.toLowerCase() === 'geupel',
     )
   ) {
     icon = 'rosmolen';
@@ -67,7 +67,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
         (m.toLowerCase().includes('windmolen') &&
           !m.toLowerCase().includes('onbekend')) ||
         m.toLowerCase().includes('windmotor') ||
-        m.toLowerCase() === 'getijdenmolen'
+        m.toLowerCase() === 'getijdenmolen',
     )
   ) {
     icon = 'windmolen';
@@ -77,7 +77,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
         m.toLowerCase() === 'verttred' ||
         m.toLowerCase() === 'verticale tredmolen' ||
         m.toLowerCase() === 'kraan' ||
-        m.toLowerCase() === 'karnmolenhuisje'
+        m.toLowerCase() === 'karnmolenhuisje',
     )
   ) {
     icon = 'verttred';

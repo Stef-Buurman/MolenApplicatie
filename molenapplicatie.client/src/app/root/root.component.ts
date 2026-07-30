@@ -49,7 +49,7 @@ export class RootComponent {
   }
 
   @Input() onFilterChange!: (
-    filters: FilterFormValues[]
+    filters: FilterFormValues[],
   ) => Observable<MapData[]>;
 
   constructor(
@@ -60,7 +60,7 @@ export class RootComponent {
     private dialog: MatDialog,
     private errors: ErrorService,
     private molenService: MolenService,
-    private mapService: MapService
+    private mapService: MapService,
   ) {
     this.molensWithImageAmount$ = this.molenService.molensWithImageAmount$;
   }
@@ -72,13 +72,13 @@ export class RootComponent {
     if (selectedPlace.population == 0) zoom = 15;
     this.mapService.setView(
       [selectedPlace.latitude, selectedPlace.longitude],
-      zoom
+      zoom,
     );
   }
 
   onMolenChange(
     selectedMolen: MolenData,
-    navigate: boolean = true
+    navigate: boolean = true,
   ): Observable<MapData[]> {
     if (!selectedMolen) return of([]);
     if (navigate) {
@@ -99,18 +99,18 @@ export class RootComponent {
         newMolenState = 'Werkend';
         if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
           this.currentFilters = this.currentFilters.filter(
-            (f) => f.filterName !== 'MolenType'
+            (f) => f.filterName !== 'MolenType',
           );
         }
         if (this.currentFilters.find((f) => f.filterName === 'Provincie')) {
           this.currentFilters = this.currentFilters.filter(
-            (f) => f.filterName !== 'Provincie'
+            (f) => f.filterName !== 'Provincie',
           );
         }
       }
       if (this.currentFilters.find((f) => f.filterName === 'MolenState')) {
         this.currentFilters = this.currentFilters.filter(
-          (f) => f.filterName !== 'MolenState'
+          (f) => f.filterName !== 'MolenState',
         );
         this.currentFilters.push({
           filterName: 'MolenState',
@@ -138,7 +138,7 @@ export class RootComponent {
   onTypeChange(selectedType: SearchModelWithCount<MolenType>) {
     if (this.currentFilters.find((f) => f.filterName === 'MolenType')) {
       this.currentFilters = this.currentFilters.filter(
-        (f) => f.filterName !== 'MolenType'
+        (f) => f.filterName !== 'MolenType',
       );
       this.currentFilters.push({
         filterName: 'MolenType',
@@ -204,7 +204,7 @@ export class RootComponent {
             this.currentFilters.find((f) => f.filterName === 'MolenState') ==
               null ||
             (typeof this.currentFilters.find(
-              (f) => f.filterName === 'MolenState'
+              (f) => f.filterName === 'MolenState',
             )?.value === 'string' &&
               (
                 this.currentFilters.find((f) => f.filterName === 'MolenState')
@@ -212,7 +212,7 @@ export class RootComponent {
               ).toLowerCase() !== 'verdwenen')
           ) {
             this.currentFilters = this.currentFilters.filter(
-              (f) => f.filterName !== 'MolenState'
+              (f) => f.filterName !== 'MolenState',
             );
             this.currentFilters.push({
               filterName: 'MolenState',
@@ -226,7 +226,7 @@ export class RootComponent {
             null
           ) {
             this.currentFilters = this.currentFilters.filter(
-              (f) => f.filterName !== 'Provincie'
+              (f) => f.filterName !== 'Provincie',
             );
           }
           this.changeFilters();
@@ -265,7 +265,7 @@ export class RootComponent {
           var isDone: boolean = false;
 
           this.toasts.showInfo(
-            'Molens worden geupdate... (Dit kan even duren)'
+            'Molens worden geupdate... (Dit kan even duren)',
           );
 
           this.http
@@ -273,14 +273,14 @@ export class RootComponent {
             .subscribe({
               next: (result) => {
                 this.toasts.showSuccess(
-                  'Er zijn ' + result.length + ' molens geupdate.'
+                  'Er zijn ' + result.length + ' molens geupdate.',
                 );
               },
               error: (error) => {
                 isDone = true;
                 if (error.status == 401) {
                   this.toasts.showError(
-                    'Je hebt een verkeerde api_key ingevuld!'
+                    'Je hebt een verkeerde api_key ingevuld!',
                   );
                 } else if (error) {
                   this.toasts.showError(error.error);
@@ -305,11 +305,11 @@ export class RootComponent {
           !result.api_key
         ) {
           this.toasts.showWarning(
-            'Er is geen api key ingevuld, er is niets gebeurt!'
+            'Er is geen api key ingevuld, er is niets gebeurt!',
           );
         } else if (result.status == DialogReturnStatus.Error) {
           this.toasts.showError(
-            'Er is iets fout gegaan met het updaten van de molens!'
+            'Er is iets fout gegaan met het updaten van de molens!',
           );
         }
       },
@@ -345,7 +345,7 @@ export class RootComponent {
           var isDone: boolean = false;
 
           this.toasts.showInfo(
-            'Nieuwe molens worden gezocht... (Dit kan even duren)'
+            'Nieuwe molens worden gezocht... (Dit kan even duren)',
           );
 
           this.http
@@ -356,15 +356,15 @@ export class RootComponent {
                   this.toasts.showInfo('Er zijn geen nieuwe molens gevonden!');
                 } else if (result.length == 1) {
                   this.toasts.showSuccess(
-                    'Er is ' + result.length + ' nieuwe molen gevonden!'
+                    'Er is ' + result.length + ' nieuwe molen gevonden!',
                   );
                   this.mapService.setView(
                     [result[0].latitude, result[0].longitude],
-                    13
+                    13,
                   );
                 } else {
                   this.toasts.showSuccess(
-                    'Er zijn ' + result.length + ' nieuwe molens gevonden!'
+                    'Er zijn ' + result.length + ' nieuwe molens gevonden!',
                   );
                 }
               },
@@ -372,7 +372,7 @@ export class RootComponent {
                 isDone = true;
                 if (error.status == 401) {
                   this.toasts.showError(
-                    'Je hebt een verkeerde api_key ingevuld!'
+                    'Je hebt een verkeerde api_key ingevuld!',
                   );
                 } else if (error) {
                   this.toasts.showError(error.error);
@@ -397,11 +397,11 @@ export class RootComponent {
           !result.api_key
         ) {
           this.toasts.showWarning(
-            'Er is geen api key ingevuld, er is niets gebeurt!'
+            'Er is geen api key ingevuld, er is niets gebeurt!',
           );
         } else if (result.status == DialogReturnStatus.Error) {
           this.toasts.showError(
-            'Er is iets fout gegaan met het updaten van de molens!'
+            'Er is iets fout gegaan met het updaten van de molens!',
           );
         }
       },

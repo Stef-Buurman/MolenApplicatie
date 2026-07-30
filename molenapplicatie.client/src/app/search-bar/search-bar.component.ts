@@ -62,7 +62,7 @@ export class SearchBarComponent {
   constructor(
     private http: HttpClient,
     private toastService: Toasts,
-    private eRef: ElementRef
+    private eRef: ElementRef,
   ) {}
 
   searchSubject = new Subject<string>();
@@ -80,9 +80,9 @@ export class SearchBarComponent {
           if (term.length <= 2) return [];
           const encodedQuery = encodeURIComponent(term);
           return this.http.get<SearchResultsModel>(
-            `/api/search?query=${encodedQuery}`
+            `/api/search?query=${encodedQuery}`,
           );
-        })
+        }),
       )
       .subscribe({
         next: (result: any) => {
@@ -93,7 +93,7 @@ export class SearchBarComponent {
               (item: { reference: string }) => ({
                 ...item,
                 reference: this.highlightReference(item.reference, term),
-              })
+              }),
             );
           }
 
@@ -105,7 +105,7 @@ export class SearchBarComponent {
                   ...item,
                   reference: this.highlightReference(item.reference, term),
                 })),
-              })
+              }),
             );
           }
 
@@ -114,7 +114,7 @@ export class SearchBarComponent {
               (item: { reference: string }) => ({
                 ...item,
                 reference: this.highlightReference(item.reference, term),
-              })
+              }),
             );
           }
 
@@ -154,7 +154,7 @@ export class SearchBarComponent {
           .map((type) =>
             type.molenType && type.molenType.name
               ? type.molenType.name.toLocaleLowerCase()
-              : ''
+              : '',
           )
           .filter((type) => type !== '')
       : [];
