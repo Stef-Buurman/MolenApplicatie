@@ -23,7 +23,9 @@ import { SharedDataService } from '../../Services/SharedDataService';
 import { MolenService } from '../../Services/MolenService';
 import { FilterFormValues } from '../../Interfaces/Filters/Filter';
 import { Toasts } from '../../Utils/Toasts';
+import { CacheManager } from '../../Utils/CacheManager';
 import { GetMolenIcon } from '../../Utils/GetMolenIcon';
+import { MolenCacheKeys } from '../../Utils/MolenCacheKeys';
 import { molenGetMapItems } from '../../api/methods/Molen.api';
 
 interface MolenIconProperties {
@@ -360,12 +362,27 @@ export class MolenClusteredMapComponent
     }
 
     try {
-      const result = await molenGetMapItems(query, {
-        params: {
-          signal: abortController.signal,
-          timeoutMs: this.initialRequestTimeoutMs,
+      const mapItems = await CacheManager.getOrSet(
+        MolenCacheKeys.mapItems(requestKey),
+        async () => {
+          const result = await molenGetMapItems(query, {
+            params: {
+              signal: abortController.signal,
+              timeoutMs: this.initialRequestTimeoutMs,
+            },
+          });
+
+          if (!result.ok) {
+            throw (
+              result.error ??
+              new Error('De server heeft geen geldige kaartitems teruggegeven.')
+            );
+          }
+
+          return result.response;
         },
-      });
+        2,
+      );
 
       if (
         abortController.signal.aborted ||
@@ -374,14 +391,7 @@ export class MolenClusteredMapComponent
         return;
       }
 
-      if (!result.ok) {
-        throw (
-          result.error ??
-          new Error('De server heeft geen geldige kaartitems teruggegeven.')
-        );
-      }
-
-      this.renderMapItems(result.response);
+      this.renderMapItems(mapItems);
 
       this.lastLoadedRequestKey = requestKey;
       this.hasLoadedOnce = true;

@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, Subject, tap } from 'rxjs';
+import {
+  BehaviorSubject,
+  defer,
+  firstValueFrom,
+  from,
+  map,
+  Observable,
+  Subject,
+  tap,
+} from 'rxjs';
 import { MolenData } from '../Interfaces/Models/MolenData';
 import { MolenFilterList } from '../Interfaces/Filters/MolenFilterList';
 import { RecentAddedImages } from '../Interfaces/MolensResponseType';
@@ -12,6 +21,8 @@ import {
   molenUpdateOldestMolens,
   molenUploadImage,
 } from '../api/methods/Molen.api';
+import { CacheManager } from '../Utils/CacheManager';
+import { MolenCacheKeys } from '../Utils/MolenCacheKeys';
 import { fromTypedApi } from '../Utils/TypedApiObservable';
 
 export interface MolenMapSummary {
@@ -25,6 +36,10 @@ export interface MolenMapSummary {
 export class MolenService {
   public selectedMolen?: MolenData;
 
+  private readonly mapSummaryCacheTtlMinutes = 2;
+  private readonly filterCacheTtlMinutes = 15;
+  private readonly molenDetailsCacheTtlMinutes = 5;
+
   private readonly mapSummarySubject = new BehaviorSubject<MolenMapSummary>({
     totalMolensWithImage: 0,
     recentAddedImages: [],
@@ -35,8 +50,20 @@ export class MolenService {
   public readonly mapRefresh$ = this.mapRefreshSubject.asObservable();
 
   public getMolenById(id: string): Observable<MolenData> {
-    return fromTypedApi(molenGetMolenDataById({ id })).pipe(
-      map((molen) => molen as MolenData),
+    return defer(() =>
+      from(
+        CacheManager.getOrSet(
+          MolenCacheKeys.details(id),
+          () =>
+            firstValueFrom(
+              fromTypedApi(molenGetMolenDataById({ id })).pipe(
+                map((molen) => molen as MolenData),
+              ),
+            ),
+          this.molenDetailsCacheTtlMinutes,
+        ),
+      ),
+    ).pipe(
       tap((molen) => {
         this.selectedMolen = molen;
       }),
@@ -44,14 +71,37 @@ export class MolenService {
   }
 
   public getAllMolenFilters(): Observable<MolenFilterList> {
-    return fromTypedApi(molenGetMolenFilters()).pipe(
-      map((filters) => filters as MolenFilterList),
+    return defer(() =>
+      from(
+        CacheManager.getOrSet(
+          MolenCacheKeys.filters,
+          () =>
+            firstValueFrom(
+              fromTypedApi(molenGetMolenFilters()).pipe(
+                map((filters) => filters as MolenFilterList),
+              ),
+            ),
+          this.filterCacheTtlMinutes,
+        ),
+      ),
     );
   }
 
   public getMapSummary(): Observable<MolenMapSummary> {
-    return fromTypedApi(molenGetMapSummary()).pipe(
-      map((summary) => summary as MolenMapSummary),
+    return defer(() =>
+      from(
+        CacheManager.getOrSet(
+          MolenCacheKeys.mapSummary,
+          () =>
+            firstValueFrom(
+              fromTypedApi(molenGetMapSummary()).pipe(
+                map((summary) => summary as MolenMapSummary),
+              ),
+            ),
+          this.mapSummaryCacheTtlMinutes,
+        ),
+      ),
+    ).pipe(
       tap((summary) => {
         this.mapSummarySubject.next(summary);
       }),
@@ -144,6 +194,7 @@ export class MolenService {
   }
 
   private onMolenDataChanged(): void {
+    CacheManager.clearByPrefix(MolenCacheKeys.prefix);
     this.mapRefreshSubject.next();
     this.refreshMapSummary();
   }
