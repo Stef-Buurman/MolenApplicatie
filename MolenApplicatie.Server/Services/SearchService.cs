@@ -91,6 +91,7 @@ namespace MolenApplicatie.Server.Services
             .Where(m => molenIds.Contains(m.Id))
             .Include(m => m.MolenTypeAssociations)
             .ThenInclude(ma => ma.MolenType)
+            .Include(m => m.AddedImages)
             .ToDictionaryAsync(m => m.Id);
 
             var results = references
@@ -99,7 +100,7 @@ namespace MolenApplicatie.Server.Services
             .Select(r => new SearchModel<MolenData>
             {
                 Reference = r.Reference,
-                Data = molenDataDict[r.Id]
+                Data = MolenService.GetMolenData(molenDataDict[r.Id])
             })
             .ToList();
 

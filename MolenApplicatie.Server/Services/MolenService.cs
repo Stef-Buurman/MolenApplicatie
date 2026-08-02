@@ -30,7 +30,7 @@ namespace MolenApplicatie.Server.Services
 
         public static MolenData GetMolenData(MolenData molen)
         {
-            molen.HasImage = (molen.Images?.Count ?? 0) > 0 || (molen.AddedImages?.Count ?? 0) > 0;
+            molen.HasImage = (molen.AddedImages?.Count ?? 0) > 0;
             return molen;
         }
 
@@ -106,7 +106,7 @@ namespace MolenApplicatie.Server.Services
                 Reference = molen.Ten_Brugge_Nr,
                 Latitude = molen.Latitude,
                 Longitude = molen.Longitude,
-                HasImage = molen.Images.Any() || molen.AddedImages.Any(),
+                HasImage = molen.AddedImages.Any(),
                 Toestand = molen.Toestand,
                 Type = "Molens",
                 Types = molen.MolenTypeAssociations.Select(association => association.MolenType.Name).ToList(),
@@ -218,7 +218,11 @@ namespace MolenApplicatie.Server.Services
         public List<MolenData> GetAllExistingMolens()
         {
             IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
-            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand != MolenToestand.Verdwenen).ToList();
+            List<MolenData> GefilterdeMolenData = alleMolenData
+                .Where(molen => molen.Toestand != null && molen.Toestand != MolenToestand.Verdwenen)
+                .AsEnumerable()
+                .Select(GetMolenData)
+                .ToList();
             return GefilterdeMolenData;
         }
 
@@ -233,13 +237,20 @@ namespace MolenApplicatie.Server.Services
                 .Include(m => m.MolenTypeAssociations)
                     .ThenInclude(a => a.MolenType)
                 .Include(m => m.MolenMakers)
-                .Include(m => m.DisappearedYearInfos).ToList();
+                .Include(m => m.DisappearedYearInfos)
+                .AsEnumerable()
+                .Select(GetMolenData)
+                .ToList();
         }
 
         public List<MolenData> GetAllRemainderMolens()
         {
             IQueryable<MolenData> alleMolenData = GetAllMolenDataCorrectTypes();
-            List<MolenData> GefilterdeMolenData = alleMolenData.Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Restant).ToList();
+            List<MolenData> GefilterdeMolenData = alleMolenData
+                .Where(molen => molen.Toestand != null && molen.Toestand == MolenToestand.Restant)
+                .AsEnumerable()
+                .Select(GetMolenData)
+                .ToList();
             return GefilterdeMolenData;
         }
 
@@ -365,7 +376,7 @@ namespace MolenApplicatie.Server.Services
                 Reference = string.IsNullOrWhiteSpace(molen.Ten_Brugge_Nr) ? molen.Id.ToString() : molen.Ten_Brugge_Nr,
                 Latitude = molen.Latitude,
                 Longitude = molen.Longitude,
-                HasImage = molen.Images.Count > 0 || molen.AddedImages.Count > 0,
+                HasImage = molen.AddedImages.Count > 0,
                 Toestand = molen.Toestand,
                 Type = "Molens",
                 Types = molen.MolenTypeAssociations.Select(mt => mt.MolenType.Name).ToList(),
@@ -461,11 +472,11 @@ namespace MolenApplicatie.Server.Services
             var molenImageToDelete = molen.Images.Find(x => x.Name == imgName);
             var molenAddedImageToDelete = molen.AddedImages.Find(x => x.Name == imgName);
             if (molenImageToDelete == null && molenAddedImageToDelete == null) return (false, "Images not found");
-            if (molenImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenImageToDelete.FilePath)))
+            if (molenImageToDelete != null)
             {
                 await _dBMolenImageService.Delete(molenImageToDelete);
             }
-            else if (molenAddedImageToDelete != null && File.Exists(CreateCleanPath.CreatePathToWWWROOT(molenAddedImageToDelete.FilePath)))
+            else if (molenAddedImageToDelete != null)
             {
                 await _dBMolenAddedImageService.Delete(molenAddedImageToDelete);
             }
@@ -480,6 +491,12 @@ namespace MolenApplicatie.Server.Services
         private async Task<int> GetCountOfRemainderMolensWithImage() => await _dbContext.MolenData
             .Where(m => m.Toestand == MolenToestand.Restant && m.AddedImages.Any())
             .CountAsync();
+
+        private async Task<int> GetCountOfMolensWithAddedImage(CancellationToken token = default) => await _dbContext.AddedImages
+            .AsNoTracking()
+            .Select(image => image.MolenDataId)
+            .Distinct()
+            .CountAsync(token);
 
         private async Task<int> GetCountOfActiveMolens() => await _dbContext.MolenData
             .Where(m => m.Toestand == MolenToestand.Werkend)
@@ -516,7 +533,7 @@ namespace MolenApplicatie.Server.Services
         {
             int activeMolensWithImage = await GetCountOfActiveMolensWithImages();
             int remainderMolensWithImage = await GetCountOfRemainderMolensWithImage();
-            int totalMolensWithImage = activeMolensWithImage + remainderMolensWithImage;
+            int totalMolensWithImage = await GetCountOfMolensWithAddedImage();
 
             int totalActiveMolens = await GetCountOfActiveMolens();
             int totalRemainderMolens = await GetCountOfRemainderMolens();
@@ -567,9 +584,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenMapSummaryResponse> GetMapSummaryAsync(CancellationToken token)
         {
-            var totalMolensWithImage = await _dbContext.MolenData
-                .AsNoTracking()
-                .CountAsync(molen => molen.AddedImages.Any(), token);
+            var totalMolensWithImage = await GetCountOfMolensWithAddedImage(token);
 
             var now = DateTime.Now;
             var recentImageStart = now.AddDays(-7);
@@ -653,7 +668,7 @@ namespace MolenApplicatie.Server.Services
                     molen => molen.MercatorY,
                     molen => molen.Toestand,
                     molen => molen.MolenTypeAssociations.Select(association => association.MolenType.Name),
-                    molen => molen.Images.Any() || molen.AddedImages.Any()),
+                    molen => molen.AddedImages.Any()),
                 (filteredQuery, pointIds) => MapQueryBuilder.CreateIndividualPointQuery(
                     filteredQuery.Where(molen => pointIds.Contains(molen.Id)),
                     molen => molen.Id,
@@ -662,7 +677,7 @@ namespace MolenApplicatie.Server.Services
                     molen => molen.Longitude,
                     molen => molen.Toestand,
                     molen => molen.MolenTypeAssociations.Select(association => association.MolenType.Name),
-                    molen => molen.Images.Any() || molen.AddedImages.Any()),
+                    molen => molen.AddedImages.Any()),
                 new MapViewport(filter.West, filter.South, filter.East, filter.North, filter.Zoom),
                 point => $"/map/{point.Id}",
                 point => point.FriendlyView,
@@ -698,8 +713,8 @@ namespace MolenApplicatie.Server.Services
             if (filter.HasImage.HasValue)
             {
                 query = filter.HasImage.Value
-                    ? query.Where(molen => molen.Images.Any() || molen.AddedImages.Any())
-                    : query.Where(molen => !molen.Images.Any() && !molen.AddedImages.Any());
+                    ? query.Where(molen => molen.AddedImages.Any())
+                    : query.Where(molen => !molen.AddedImages.Any());
             }
 
             return query;
