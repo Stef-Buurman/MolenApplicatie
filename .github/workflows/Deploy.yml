@@ -28,32 +28,5 @@ jobs:
       - name: Set up virtual environment
         run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH
 
-      - name: Set api key and database connection
-        run: |
-          ssh "$SSH_USER@$SSH_IP" "cat > $APP_SETTINGS_PATH << EOF
-          {
-            \"Logging\": {
-              \"LogLevel\": {
-                \"Default\": \"Information\",
-                \"Microsoft.AspNetCore\": \"Warning\"
-              }
-            },
-            \"AllowedHosts\": \"*\",
-            \"Kestrel\": {
-              \"Endpoints\": {
-                \"Http\": {
-                  \"Url\": \"http://*:5000\"
-                }
-              }
-            },
-            \"FileUploadFilter\": {
-              \"Authorization\": \"$API_KEY\"
-            },
-            \"ConnectionStrings\": {
-              \"MolenDatabase\": \"server=$DB_IP;user=$DB_User;password=$DB_Password;database=$DB_Name;port=$DB_Port\"
-            }
-          }
-          EOF"
-
       - name: Set up virtual environment
         run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH

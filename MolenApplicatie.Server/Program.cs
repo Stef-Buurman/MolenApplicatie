@@ -5,9 +5,38 @@ using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Services;
 using MolenApplicatie.Server.Services.Database;
+using MySqlConnector;
 using TypedApi.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var databasePassword = ReadSystemdCredential("molen-db-password");
+
+if (!string.IsNullOrWhiteSpace(databasePassword))
+{
+    var fallbackConnectionString =
+        builder.Configuration.GetConnectionString("MolenDatabase")
+        ?? throw new InvalidOperationException(
+            "Connection string 'MolenDatabase' was not configured.");
+
+    var connectionStringBuilder =
+        new MySqlConnectionStringBuilder(fallbackConnectionString)
+        {
+            Password = databasePassword
+        };
+
+    builder.Configuration["ConnectionStrings:MolenDatabase"] =
+        connectionStringBuilder.ConnectionString;
+}
+
+var fileUploadAuthorization =
+    ReadSystemdCredential("file-upload-authorization");
+
+if (!string.IsNullOrWhiteSpace(fileUploadAuthorization))
+{
+    builder.Configuration["FileUploadFilter:Authorization"] =
+        fileUploadAuthorization;
+}
 
 if (builder.Environment.IsProduction())
 {
@@ -20,7 +49,15 @@ if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
 }
 
 builder.Services.AddTypedApiSwagger();
-builder.Services.AddControllers().AddTypedApiJsonOptions();
+
+builder.Services
+    .AddControllers()
+    .AddTypedApiJsonOptions()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<NewMolenDataService>();
 builder.Services.AddTransient<PlacesService>();
@@ -44,20 +81,18 @@ builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 10485760;
 });
+
 builder.Services.Configure<FileUploadOptions>(builder.Configuration.GetSection("FileUploadFilter"));
 
-var connectionString = builder.Configuration.GetConnectionString("MolenDatabase");
+var connectionString = builder.Configuration.GetConnectionString("MolenDatabase")
+    ?? throw new InvalidOperationException(
+        "Connection string 'MolenDatabase' was not configured.");
 
 builder.Services.AddDbContext<MolenDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-           .EnableSensitiveDataLogging()
-           .LogTo(_ => { }, LogLevel.None)
-);
-
-
-builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+{
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+    if (builder.Environment.IsDevelopment()) options.EnableSensitiveDataLogging();
+});
 
 var app = builder.Build();
 
@@ -102,12 +137,16 @@ else
 
 app.UseRouting();
 
-app.UseCors(builder =>
-    builder.AllowAnyOrigin()
-           .AllowAnyMethod()
-           .AllowAnyHeader());
+app.UseCors(corsPolicyBuilder =>
+{
+    corsPolicyBuilder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+});
 
-//app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+
 app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
@@ -116,3 +155,32 @@ app.MapControllerRoute(
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+static string? ReadSystemdCredential(string credentialName)
+{
+    var credentialsDirectory =
+        Environment.GetEnvironmentVariable("CREDENTIALS_DIRECTORY");
+
+    if (string.IsNullOrWhiteSpace(credentialsDirectory))
+    {
+        return null;
+    }
+
+    var credentialPath =
+        Path.Combine(
+            credentialsDirectory,
+            credentialName);
+
+    if (!File.Exists(credentialPath))
+    {
+        return null;
+    }
+
+    var credentialValue =
+        File.ReadAllText(credentialPath)
+            .TrimEnd('\r', '\n');
+
+    return string.IsNullOrWhiteSpace(credentialValue)
+        ? null
+        : credentialValue;
+}
