@@ -109,31 +109,30 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    var molenAddedImagesPath = Path.Combine(builder.Environment.WebRootPath, "MolenAddedImages");
-    var molenImagesPath = Path.Combine(builder.Environment.WebRootPath, "MolenImages");
-    if (Directory.Exists(molenAddedImagesPath))
-    {
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(molenAddedImagesPath),
-            RequestPath = "/MolenAddedImages"
-        });
-    }
-
-    if (Directory.Exists(molenImagesPath))
-    {
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(molenImagesPath),
-            RequestPath = "/MolenImages"
-        });
-    }
 }
-else
+
+var molenAddedImagesPath =
+    Path.Combine(app.Environment.WebRootPath, "MolenAddedImages");
+
+var molenImagesPath =
+    Path.Combine(app.Environment.WebRootPath, "MolenImages");
+
+Directory.CreateDirectory(molenAddedImagesPath);
+Directory.CreateDirectory(molenImagesPath);
+
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
 {
-    app.UseStaticFiles();
-}
+    FileProvider = new PhysicalFileProvider(molenAddedImagesPath),
+    RequestPath = "/MolenAddedImages"
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(molenImagesPath),
+    RequestPath = "/MolenImages"
+});
 
 app.UseRouting();
 

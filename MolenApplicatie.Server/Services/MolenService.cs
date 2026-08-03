@@ -12,20 +12,23 @@ namespace MolenApplicatie.Server.Services
 {
     public class MolenService
     {
-        private readonly string folderNameMolenImages = $"wwwroot/MolenAddedImages";
+        private readonly string _molenAddedImagesPath;
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
         private readonly DBMolenAddedImageService _dBMolenAddedImageService;
         private readonly DBMolenImageService _dBMolenImageService;
         private readonly MapClusterService _mapClusterService;
 
-        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenAddedImageService dBMolenAddedImageService, DBMolenImageService dBMolenImageService, MapClusterService mapClusterService)
+        public MolenService(MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenAddedImageService dBMolenAddedImageService, DBMolenImageService dBMolenImageService, MapClusterService mapClusterService, IWebHostEnvironment environment)
         {
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
             _dBMolenAddedImageService = dBMolenAddedImageService;
             _dBMolenImageService = dBMolenImageService;
             _mapClusterService = mapClusterService;
+
+            _molenAddedImagesPath =
+                Path.Combine(environment.WebRootPath, "MolenAddedImages");
         }
 
         public static MolenData GetMolenData(MolenData molen)
@@ -388,7 +391,7 @@ namespace MolenApplicatie.Server.Services
             var maxSavedFilesCount = 5;
             using (var memoryStream = new MemoryStream())
             {
-                string folderName = folderNameMolenImages;
+                string folderName = _molenAddedImagesPath;
 
                 if (!Directory.Exists(folderName))
                 {
