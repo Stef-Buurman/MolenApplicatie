@@ -60,6 +60,16 @@ builder.Services.AddControllers()
         x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MolenDbContext>();
+
+    Console.WriteLine("Checking database migrations...");
+    await dbContext.Database.MigrateAsync();
+    Console.WriteLine("Database migrations applied successfully.");
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -104,18 +114,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapFallbackToFile("/index.html");
-
-
-#if DEBUG
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetService<MolenDbContext>();
-    context!.Database.EnsureCreated();
-
-    if (!context.Database.CanConnect())
-        throw new FileLoadException("cannot connect to db!");
-}
-#endif
 
 app.Run();
