@@ -12,21 +12,11 @@ jobs:
       SSH_USER: ${{ secrets.UPDATE_PROJECT_USER }}
       SSH_IP: ${{ secrets.UPDATE_PROJECT_IP }}
       REMOTE_SCRIPT_PATH: ${{ secrets.UPDATE_PROJECT_FILE_PATH }}
-      APP_SETTINGS_PATH: ${{ secrets.APP_SETTINGS_PATH }}
-      API_KEY: ${{ secrets.API_KEY }}
-      DB_User: ${{ secrets.DB_User }}
-      DB_Password: ${{ secrets.DB_Password }}
-      DB_Name: ${{ secrets.DB_Name }}
-      DB_Port: ${{ secrets.DB_Port }}
-      DB_IP: ${{ secrets.DB_IP }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Test SSH Connection
         run: ssh $SSH_USER@$SSH_IP "echo Connection Successful"
-
-      - name: Set up virtual environment
-        run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH
 
       - name: Set up virtual environment
         run: ssh $SSH_USER@$SSH_IP $REMOTE_SCRIPT_PATH
