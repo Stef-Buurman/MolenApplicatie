@@ -388,77 +388,103 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<(IFormFile? file, string errorMessage, HttpStatusCode statusCode)> SaveMolenImage(Guid id, string imageFolderKey, IFormFile file)
         {
-            var maxSavedFilesCount = 5;
-            using (var memoryStream = new MemoryStream())
+            const int maxSavedFilesCount = 5;
+            var folderName = Path.Combine(_molenAddedImagesPath, imageFolderKey);
+            Directory.CreateDirectory(folderName);
+            var existingFiles = Directory.GetFiles(folderName);
+            if (existingFiles.Length >= maxSavedFilesCount) return (null, "Er zijn al te veel foto's opgeslagen voor deze molen.", HttpStatusCode.BadRequest);
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (fileExtension != ".jpg" && fileExtension != ".jpeg" && fileExtension != ".png")
+                return (null, "Dit soort bestand wordt niet ondersteund!", HttpStatusCode.UnsupportedMediaType);
+
+            byte[] imageBytes;
+
+            await using (var memoryStream = new MemoryStream())
             {
-                string folderName = _molenAddedImagesPath;
-
-                if (!Directory.Exists(folderName))
-                {
-                    Directory.CreateDirectory(folderName);
-                }
-
-                folderName = Path.Combine(folderName, imageFolderKey);
-
-                if (Directory.Exists(folderName) && Directory.GetFiles(folderName).Length >= maxSavedFilesCount)
-                {
-                    return (null, "Er zijn al te veel foto's opgeslagen voor deze molen.", HttpStatusCode.BadRequest);
-                }
-
-                var fileExtension = Path.GetExtension(file.FileName);
-                if (fileExtension == null ||
-                    (fileExtension.ToLower() != ".jpg"
-                    && fileExtension.ToLower() != ".jpeg"
-                    && fileExtension.ToLower() != ".png"))
-                {
-                    return (null, "Dit soort bestand wordt niet ondersteund!", HttpStatusCode.UnsupportedMediaType);
-                }
-
                 await file.CopyToAsync(memoryStream);
-                var imageBytes = memoryStream.ToArray();
+                imageBytes = memoryStream.ToArray();
+            }
 
-                var uploadedHash = ComputeSha256Hash(imageBytes);
+            var uploadedHash =
+                ComputeSha256Hash(imageBytes);
 
-                if (Directory.Exists(folderName))
-                {
-                    foreach (var existingFile in Directory.GetFiles(folderName))
+            foreach (var existingFile in existingFiles)
+            {
+                var existingBytes = await File.ReadAllBytesAsync(existingFile);
+                var existingHash = ComputeSha256Hash(existingBytes);
+                if (uploadedHash != existingHash) continue;
+                var existingRelativePath = CreateCleanPath.CreatePathWithoutWWWROOT(existingFile);
+                var alreadyRegistered = await _dbContext.AddedImages.AsNoTracking().AnyAsync(addedImage => addedImage.MolenDataId == id && addedImage.FilePath == existingRelativePath);
+                if (alreadyRegistered) return (null, "Deze afbeelding is al opgeslagen.", HttpStatusCode.Conflict);
+
+
+                await _dBMolenAddedImageService.AddOrUpdate(
+                    new AddedImage
                     {
-                        var existingBytes = await File.ReadAllBytesAsync(existingFile);
-                        var existingHash = ComputeSha256Hash(existingBytes);
-                        if (uploadedHash == existingHash)
-                        {
-                            return (null, "Deze afbeelding is al opgeslagen.", HttpStatusCode.Conflict);
-                        }
-                    }
-                }
-                else
-                {
-                    Directory.CreateDirectory(folderName);
-                }
+                        FilePath = existingRelativePath,
+                        Name = Path.GetFileNameWithoutExtension(
+                            existingFile),
+                        DateTaken =
+                            GetDateTakenOfImage.GetDateTaken(
+                                existingFile),
+                        CanBeDeleted = true,
+                        MolenDataId = id
+                    });
 
-                var fileDirectory = Path.Combine(folderName, GetFileNameForImage.GetFileName() + fileExtension);
-                while (File.Exists(fileDirectory))
-                {
-                    fileDirectory = Path.Combine(folderName, GetFileNameForImage.GetFileName() + fileExtension);
-                }
+                await _dbContext.SaveChangesAsync();
 
-                await File.WriteAllBytesAsync(fileDirectory, imageBytes);
+                return (file, string.Empty, HttpStatusCode.OK);
+            }
 
-                await _dBMolenAddedImageService.AddOrUpdate(new AddedImage
-                {
-                    FilePath = CreateCleanPath.CreatePathWithoutWWWROOT(fileDirectory),
-                    Name = Path.GetFileNameWithoutExtension(fileDirectory),
-                    DateTaken = GetDateTakenOfImage.GetDateTaken(fileDirectory),
-                    CanBeDeleted = true,
-                    MolenDataId = id
-                });
+            string fileDirectory;
+
+            do
+            {
+                fileDirectory = Path.Combine(folderName, GetFileNameForImage.GetFileName() + fileExtension);
+            }
+            while (File.Exists(fileDirectory));
+
+            await File.WriteAllBytesAsync(
+                fileDirectory,
+                imageBytes);
+
+            try
+            {
+                var relativeFilePath =
+                    CreateCleanPath.CreatePathWithoutWWWROOT(
+                        fileDirectory);
+
+                await _dBMolenAddedImageService.AddOrUpdate(
+                    new AddedImage
+                    {
+                        FilePath = relativeFilePath,
+                        Name = Path.GetFileNameWithoutExtension(
+                            fileDirectory),
+                        DateTaken =
+                            GetDateTakenOfImage.GetDateTaken(
+                                fileDirectory),
+                        CanBeDeleted = true,
+                        MolenDataId = id
+                    });
 
                 await _dbContext.SaveChangesAsync();
             }
+            catch
+            {
+                if (File.Exists(fileDirectory))
+                {
+                    File.Delete(fileDirectory);
+                }
 
-            return (file, "", HttpStatusCode.OK);
+                throw;
+            }
+
+            return (
+                file,
+                string.Empty,
+                HttpStatusCode.OK);
         }
-
         private string ComputeSha256Hash(byte[] bytes)
         {
             using (var sha256 = SHA256.Create())
