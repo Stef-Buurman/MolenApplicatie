@@ -38,6 +38,8 @@ namespace MolenApplicatie.Server.Services
             var directMolens = await _dbContext.MolenData
             .Where(m => m.Name != null && EF.Functions.Like(m.Name.ToLower(), $"%{query}%") && m.Toestand != null
                 && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .OrderBy(m => m.Name)
+            .ThenBy(m => m.Id)
             .Select(m => new { m.Id, m.Name, Source = "Molen naam: " })
             .Take(limit)
             .ToListAsync();
@@ -45,12 +47,16 @@ namespace MolenApplicatie.Server.Services
             var buildYearMolens = await _dbContext.MolenData
             .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
                 && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .OrderBy(m => m.Bouwjaar)
+            .ThenBy(m => m.Id)
             .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
             .Take(limit)
             .ToListAsync();
 
             var tbnMolens = await _dbContext.MolenTBNs
             .Where(t => t.Ten_Brugge_Nr != null && EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%"))
+            .OrderBy(t => t.Ten_Brugge_Nr)
+            .ThenBy(t => t.Id)
             .Select(t => new { t.MolenData.Id, Name = t.Ten_Brugge_Nr, Source = "Molen TBN: " })
             .Take(limit)
             .ToListAsync();
@@ -58,6 +64,8 @@ namespace MolenApplicatie.Server.Services
             var typeMolens = await _dbContext.MolenTypeAssociations
             .Where(ma => ma.MolenType.Name != null && EF.Functions.Like(ma.MolenType.Name.ToLower(), $"%{query}%")
                 && ma.MolenData.Toestand != null && ma.MolenData.Toestand != MolenToestand.Verdwenen && allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
+            .OrderBy(ma => ma.MolenType.Name)
+            .ThenBy(ma => ma.MolenDataId)
             .Select(ma => new { ma.MolenData.Id, ma.MolenType.Name, Source = "Molen Type: " })
             .Take(limit)
             .ToListAsync();
@@ -65,6 +73,8 @@ namespace MolenApplicatie.Server.Services
             var placeMolens = await _dbContext.MolenData
             .Where(m => m.Plaats != null && EF.Functions.Like(m.Plaats.ToLower(), $"%{query}%")
                 && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+            .OrderBy(m => m.Plaats)
+            .ThenBy(m => m.Id)
             .Select(m => new { m.Id, Name = m.Plaats, Source = "Molen Plaats: " })
             .Take(limit)
             .ToListAsync();
@@ -113,6 +123,9 @@ namespace MolenApplicatie.Server.Services
 
             var matchedPlaces = await _dbContext.Places
                 .Where(p => p.Name != null && EF.Functions.Like(p.Name.ToLower(), $"%{query}%"))
+                .OrderByDescending(p => p.Population)
+                .ThenBy(p => p.Name)
+                .ThenBy(p => p.Id)
                 .Select(p => new
                 {
                     Place = p,
@@ -157,6 +170,8 @@ namespace MolenApplicatie.Server.Services
 
             var molenTypes = await _dbContext.MolenTypes
                 .Where(mt => mt.Name != null && EF.Functions.Like(mt.Name.ToLower(), $"%{query}%"))
+                .OrderBy(mt => mt.Name)
+                .ThenBy(mt => mt.Id)
                 .Take(limit)
                 .ToListAsync();
 

@@ -15,4 +15,10 @@ namespace MolenApplicatie.Server.Services
 
         public bool IsGridCell => CellX.HasValue && CellY.HasValue;
     }
+
+    public sealed class MapCoordinateQueryPoint
+    {
+        public double Latitude { get; init; }
+        public double Longitude { get; init; }
+    }
 }

@@ -984,6 +984,68 @@
         }
       }
     },
+    "/api/molen/with-image-count": {
+      "get": {
+        "tags": ["Molen"],
+        "operationId": "Molen_GetMolensWithImageCount_GET_api_molen_with_image_count",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-typedapi-operation": {
+          "controllerName": "Molen",
+          "actionName": "GetMolensWithImageCount"
+        }
+      }
+    },
     "/api/molen/{id}": {
       "get": {
         "tags": ["Molen"],
@@ -1626,10 +1688,7 @@
           {
             "name": "West",
             "in": "query",
-            "required": true,
             "schema": {
-              "maximum": 180,
-              "minimum": -180,
               "type": "number",
               "format": "double"
             }
@@ -1637,10 +1696,7 @@
           {
             "name": "South",
             "in": "query",
-            "required": true,
             "schema": {
-              "maximum": 90,
-              "minimum": -90,
               "type": "number",
               "format": "double"
             }
@@ -1648,10 +1704,7 @@
           {
             "name": "East",
             "in": "query",
-            "required": true,
             "schema": {
-              "maximum": 180,
-              "minimum": -180,
               "type": "number",
               "format": "double"
             }
@@ -1659,10 +1712,7 @@
           {
             "name": "North",
             "in": "query",
-            "required": true,
             "schema": {
-              "maximum": 90,
-              "minimum": -90,
               "type": "number",
               "format": "double"
             }
@@ -1670,10 +1720,7 @@
           {
             "name": "Zoom",
             "in": "query",
-            "required": true,
             "schema": {
-              "maximum": 19,
-              "minimum": 0,
               "type": "integer",
               "format": "int32"
             }
@@ -2370,6 +2417,10 @@
             "nullable": true
           },
           "adres": {
+            "type": "string",
+            "nullable": true
+          },
+          "land": {
             "type": "string",
             "nullable": true
           },
@@ -3175,6 +3226,6 @@
   "x-typedapi": {
     "contractVersion": 2,
     "producer": "TypedApi.Swagger",
-    "producerVersion": "0.3.2"
+    "producerVersion": "0.3.3"
   }
 }

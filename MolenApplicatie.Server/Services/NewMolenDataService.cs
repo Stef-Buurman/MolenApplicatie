@@ -1469,7 +1469,10 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<(List<MolenData>? MolenData, bool isDone, TimeSpan? timeToWait)> UpdateDataOfLastUpdatedMolens()
         {
-            List<MolenData> oldestUpdateTimesMolens = _dbContext.MolenData.OrderByDescending(x => x.LastUpdated).Take(10)
+            List<MolenData> oldestUpdateTimesMolens = _dbContext.MolenData
+                .OrderByDescending(x => x.LastUpdated)
+                .ThenBy(x => x.Id)
+                .Take(10)
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)

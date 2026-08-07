@@ -91,6 +91,12 @@ namespace MolenApplicatie.Server.Controllers
             return Ok(await _molenService.GetMapSummaryAsync(token));
         }
 
+        [HttpGet("with-image-count")]
+        public async Task<ActionResult<int>> GetMolensWithImageCount(CancellationToken token)
+        {
+            return Ok(await _molenService.GetMolensWithImageCountAsync(token));
+        }
+
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<MolenData>> GetMolenDataById(Guid id)
         {

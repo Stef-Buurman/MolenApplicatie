@@ -58,7 +58,7 @@ namespace MolenApplicatie.Server.Controllers
             return Ok();
         }
 
-        [FileUploadFilter]
+        // [FileUploadFilter]
         [HttpGet("SaveMolenResponses")]
         public async Task<IActionResult> SaveMolenResponses()
         {
@@ -72,16 +72,16 @@ namespace MolenApplicatie.Server.Controllers
             var startTime = DateTime.Now;
             await _NewMolenDataService2_0.test();
             var midTime = DateTime.Now;
-            await _PlacesService2_0.test();
-            var midTime2 = DateTime.Now;
+            // await _PlacesService2_0.test();
+            // var midTime2 = DateTime.Now;
             var changes = await _dbContext.SaveChangesAsync();
             var endTime = DateTime.Now;
-            Console.WriteLine($"Start: {startTime}, Mid1: {midTime}, Mid2: {midTime2}, End: {endTime}");
-            Console.WriteLine($"Molen duration: {midTime - startTime}");
-            Console.WriteLine($"Places duration: {midTime2 - midTime}");
-            Console.WriteLine($"Save changes duration: {endTime - midTime2}");
-            Console.WriteLine($"Total duration: {endTime - startTime}");
-            Console.WriteLine($"Changes saved: {changes}");
+            // Console.WriteLine($"Start: {startTime}, Mid1: {midTime}, Mid2: {midTime2}, End: {endTime}");
+            // Console.WriteLine($"Molen duration: {midTime - startTime}");
+            // Console.WriteLine($"Places duration: {midTime2 - midTime}");
+            // Console.WriteLine($"Save changes duration: {endTime - midTime2}");
+            // Console.WriteLine($"Total duration: {endTime - startTime}");
+            // Console.WriteLine($"Changes saved: {changes}");
             return Ok();
         }
 

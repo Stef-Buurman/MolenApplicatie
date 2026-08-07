@@ -17,7 +17,13 @@
             "standerdmolen",
             "stellingmolen",
             "weidemolen",
-            "kleine molen"
+            "kleine molen",
+            "wipmolen",
+            "torenmolen",
+            "windmolen",
+            "watermolen",
+            "ronde molen",
+            "kantige molen"
         };
     }
 }

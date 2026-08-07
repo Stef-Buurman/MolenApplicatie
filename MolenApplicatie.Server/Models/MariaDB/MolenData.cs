@@ -28,6 +28,7 @@ namespace MolenApplicatie.Server.Models.MariaDB
         public string? Bedrijfsvaardigheid { get; set; }
         public string? Plaats { get; set; }
         public string? Adres { get; set; }
+        public string? Land { get; set; }
         public string? Provincie { get; set; }
         public string? Gemeente { get; set; }
         public string? Streek { get; set; }

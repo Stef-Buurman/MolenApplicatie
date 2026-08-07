@@ -620,6 +620,7 @@ namespace MolenApplicatie.Server.Services.Database
             target.Bedrijfsvaardigheid = source.Bedrijfsvaardigheid;
             target.Plaats = source.Plaats;
             target.Adres = source.Adres;
+            target.Land = source.Land;
             target.Provincie = source.Provincie;
             target.Gemeente = source.Gemeente;
             target.Streek = source.Streek;

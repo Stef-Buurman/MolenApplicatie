@@ -88,49 +88,125 @@ namespace MolenApplicatie.Server.Services.Database
             if (entities == null || entities.Count == 0)
                 return entities;
 
-            var all_types = entities.Select(e => e.MolenType).Where(t => t != null).Distinct().ToList();
-            if (all_types.Count > 0)
+            entities = entities.Where(entity => entity != null).ToList();
+            token.ThrowIfCancellationRequested();
+
+            foreach (var entity in entities)
             {
-                all_types = await _dBMolenTypeService.AddOrUpdateRange(all_types, token, strat);
+                if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty) entity.MolenDataId = entity.MolenData.Id;
             }
 
-            await _cache.GetAllAsync();
+            var requestedTypesByName = entities
+                .Select(entity => entity.MolenType)
+                .Where(type =>
+                    type != null &&
+                    !string.IsNullOrWhiteSpace(type.Name))
+                .Cast<MolenType>()
+                .GroupBy(
+                    type => type.Name.Trim(),
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First(),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
-            var entitiesToAdd = new List<MolenTypeAssociation>();
-            var entitiesToUpdate = new List<MolenTypeAssociation>();
+            var databaseTypes = await _context.MolenTypes.AsNoTracking().ToListAsync(token);
 
+            var typesByName = _context.MolenTypes.Local
+                .Concat(databaseTypes)
+                .Where(type => !string.IsNullOrWhiteSpace(type.Name))
+                .GroupBy(
+                    type => type.Name.Trim(),
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First(),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            var newTypes = requestedTypesByName.Where(pair => !typesByName.ContainsKey(pair.Key)).Select(pair => new MolenType { Name = pair.Value.Name.Trim() }).ToList();
+
+            if (newTypes.Count > 0)
+            {
+                await _dBMolenTypeService.AddRangeAsync(newTypes, token);
+                foreach (var newType in newTypes) typesByName[newType.Name.Trim()] = newType;
+            }
+
+            /*
+             * Resolve every association to a MolenTypeId and then remove both
+             * navigation properties. EF should only track the association itself.
+             */
             foreach (var entity in entities)
             {
                 if (entity.MolenType != null)
                 {
-                    entity.MolenType = all_types.FirstOrDefault(t => entity.MolenType.Equals(t));
+                    var typeName = entity.MolenType.Name?.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(typeName) &&
+                        typesByName.TryGetValue(
+                            typeName,
+                            out var resolvedType))
+                    {
+                        entity.MolenTypeId = resolvedType.Id;
+                    }
+                    else if (entity.MolenType.Id != Guid.Empty)
+                    {
+                        entity.MolenTypeId = entity.MolenType.Id;
+                    }
                 }
 
-                if (entity.MolenType != null && entity.MolenType.Id != Guid.Empty)
-                {
-                    entity.MolenTypeId = entity.MolenType.Id;
-                }
-                entity.MolenType = null;
-
-                if (entity.MolenData != null && entity.MolenData.Id != Guid.Empty)
-                {
-                    entity.MolenDataId = entity.MolenData.Id;
-                }
-                entity.MolenData = null;
+                entity.MolenType = null!;
+                entity.MolenData = null!;
             }
 
-            if (ExistsRange(entities, out List<MolenTypeAssociation> existingEntities, out List<MolenTypeAssociation> newEntities, out List<MolenTypeAssociation> updatedEntities, false, token, strat))
+            var invalidAssociation = entities.FirstOrDefault(entity => entity.MolenDataId == Guid.Empty || entity.MolenTypeId == Guid.Empty);
+            if (invalidAssociation != null)
+                throw new InvalidOperationException("A MolenTypeAssociation has no valid MolenDataId or MolenTypeId.");
+
+
+            var molenDataIds = entities.Select(entity => entity.MolenDataId).Distinct().ToList();
+
+            var molenTypeIds = entities.Select(entity => entity.MolenTypeId).Distinct().ToList();
+
+            var databaseAssociations = await _context.MolenTypeAssociations
+                .AsNoTracking()
+                .Where(association =>
+                    molenDataIds.Contains(association.MolenDataId) &&
+                    molenTypeIds.Contains(association.MolenTypeId))
+                .ToListAsync(token);
+
+            var associationsByKey = _context.MolenTypeAssociations.Local
+                .Where(association =>
+                    molenDataIds.Contains(association.MolenDataId) &&
+                    molenTypeIds.Contains(association.MolenTypeId))
+                .Concat(databaseAssociations)
+                .GroupBy(association => (
+                    association.MolenDataId,
+                    association.MolenTypeId
+                ))
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First()
+                );
+
+            var newAssociations = entities.GroupBy(entity => (entity.MolenDataId, entity.MolenTypeId)).Where(group => !associationsByKey.ContainsKey(group.Key)).Select(group => group.First()).ToList();
+
+            if (newAssociations.Count > 0)
             {
-                entitiesToAdd.AddRange(newEntities);
-                entitiesToUpdate.AddRange(updatedEntities);
-            }
-            else
-            {
-                entitiesToAdd.AddRange(entities);
+                await base.AddRangeAsync(newAssociations, token);
+
+                foreach (var newAssociation in newAssociations)
+                    associationsByKey[(newAssociation.MolenDataId, newAssociation.MolenTypeId)] = newAssociation;
             }
 
-            if (entitiesToAdd.Count > 0) await AddRangeAsync(entitiesToAdd, token);
-            if (entitiesToUpdate.Count > 0) await UpdateRange(entitiesToUpdate, token, strat);
+            foreach (var entity in entities)
+            {
+                if (associationsByKey.TryGetValue((entity.MolenDataId, entity.MolenTypeId), out var resolvedAssociation))
+                    entity.Id = resolvedAssociation.Id;
+            }
 
             return entities;
         }

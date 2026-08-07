@@ -42,6 +42,8 @@ namespace MolenApplicatie.Server.Services.Database
 
         public override async Task<MolenImage> Add(MolenImage molenImage, CancellationToken token = default)
         {
+            if (Uri.IsWellFormedUriString(molenImage.FilePath, UriKind.Absolute)) return await base.Add(molenImage, token);
+
             bool DoesFileExist = File.Exists(Globals.WWWROOTPath + molenImage.FilePath);
             if (!DoesFileExist && Uri.IsWellFormedUriString(molenImage.ExternalUrl, UriKind.Absolute))
             {

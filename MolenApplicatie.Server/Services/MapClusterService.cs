@@ -10,16 +10,23 @@ namespace MolenApplicatie.Server.Services
     public class MapClusterService
     {
         private const int MaximumZoom = 19;
-        private const int ShowIndividualPointsFromZoom = 17;
+        private const int UseDetailedQueryFromZoom = 8;
+        private const int MaximumVisibleLocationsForExactPointDisplay = 20;
+        private const int MaximumVisiblePointsForDetailedQuery = 200;
         private const double FullWorldLongitudeWidth = 360d;
-        private const int SparseVisiblePointThreshold = 100;
-        private const int MinimumClusterRadiusInPixels = 50;
-        private const double SparseClusterRadiusMultiplier = 0.4d;
+        private const int VerySparseVisiblePointThreshold = 100;
+        private const int SparseVisiblePointThreshold = 200;
+        private const int MinimumClusterRadiusInPixels = 45;
+        private const double VerySparseClusterRadiusMultiplier = 0.35d;
+        private const double SparseClusterRadiusMultiplier = 0.5d;
 
         public async Task<IReadOnlyList<MapItemResponse>> GetMapItemsAsync<TEntity>(
             IQueryable<TEntity> query,
             Func<double, double, double, double, Expression<Func<TEntity, bool>>> viewportPredicateFactory,
-            Func<IQueryable<TEntity>, IQueryable<MapQueryPoint>> mapQueryFactory,
+            Func<IQueryable<TEntity>, IQueryable<Guid>> idQueryFactory,
+            Func<IQueryable<TEntity>, IQueryable<MapCoordinateQueryPoint>> coordinateQueryFactory,
+            Func<IQueryable<TEntity>, IQueryable<MapQueryPoint>> gridQueryFactory,
+            Func<IQueryable<TEntity>, IQueryable<MapQueryPoint>> individualMapQueryFactory,
             Func<IQueryable<TEntity>, IReadOnlyCollection<Guid>, IQueryable<MapQueryPoint>> individualPointQueryFactory,
             MapViewport viewport,
             Func<MapQueryPoint, string> urlFactory,
@@ -31,15 +38,52 @@ namespace MolenApplicatie.Server.Services
             ValidateViewport(viewport);
 
             var bounds = NormalizeBounds(viewport.West, viewport.East);
-            var databasePoints = await GetVisibleDatabasePoints(
+            var viewportQuery = CreateViewportQuery(
                 query,
                 viewportPredicateFactory,
-                mapQueryFactory,
                 bounds.West,
                 viewport.South,
                 bounds.East,
-                viewport.North,
+                viewport.North);
+
+            var showEveryVisibleLocation = await HasAtMostVisibleLocationsAsync(
+                coordinateQueryFactory(viewportQuery),
+                MaximumVisibleLocationsForExactPointDisplay,
                 token);
+
+            if (showEveryVisibleLocation)
+            {
+                var exactDatabasePoints = await individualMapQueryFactory(viewportQuery)
+                    .ToListAsync(token);
+
+                token.ThrowIfCancellationRequested();
+
+                var exactVisiblePoints = CreateVisiblePoints(
+                    exactDatabasePoints,
+                    bounds.West,
+                    bounds.East);
+
+                return CreatePointOrExactLocationResponses(
+                    exactVisiblePoints,
+                    viewport.Zoom,
+                    urlFactory,
+                    popupTextFactory,
+                    popupTitleFactory,
+                    token);
+            }
+
+            var useDetailedQuery =
+                viewport.Zoom >= UseDetailedQueryFromZoom &&
+                await HasAtMostVisiblePointsAsync(
+                    idQueryFactory(viewportQuery),
+                    MaximumVisiblePointsForDetailedQuery,
+                    token);
+
+            var databasePoints = await (
+                    useDetailedQuery
+                        ? individualMapQueryFactory(viewportQuery)
+                        : gridQueryFactory(viewportQuery))
+                .ToListAsync(token);
 
             token.ThrowIfCancellationRequested();
 
@@ -55,15 +99,10 @@ namespace MolenApplicatie.Server.Services
 
                 var individualPoints = singlePointIds.Length == 0
                     ? []
-                    : await GetVisibleDatabasePoints(
-                        query,
-                        viewportPredicateFactory,
-                        filteredQuery => individualPointQueryFactory(filteredQuery, singlePointIds),
-                        bounds.West,
-                        viewport.South,
-                        bounds.East,
-                        viewport.North,
-                        token);
+                    : await individualPointQueryFactory(
+                            viewportQuery,
+                            singlePointIds)
+                        .ToListAsync(token);
 
                 var visibleIndividualPoints = CreateVisiblePoints(
                         individualPoints,
@@ -77,17 +116,6 @@ namespace MolenApplicatie.Server.Services
                     viewport.Zoom,
                     urlFactory,
                     popupTextFactory);
-            }
-
-            if (viewport.Zoom >= ShowIndividualPointsFromZoom)
-            {
-                return CreatePointOrExactLocationResponses(
-                    visiblePoints,
-                    viewport.Zoom,
-                    urlFactory,
-                    popupTextFactory,
-                    popupTitleFactory,
-                    token);
             }
 
             return CreateClusters(
@@ -230,15 +258,13 @@ namespace MolenApplicatie.Server.Services
             return points.Sum(point => point.Point.PointCount);
         }
 
-        private static async Task<List<MapQueryPoint>> GetVisibleDatabasePoints<TEntity>(
+        private static IQueryable<TEntity> CreateViewportQuery<TEntity>(
             IQueryable<TEntity> query,
             Func<double, double, double, double, Expression<Func<TEntity, bool>>> viewportPredicateFactory,
-            Func<IQueryable<TEntity>, IQueryable<MapQueryPoint>> mapQueryFactory,
             double west,
             double south,
             double east,
-            double north,
-            CancellationToken token)
+            double north)
             where TEntity : class
         {
             var viewportWidth = east - west;
@@ -246,49 +272,101 @@ namespace MolenApplicatie.Server.Services
 
             if (viewportWidth >= FullWorldLongitudeWidth)
             {
-                filteredQuery = filteredQuery.Where(
+                return filteredQuery.Where(
                     viewportPredicateFactory(
                         -180d,
                         south,
                         180d,
                         north));
             }
-            else
+
+            var longitudeRanges = CreateDatabaseLongitudeRanges(west, east);
+
+            if (longitudeRanges.Count == 1)
             {
-                var longitudeRanges = CreateDatabaseLongitudeRanges(west, east);
+                var range = longitudeRanges[0];
 
-                if (longitudeRanges.Count == 1)
-                {
-                    var range = longitudeRanges[0];
-
-                    filteredQuery = filteredQuery.Where(
-                        viewportPredicateFactory(
-                            range.West,
-                            south,
-                            range.East,
-                            north));
-                }
-                else
-                {
-                    var firstQuery = filteredQuery.Where(
-                        viewportPredicateFactory(
-                            longitudeRanges[0].West,
-                            south,
-                            longitudeRanges[0].East,
-                            north));
-
-                    var secondQuery = filteredQuery.Where(
-                        viewportPredicateFactory(
-                            longitudeRanges[1].West,
-                            south,
-                            longitudeRanges[1].East,
-                            north));
-
-                    filteredQuery = firstQuery.Concat(secondQuery);
-                }
+                return filteredQuery.Where(
+                    viewportPredicateFactory(
+                        range.West,
+                        south,
+                        range.East,
+                        north));
             }
 
-            return await mapQueryFactory(filteredQuery).ToListAsync(token);
+            var firstPredicate = viewportPredicateFactory(
+                longitudeRanges[0].West,
+                south,
+                longitudeRanges[0].East,
+                north);
+
+            var secondPredicate = viewportPredicateFactory(
+                longitudeRanges[1].West,
+                south,
+                longitudeRanges[1].East,
+                north);
+
+            // Keep this as one keyed entity query. Concat/Union followed by an
+            // individual projection with the Types collection cannot reliably
+            // be translated by EF Core/Pomelo around the date line.
+            return filteredQuery.Where(
+                CombineWithOrElse(
+                    firstPredicate,
+                    secondPredicate));
+        }
+
+        private static async Task<bool> HasAtMostVisibleLocationsAsync(
+            IQueryable<MapCoordinateQueryPoint> coordinateQuery,
+            int maximumLocationCount,
+            CancellationToken token)
+        {
+            var cappedLocationCount = await coordinateQuery
+                .Select(point => new
+                {
+                    point.Latitude,
+                    point.Longitude
+                })
+                .Distinct()
+                .OrderBy(point => point.Latitude)
+                .ThenBy(point => point.Longitude)
+                .Take(maximumLocationCount + 1)
+                .CountAsync(token);
+
+            return cappedLocationCount <= maximumLocationCount;
+        }
+
+        private static async Task<bool> HasAtMostVisiblePointsAsync(
+            IQueryable<Guid> idQuery,
+            int maximumPointCount,
+            CancellationToken token)
+        {
+            var cappedPointCount = await idQuery
+                .OrderBy(id => id)
+                .Take(maximumPointCount + 1)
+                .CountAsync(token);
+
+            return cappedPointCount <= maximumPointCount;
+        }
+
+        private static Expression<Func<TEntity, bool>> CombineWithOrElse<TEntity>(
+            Expression<Func<TEntity, bool>> first,
+            Expression<Func<TEntity, bool>> second)
+        {
+            var parameter = Expression.Parameter(typeof(TEntity), "entity");
+
+            var firstBody = new ParameterReplaceVisitor(
+                    first.Parameters[0],
+                    parameter)
+                .Visit(first.Body)!;
+
+            var secondBody = new ParameterReplaceVisitor(
+                    second.Parameters[0],
+                    parameter)
+                .Visit(second.Body)!;
+
+            return Expression.Lambda<Func<TEntity, bool>>(
+                Expression.OrElse(firstBody, secondBody),
+                parameter);
         }
 
         private static IReadOnlyList<VisibleMapPoint> CreateVisiblePoints(
@@ -329,12 +407,21 @@ namespace MolenApplicatie.Server.Services
                 _ => 80
             };
 
-            if (visiblePointCount > SparseVisiblePointThreshold)
-                return normalRadius;
+            if (visiblePointCount <= VerySparseVisiblePointThreshold)
+            {
+                return Math.Max(
+                    MinimumClusterRadiusInPixels,
+                    (int)Math.Round(normalRadius * VerySparseClusterRadiusMultiplier));
+            }
 
-            return Math.Max(
-                MinimumClusterRadiusInPixels,
-                (int)Math.Round(normalRadius * SparseClusterRadiusMultiplier));
+            if (visiblePointCount <= SparseVisiblePointThreshold)
+            {
+                return Math.Max(
+                    MinimumClusterRadiusInPixels,
+                    (int)Math.Round(normalRadius * SparseClusterRadiusMultiplier));
+            }
+
+            return normalRadius;
         }
 
         private static IReadOnlyList<LongitudeRange> CreateDatabaseLongitudeRanges(double west, double east)
@@ -597,6 +684,29 @@ namespace MolenApplicatie.Server.Services
 
             if (viewport.Zoom < 0 || viewport.Zoom > MaximumZoom)
                 throw new ArgumentException($"Zoom must be between 0 and {MaximumZoom}.", nameof(viewport));
+        }
+
+
+        private sealed class ParameterReplaceVisitor : ExpressionVisitor
+        {
+            private readonly ParameterExpression _source;
+            private readonly ParameterExpression _replacement;
+
+            public ParameterReplaceVisitor(
+                ParameterExpression source,
+                ParameterExpression replacement)
+            {
+                _source = source;
+                _replacement = replacement;
+            }
+
+            protected override Expression VisitParameter(
+                ParameterExpression node)
+            {
+                return node == _source
+                    ? _replacement
+                    : base.VisitParameter(node);
+            }
         }
 
         private sealed class VisibleMapPoint

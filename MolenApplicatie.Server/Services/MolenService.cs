@@ -150,18 +150,63 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<ValueName>> GetAllMolenConditions()
         {
-            var conditions = await _dbContext.MolenData
-                    .Where(m => !string.IsNullOrWhiteSpace(m.Toestand) && m.Latitude != 0 && m.Longitude != 0)
-                    .GroupBy(m => m.Toestand)
-                    .Select(g => new ValueName
-                    {
-                        Name = g.Key ?? string.Empty,
-                        Count = g.Count()
-                    })
-                    .OrderBy(c => c.Name)
-                    .ToListAsync();
-            conditions.Add(new ValueName { Name = MolenToestand.Bestaande, Count = conditions.Where(c => !MolenToestand.Equals(c.Name, MolenToestand.Verdwenen)).Sum(c => c.Count) });
-            return conditions.ToList();
+            var conditionValues = await _dbContext.MolenData
+                .AsNoTracking()
+                .Where(molen =>
+                    !string.IsNullOrWhiteSpace(molen.Toestand) &&
+                    molen.Latitude != 0 &&
+                    molen.Longitude != 0)
+                .Select(molen => molen.Toestand!)
+                .ToListAsync();
+
+            var normalizedConditions = conditionValues
+                .Select(value => MolenToestand.From(value) ?? value.Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
+
+            var conditions = normalizedConditions
+                .GroupBy(
+                    value => value,
+                    StringComparer.OrdinalIgnoreCase)
+                .Select(group => new ValueName
+                {
+                    Name = group.First(),
+                    Count = group.Count()
+                })
+                .ToList();
+
+            var existingStates = new HashSet<string>(
+                [
+                    MolenToestand.Bestaande,
+                    MolenToestand.InAanbouw,
+                    MolenToestand.Restant,
+                    MolenToestand.Werkend,
+                    MolenToestand.NietWerkend
+                ],
+                StringComparer.OrdinalIgnoreCase);
+
+            var existingCount = normalizedConditions.Count(existingStates.Contains);
+
+            var existingCondition = conditions.FirstOrDefault(
+                condition => string.Equals(
+                    condition.Name,
+                    MolenToestand.Bestaande,
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (existingCondition != null)
+            {
+                existingCondition.Count = existingCount;
+            }
+            else if (existingCount > 0)
+            {
+                conditions.Add(new ValueName
+                {
+                    Name = MolenToestand.Bestaande,
+                    Count = existingCount
+                });
+            }
+
+            return conditions.OrderBy(condition => condition.Name).ToList();
         }
 
         public async Task<MolenFilters> GetMolenFilters()
@@ -521,11 +566,8 @@ namespace MolenApplicatie.Server.Services
             .Where(m => m.Toestand == MolenToestand.Restant && m.AddedImages.Any())
             .CountAsync();
 
-        private async Task<int> GetCountOfMolensWithAddedImage(CancellationToken token = default) => await _dbContext.AddedImages
-            .AsNoTracking()
-            .Select(image => image.MolenDataId)
-            .Distinct()
-            .CountAsync(token);
+        public Task<int> GetMolensWithImageCountAsync(CancellationToken token = default)
+            => _dbContext.MolenData.AsNoTracking().CountAsync(molen => molen.AddedImages.Any(), token);
 
         private async Task<int> GetCountOfActiveMolens() => await _dbContext.MolenData
             .Where(m => m.Toestand == MolenToestand.Werkend)
@@ -562,7 +604,7 @@ namespace MolenApplicatie.Server.Services
         {
             int activeMolensWithImage = await GetCountOfActiveMolensWithImages();
             int remainderMolensWithImage = await GetCountOfRemainderMolensWithImage();
-            int totalMolensWithImage = await GetCountOfMolensWithAddedImage();
+            int totalMolensWithImage = await GetMolensWithImageCountAsync();
 
             int totalActiveMolens = await GetCountOfActiveMolens();
             int totalRemainderMolens = await GetCountOfRemainderMolens();
@@ -613,7 +655,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<MolenMapSummaryResponse> GetMapSummaryAsync(CancellationToken token)
         {
-            var totalMolensWithImage = await GetCountOfMolensWithAddedImage(token);
+            var totalMolensWithImage = await GetMolensWithImageCountAsync(token);
 
             var now = DateTime.Now;
             var recentImageStart = now.AddDays(-7);
@@ -687,14 +729,25 @@ namespace MolenApplicatie.Server.Services
                     molen.Latitude <= queryNorth &&
                     molen.Longitude >= queryWest &&
                     molen.Longitude <= queryEast,
-                filteredQuery => MapQueryBuilder.Create(
+                filteredQuery => filteredQuery.Select(molen => molen.Id),
+                filteredQuery => filteredQuery.Select(molen => new MapCoordinateQueryPoint
+                {
+                    Latitude = molen.Latitude,
+                    Longitude = molen.Longitude
+                }),
+                filteredQuery => MapQueryBuilder.CreateGridQuery(
                     filteredQuery,
                     filter.Zoom,
+                    molen => molen.Id,
+                    molen => molen.Latitude,
+                    molen => molen.Longitude,
+                    molen => molen.MercatorY),
+                filteredQuery => MapQueryBuilder.CreateIndividualPointQuery(
+                    filteredQuery,
                     molen => molen.Id,
                     molen => molen.Name,
                     molen => molen.Latitude,
                     molen => molen.Longitude,
-                    molen => molen.MercatorY,
                     molen => molen.Toestand,
                     molen => molen.MolenTypeAssociations.Select(association => association.MolenType.Name),
                     molen => molen.AddedImages.Any()),
@@ -718,13 +771,10 @@ namespace MolenApplicatie.Server.Services
         {
             var molenState = MolenToestand.From(filter.MolenState);
 
-            if (MolenToestand.Equals(molenState, MolenToestand.Bestaande))
+            if (!string.IsNullOrWhiteSpace(molenState))
             {
-                query = query.Where(molen => molen.Toestand != null && molen.Toestand != MolenToestand.Verdwenen);
-            }
-            else if (!string.IsNullOrWhiteSpace(molenState))
-            {
-                query = query.Where(molen => molen.Toestand != null && molen.Toestand.ToLower() == molenState.ToLower());
+                var stateAliases = MolenToestand.GetDatabaseAliases(molenState);
+                query = query.Where(molen => molen.Toestand != null && stateAliases.Contains(molen.Toestand.ToLower()));
             }
 
             if (!string.IsNullOrWhiteSpace(filter.MolenType))
