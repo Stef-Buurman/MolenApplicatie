@@ -82,6 +82,7 @@ export class MolenClusteredMapComponent
   private hasLoadedOnce: boolean = false;
   private hasShownLoadedToast: boolean = false;
   private readonly initialRequestTimeoutMs: number = 30000;
+  private readonly maximumWebMercatorLatitude: number = 85.05112878;
 
   constructor(
     private router: Router,
@@ -302,9 +303,18 @@ export class MolenClusteredMapComponent
     if (!bounds.isValid()) return;
 
     const west = bounds.getWest();
-    const south = bounds.getSouth();
-    const east = bounds.getEast();
-    const north = bounds.getNorth();
+    let east = bounds.getEast();
+
+    // Keep a continuous longitude interval. Leaflet deliberately returns values
+    // below -180 or above 180 for repeated world copies and the backend supports it.
+    while (east <= west) {
+      east += 360;
+    }
+
+    // Large map viewports can extend beyond the valid Web Mercator latitude.
+    // Clamp before sending the request so ASP.NET never returns a validation error.
+    const south = this.clampLatitude(bounds.getSouth());
+    const north = this.clampLatitude(bounds.getNorth());
     const zoom = Math.round(this.map.getZoom());
 
     const longitudeDifference = Math.abs(east - west);
@@ -462,26 +472,29 @@ export class MolenClusteredMapComponent
 
     const molenCluster = cluster as MolenMapClusterResponse;
     const isSingleMolen = cluster.pointCount === 1;
+    const isExactLocationCluster = this.isExactLocationCluster(cluster);
 
     const marker = L.marker([cluster.latitude, cluster.longitude], {
       icon: isSingleMolen
         ? this.createMolenIcon(molenCluster)
-        : this.createClusterIcon(cluster.pointCount),
+        : this.createClusterIcon(cluster.pointCount, isExactLocationCluster),
       bubblingMouseEvents: false,
       keyboard: true,
       title: isSingleMolen
         ? '1 molen'
-        : `${cluster.pointCount.toLocaleString('nl-NL')} molens`,
+        : isExactLocationCluster
+          ? `${cluster.pointCount.toLocaleString('nl-NL')} molens op exact dezelfde locatie`
+          : `${cluster.pointCount.toLocaleString('nl-NL')} molens`,
     });
 
     marker.on('mouseover', () => {
-      if (!isSingleMolen) {
+      if (!isSingleMolen && !isExactLocationCluster) {
         this.showOutline(cluster);
       }
     });
 
     marker.on('mouseout', () => {
-      if (!isSingleMolen) {
+      if (!isSingleMolen && !isExactLocationCluster) {
         this.removeOutline();
       }
     });
@@ -512,6 +525,25 @@ export class MolenClusteredMapComponent
   private handleClusterClick(cluster: MapClusterResponse): void {
     if (!this.map) return;
 
+    if (
+      cluster.popupData?.pointData &&
+      cluster.popupData.pointData.length > 0
+    ) {
+      this.removeOutline();
+
+      L.popup({
+        closeButton: true,
+        autoPan: true,
+        maxWidth: 400,
+        className: 'molen-map-popup',
+      })
+        .setLatLng([cluster.latitude, cluster.longitude])
+        .setContent(this.createClusterPopup(cluster))
+        .openOn(this.map);
+
+      return;
+    }
+
     const currentZoom = this.map.getZoom();
     const expansionZoom = Math.min(
       cluster.expansionZoom,
@@ -524,23 +556,6 @@ export class MolenClusteredMapComponent
       this.map.setView([cluster.latitude, cluster.longitude], expansionZoom, {
         animate: true,
       });
-
-      return;
-    }
-
-    if (
-      cluster.popupData?.pointData &&
-      cluster.popupData.pointData.length > 0
-    ) {
-      L.popup({
-        closeButton: true,
-        autoPan: true,
-        maxWidth: 400,
-        className: 'molen-map-popup',
-      })
-        .setLatLng([cluster.latitude, cluster.longitude])
-        .setContent(this.createClusterPopup(cluster))
-        .openOn(this.map);
 
       return;
     }
@@ -569,19 +584,68 @@ export class MolenClusteredMapComponent
     });
   }
 
-  private createClusterIcon(pointCount: number): L.DivIcon {
+  private createClusterIcon(
+    pointCount: number,
+    isExactLocationCluster: boolean,
+  ): L.DivIcon {
     const formattedPointCount = pointCount.toLocaleString('nl-NL');
+    const size = this.getClusterIconSize(pointCount);
+    const densityClass = this.getClusterDensityClass(pointCount);
+    const exactLocationClass = isExactLocationCluster
+      ? ' molen-map-cluster--exact-location'
+      : '';
+    const exactLocationIndicator = isExactLocationCluster
+      ? `
+          <span class="molen-map-cluster-stack" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </span>
+        `
+      : '';
+    const anchor = size / 2;
 
     return L.divIcon({
       className: 'molen-map-cluster-wrapper',
       html: `
-        <div class="molen-map-cluster">
-          <span>${formattedPointCount}</span>
+        <div
+          class="molen-map-cluster molen-map-cluster--${densityClass}${exactLocationClass}"
+          style="--molen-cluster-size: ${size}px"
+        >
+          <span class="molen-map-cluster-count">${formattedPointCount}</span>
+          ${exactLocationIndicator}
         </div>
       `,
-      iconSize: [48, 48],
-      iconAnchor: [24, 24],
+      iconSize: [size, size],
+      iconAnchor: [anchor, anchor],
     });
+  }
+
+  private getClusterIconSize(pointCount: number): number {
+    const minimumSize = 36;
+    const maximumSize = 60;
+    const maximumCountForSizing = 1000;
+    const normalizedCount = Math.min(
+      Math.max(pointCount, 2),
+      maximumCountForSizing,
+    );
+    const progress =
+      Math.log10(normalizedCount) / Math.log10(maximumCountForSizing);
+
+    return Math.round(minimumSize + progress * (maximumSize - minimumSize));
+  }
+
+  private getClusterDensityClass(pointCount: number): string {
+    if (pointCount >= 250) return 'very-high';
+    if (pointCount >= 100) return 'high';
+    if (pointCount >= 50) return 'medium-high';
+    if (pointCount >= 25) return 'medium';
+    if (pointCount >= 10) return 'low-medium';
+
+    return 'low';
+  }
+
+  private isExactLocationCluster(cluster: MapClusterResponse): boolean {
+    return (cluster.popupData?.pointData?.length ?? 0) > 1;
   }
 
   private createPointPopup(point: MapPointResponse): HTMLElement {
@@ -712,6 +776,13 @@ export class MolenClusteredMapComponent
     this.outlineLayer = undefined;
   }
 
+  private clampLatitude(latitude: number): number {
+    return Math.max(
+      -this.maximumWebMercatorLatitude,
+      Math.min(this.maximumWebMercatorLatitude, latitude),
+    );
+  }
+
   private createRequestKey(query: MolenGetMapItemsParams): string {
     return [
       query.west?.toFixed(5),
@@ -756,6 +827,26 @@ export class MolenClusteredMapComponent
     }
 
     if (error && typeof error === 'object') {
+      if (
+        'errors' in error &&
+        error.errors &&
+        typeof error.errors === 'object'
+      ) {
+        const validationMessages = Object.values(error.errors)
+          .flatMap((messages) =>
+            Array.isArray(messages)
+              ? messages.filter(
+                  (message): message is string => typeof message === 'string',
+                )
+              : [],
+          )
+          .filter((message) => message.trim().length > 0);
+
+        if (validationMessages.length > 0) {
+          return validationMessages.join(' ');
+        }
+      }
+
       if ('detail' in error && typeof error.detail === 'string') {
         return error.detail;
       }

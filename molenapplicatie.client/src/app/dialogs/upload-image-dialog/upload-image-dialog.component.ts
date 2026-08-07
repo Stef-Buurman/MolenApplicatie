@@ -7,10 +7,10 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { Toasts } from '../../../Utils/Toasts';
 import { MolenService } from '../../../Services/MolenService';
 import { getTypedApiErrorMessage } from '../../../Utils/TypedApiObservable';
+import { MolenData } from '../../../api/generated/data-contracts';
 
 @Component({
   selector: 'app-upload-image-dialog',

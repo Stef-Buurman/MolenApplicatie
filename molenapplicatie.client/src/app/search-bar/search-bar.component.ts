@@ -6,15 +6,12 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import { Place } from '../../Interfaces/Models/Place';
 import { Toasts } from '../../Utils/Toasts';
 import {
   SearchModel,
   SearchModelWithCount,
   SearchResultsModel,
 } from '../../Interfaces/SearchResultModel';
-import { MolenData } from '../../Interfaces/Models/MolenData';
-import { MolenType } from '../../Interfaces/Models/MolenType';
 import { GetMolenIcon, GetMolenTypeIcon } from '../../Utils/GetMolenIcon';
 import {
   Subject,
@@ -30,6 +27,11 @@ import {
   fromTypedApi,
   getTypedApiErrorMessage,
 } from '../../Utils/TypedApiObservable';
+import {
+  Place,
+  MolenData,
+  MolenType,
+} from '../../api/generated/data-contracts';
 
 @Component({
   selector: 'app-search-bar',

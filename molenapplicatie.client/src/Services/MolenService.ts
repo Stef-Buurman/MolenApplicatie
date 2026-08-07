@@ -9,12 +9,12 @@ import {
   Subject,
   tap,
 } from 'rxjs';
-import { MolenData } from '../Interfaces/Models/MolenData';
 import { MolenFilterList } from '../Interfaces/Filters/MolenFilterList';
 import { RecentAddedImages } from '../Interfaces/MolensResponseType';
 import {
   molenDeleteMolenImage,
   molenGetMapSummary,
+  molenGetMolensWithImageCount,
   molenGetMolenDataById,
   molenGetMolenFilters,
   molenGetNewAddedMolens,
@@ -24,6 +24,7 @@ import {
 import { CacheManager } from '../Utils/CacheManager';
 import { MolenCacheKeys } from '../Utils/MolenCacheKeys';
 import { fromTypedApi } from '../Utils/TypedApiObservable';
+import { MolenData } from '../api/generated/data-contracts';
 
 export interface MolenMapSummary {
   totalMolensWithImage: number;
@@ -37,6 +38,7 @@ export class MolenService {
   public selectedMolen?: MolenData;
 
   private readonly mapSummaryCacheTtlMinutes = 2;
+  private readonly withImageCountCacheTtlMinutes = 5;
   private readonly filterCacheTtlMinutes = 15;
   private readonly molenDetailsCacheTtlMinutes = 5;
 
@@ -45,6 +47,10 @@ export class MolenService {
     recentAddedImages: [],
   });
   public readonly mapSummary$ = this.mapSummarySubject.asObservable();
+
+  private readonly molensWithImageCountSubject = new BehaviorSubject<number>(0);
+  public readonly molensWithImageCount$ =
+    this.molensWithImageCountSubject.asObservable();
 
   private readonly mapRefreshSubject = new Subject<void>();
   public readonly mapRefresh$ = this.mapRefreshSubject.asObservable();
@@ -104,6 +110,27 @@ export class MolenService {
     ).pipe(
       tap((summary) => {
         this.mapSummarySubject.next(summary);
+      }),
+    );
+  }
+
+  public getMolensWithImageCount(): Observable<number> {
+    return defer(() =>
+      from(
+        CacheManager.getOrSet(
+          MolenCacheKeys.withImageCount,
+          () =>
+            firstValueFrom(
+              fromTypedApi(molenGetMolensWithImageCount()).pipe(
+                map((count) => Number(count)),
+              ),
+            ),
+          this.withImageCountCacheTtlMinutes,
+        ),
+      ),
+    ).pipe(
+      tap((count) => {
+        this.molensWithImageCountSubject.next(count);
       }),
     );
   }
@@ -197,6 +224,7 @@ export class MolenService {
     CacheManager.clearByPrefix(MolenCacheKeys.prefix);
     this.mapRefreshSubject.next();
     this.refreshMapSummary();
+    this.refreshMolensWithImageCount();
   }
 
   private refreshMapSummary(): void {
@@ -204,6 +232,14 @@ export class MolenService {
       error: () => {
         // The data-changing operation succeeded; a summary refresh failure
         // should not turn that operation into an error.
+      },
+    });
+  }
+
+  private refreshMolensWithImageCount(): void {
+    this.getMolensWithImageCount().subscribe({
+      error: () => {
+        // Keep the successfully completed image change as the main result.
       },
     });
   }

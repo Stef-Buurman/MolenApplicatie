@@ -9,7 +9,8 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { ConfirmationDialogData } from '../../../Interfaces/ConfirmationDialogData';
 import { Toasts } from '../../../Utils/Toasts';
 import { DialogReturnType } from '../../../Interfaces/DialogReturnType';
-import { MolenImage } from '../../../Interfaces/Models/MolenImage';
+import { MolenImageType } from '../../../Interfaces/Models/MolenImageType';
+import { AddedImage } from '../../../api/generated/data-contracts';
 
 @Component({
   selector: 'app-image-dialog',
@@ -20,20 +21,28 @@ import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 export class ImageDialogComponent {
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { selectedImage: MolenImage; canBeDeleted: boolean },
+    public data: {
+      selectedImage: MolenImageType;
+      canBeDeleted: boolean;
+    },
     private dialogRef: MatDialogRef<ImageDialogComponent>,
     private dialog: MatDialog,
     private toast: Toasts,
   ) {}
 
-  get image(): MolenImage {
+  get image(): MolenImageType {
     return this.data.selectedImage;
   }
 
+  isAddedImage(image: MolenImageType): image is AddedImage {
+    return 'dateTaken' in image;
+  }
+
   getFilePath(): string | undefined {
-    if (this.data && this.data.selectedImage) {
+    if (this.data?.selectedImage) {
       return this.data.selectedImage.filePath;
     }
+
     return undefined;
   }
 
@@ -53,7 +62,7 @@ export class ImageDialogComponent {
 
       dialogRef.afterClosed().subscribe({
         next: (result: DialogReturnType) => {
-          if (result.status == DialogReturnStatus.Confirmed) {
+          if (result.status === DialogReturnStatus.Confirmed) {
             this.dialogRef.close({
               status: DialogReturnStatus.Deleted,
               api_key: result.api_key,
@@ -68,11 +77,13 @@ export class ImageDialogComponent {
     }
   }
 
-  downloadImage(image: MolenImage): void {
+  downloadImage(image: MolenImageType): void {
     const link = document.createElement('a');
+
     link.href = image.filePath;
     link.download = image.name;
     link.rel = 'noopener';
+
     link.click();
   }
 }

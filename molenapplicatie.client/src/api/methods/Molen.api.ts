@@ -520,6 +520,53 @@ export async function molenGetMapSummary(
  * No description
  *
  * @tags Molen
+ * @name MolenGetMolensWithImageCount
+ * @request GET:/api/molen/with-image-count
+ */
+export async function molenGetMolensWithImageCount(
+  options: ApiMethodOptions<
+    number,
+    | HttpValidationProblemDetails
+    | ProblemDetails
+    | HttpValidationProblemDetails,
+    RequestParams
+  > = {},
+): Promise<
+  ApiResult<
+    number,
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >
+> {
+  const { onSuccess, onError, params = {} } = options;
+
+  return handleApiResponse<
+    number,
+    HttpValidationProblemDetails | ProblemDetails | HttpValidationProblemDetails
+  >(
+    () =>
+      request<
+        number,
+        | HttpValidationProblemDetails
+        | ProblemDetails
+        | HttpValidationProblemDetails
+      >({
+        ...params,
+        path: `/api/molen/with-image-count`,
+        method: 'GET',
+        format: 'json',
+      }),
+    {
+      onSuccess: onSuccess ?? typedApiDefaultSuccessHandler,
+      onError: onError ?? typedApiDefaultErrorHandler,
+      fallbackErrorMessage: typedApiDefaultErrorMessage,
+    },
+  );
+}
+
+/**
+ * No description
+ *
+ * @tags Molen
  * @name MolenGetMolenDataById
  * @request GET:/api/molen/{id}
  */
@@ -955,7 +1002,7 @@ export async function molenGetAllMolen(
  * @request GET:/api/molen/map-items
  */
 export async function molenGetMapItems(
-  query: MolenGetMapItemsParams,
+  query: MolenGetMapItemsParams = {},
   options: ApiMethodOptions<
     (MapPointResponse | MapClusterResponse)[],
     | HttpValidationProblemDetails

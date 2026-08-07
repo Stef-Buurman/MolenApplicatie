@@ -125,6 +125,7 @@ export interface MolenData {
   bedrijfsvaardigheid?: string | null;
   plaats?: string | null;
   adres?: string | null;
+  land?: string | null;
   provincie?: string | null;
   gemeente?: string | null;
   streek?: string | null;
@@ -425,15 +426,15 @@ export interface MolenGetMolenTypesParams {
 
 export interface MolenGetMapItemsParams {
   /** @format double */
-  west: number;
+  west?: number;
   /** @format double */
-  south: number;
+  south?: number;
   /** @format double */
-  east: number;
+  east?: number;
   /** @format double */
-  north: number;
+  north?: number;
   /** @format int32 */
-  zoom: number;
+  zoom?: number;
   molenType?: string;
   provincie?: string;
   molenState?: string;

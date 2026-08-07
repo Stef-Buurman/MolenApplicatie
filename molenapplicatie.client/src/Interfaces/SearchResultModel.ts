@@ -1,6 +1,4 @@
-import { MolenData } from './Models/MolenData';
-import { MolenType } from './Models/MolenType';
-import { Place } from './Models/Place';
+import { MolenData, MolenType, Place } from '../api/generated/data-contracts';
 
 export interface SearchModel<T> {
   reference: string;

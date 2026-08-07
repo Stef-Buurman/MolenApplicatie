@@ -57,9 +57,14 @@ export class MapPageComponent implements OnInit, OnDestroy {
     this.molenService.mapSummary$
       .pipe(takeUntil(this.destroyed$))
       .subscribe((summary) => {
-        this.molensWithImageAmount = summary.totalMolensWithImage;
         this.recentAddedImages = summary.recentAddedImages;
         this.isPopupVisible = summary.recentAddedImages.length > 0;
+      });
+
+    this.molenService.molensWithImageCount$
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((count) => {
+        this.molensWithImageAmount = count;
       });
 
     this.molenService
@@ -68,6 +73,17 @@ export class MapPageComponent implements OnInit, OnDestroy {
       .subscribe({
         error: () => {
           this.toasts.showError('De kaartinformatie kon niet worden geladen.');
+        },
+      });
+
+    this.molenService
+      .getMolensWithImageCount()
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe({
+        error: () => {
+          this.toasts.showError(
+            'Het aantal molens met een foto kon niet worden geladen.',
+          );
         },
       });
   }

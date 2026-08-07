@@ -49,28 +49,162 @@ app-molen-clustered-map {
 }
 
 .molen-map-cluster {
-  display: flex;
-  width: 48px;
-  height: 48px;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid white;
+  position: relative;
+  display: grid;
+  box-sizing: border-box;
+  width: var(--molen-cluster-size, 40px);
+  height: var(--molen-cluster-size, 40px);
+  place-items: center;
+  border: 2px solid rgba(248, 244, 227, 0.96);
   border-radius: 50%;
-  background-color: #0058a2;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-  color: white;
-  font-size: 13px;
+  background-color: var(--molen-cluster-color);
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 3px 8px rgba(18, 42, 54, 0.28),
+    0 8px 18px rgba(18, 42, 54, 0.12);
+  color: #fffdf4;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--molen-cluster-font-size, 12px);
+  font-variant-numeric: tabular-nums;
   font-weight: 800;
+  letter-spacing: -0.025em;
   line-height: 1;
   text-align: center;
+  text-shadow: 0 1px 2px rgba(18, 42, 54, 0.42);
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 140ms ease,
+    filter 140ms ease,
+    transform 140ms ease;
+}
+
+.molen-map-cluster::before {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.molen-map-cluster-count {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 0 3px;
+}
+
+.molen-map-cluster--exact-location {
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 0 0 4px rgba(0, 88, 162, 0.2),
+    0 3px 8px rgba(18, 42, 54, 0.3),
+    0 8px 18px rgba(18, 42, 54, 0.13);
+}
+
+.molen-map-cluster-stack {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+  display: block;
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 70, 122, 0.9);
+  border-radius: 50%;
+  background: #fff7d9;
+  box-shadow: 0 2px 5px rgba(18, 42, 54, 0.28);
+  pointer-events: none;
+}
+
+.molen-map-cluster-stack > span {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  border: 1px solid #0058a2;
+  border-radius: 50%;
+  background: #2ebd59;
+}
+
+.molen-map-cluster-stack > span:first-child {
+  top: 3px;
+  left: 3px;
+}
+
+.molen-map-cluster-stack > span:last-child {
+  right: 3px;
+  bottom: 3px;
+}
+
+.molen-map-cluster--low {
+  --molen-cluster-color: #075f9b;
+  --molen-cluster-edge-color: #064a78;
+}
+
+.molen-map-cluster--low-medium {
+  --molen-cluster-color: #147e7b;
+  --molen-cluster-edge-color: #0e615f;
+  --molen-cluster-font-size: 12.1px;
+}
+
+.molen-map-cluster--medium {
+  --molen-cluster-color: #3a8748;
+  --molen-cluster-edge-color: #2b6836;
+  --molen-cluster-font-size: 12.25px;
+}
+
+.molen-map-cluster--medium-high {
+  --molen-cluster-color: #9a741e;
+  --molen-cluster-edge-color: #735715;
+  --molen-cluster-font-size: 12.5px;
+}
+
+.molen-map-cluster--high {
+  --molen-cluster-color: #ad572f;
+  --molen-cluster-edge-color: #843e20;
+  --molen-cluster-font-size: 12.75px;
+}
+
+.molen-map-cluster--very-high {
+  --molen-cluster-color: #8e394d;
+  --molen-cluster-edge-color: #69283a;
+  --molen-cluster-font-size: 13px;
 }
 
 .molen-map-cluster:hover {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
-  transform: scale(1.08);
+  filter: brightness(1.05) saturate(1.03);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 4px 10px rgba(18, 42, 54, 0.3),
+    0 10px 22px rgba(18, 42, 54, 0.15);
+}
+
+.molen-map-cluster--exact-location:hover {
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 0 0 4px rgba(0, 88, 162, 0.26),
+    0 4px 10px rgba(18, 42, 54, 0.3),
+    0 10px 22px rgba(18, 42, 54, 0.15);
+}
+
+.molen-map-cluster:active {
+  filter: brightness(0.98);
+  transform: translateY(0);
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 2px 6px rgba(18, 42, 54, 0.26),
+    0 6px 14px rgba(18, 42, 54, 0.12);
+}
+
+.molen-map-cluster--exact-location:active {
+  box-shadow:
+    0 0 0 1px var(--molen-cluster-edge-color),
+    0 0 0 4px rgba(0, 88, 162, 0.2),
+    0 2px 6px rgba(18, 42, 54, 0.26),
+    0 6px 14px rgba(18, 42, 54, 0.12);
 }
 
 .molen-map-popup .leaflet-popup-content {

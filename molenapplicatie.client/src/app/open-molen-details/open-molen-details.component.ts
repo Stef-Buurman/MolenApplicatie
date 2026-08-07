@@ -2,10 +2,10 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { MolenData } from '../../Interfaces/Models/MolenData';
 import { MolenService } from '../../Services/MolenService';
 import { Toasts } from '../../Utils/Toasts';
 import { MolenDialogComponent } from '../dialogs/molen-dialog/molen-dialog.component';
+import { MolenData } from '../../api/generated/data-contracts';
 
 @Component({
   selector: 'app-open-molen-details',

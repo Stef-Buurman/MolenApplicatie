@@ -1,33 +1,39 @@
 <div class="selectedImage">
   <img [src]="getFilePath()" alt="Alternate Text" />
+
   <div class="button-container">
     <div class="image-buttons">
       <button
-        class="btn {{
-          data.canBeDeleted ? 'deleteButton' : 'deleteButtoDisabled'
-        }}"
+        class="btn"
+        [class.deleteButton]="data.canBeDeleted"
+        [class.deleteButtoDisabled]="!data.canBeDeleted"
         (click)="openDeleteDialog()"
       >
-        <i class="fas fa-trash"></i> Delete
+        <i class="fas fa-trash"></i>
+        Delete
       </button>
+
       <button
-        class="btn download_btn {{
-          image.dateTaken ? 'remove-round-border' : ''
-        }}"
+        class="btn download_btn"
+        [class.remove-round-border]="isAddedImage(image) && image.dateTaken"
         (click)="downloadImage(image)"
       >
-        <i class="fa fa-download"></i> Download
+        <i class="fa fa-download"></i>
+        Download
       </button>
-      <div class="date-taken" *ngIf="image.dateTaken">
+
+      <div class="date-taken" *ngIf="isAddedImage(image) && image.dateTaken">
         Foto gemaakt op <br />
         {{ image.dateTaken | date: "d MMMM y" }}
       </div>
+
       <img
         class="gif"
         src="Assets/Background/Buurman-en-Buurman.gif"
         alt="Alternate Text"
       />
     </div>
+
     <div>
       <div (click)="onClose()" class="container-close-btn">
         <div class="circle">

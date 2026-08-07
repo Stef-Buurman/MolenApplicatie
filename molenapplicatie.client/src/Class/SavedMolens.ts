@@ -1,4 +1,4 @@
-import { MolenData } from '../Interfaces/Models/MolenData';
+import { MolenData } from '../api/generated/data-contracts';
 
 export class SavedMolens {
   LastUpdatedTimestamp: number;

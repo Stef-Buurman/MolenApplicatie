@@ -1,7 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FilterFormValues } from '../../../Interfaces/Filters/Filter';
-import { MolenFilterList } from '../../../Interfaces/Filters/MolenFilterList';
+import {
+  MolenFilterList,
+  ValueName,
+} from '../../../Interfaces/Filters/MolenFilterList';
 import { MolenFilters } from '../../../Interfaces/Filters/MolenFilters';
 import { MolenService } from '../../../Services/MolenService';
 
@@ -14,7 +17,7 @@ import { MolenService } from '../../../Services/MolenService';
 export class FilterMapComponent implements OnInit {
   selectedFilter: MolenFilters = {
     provincie: '',
-    toestand: 'Werkend',
+    toestand: '',
     type: '',
     hasImage: '',
   };
@@ -44,12 +47,7 @@ export class FilterMapComponent implements OnInit {
     }
 
     this.selectedFilter.provincie = this.getStringFilterValue('Provincie');
-    this.selectedFilter.toestand =
-      this.getStringFilterValue('MolenState') || 'Werkend';
-
-    if (!this.filters['MolenState']) {
-      this.filters['MolenState'] = this.createWerkendFilter();
-    }
+    this.selectedFilter.toestand = this.getStringFilterValue('MolenState');
     this.selectedFilter.type = this.getStringFilterValue('MolenType');
 
     const hasImage = this.filters['HasImage']?.value;
@@ -58,7 +56,11 @@ export class FilterMapComponent implements OnInit {
 
     this.molenService.getAllMolenFilters().subscribe({
       next: (filters) => {
-        this.molenFilters = filters;
+        this.molenFilters = {
+          provincies: this.getUniqueOptions(filters.provincies),
+          toestanden: this.getUniqueOptions(filters.toestanden),
+          types: this.getUniqueOptions(filters.types),
+        };
       },
     });
   }
@@ -92,28 +94,14 @@ export class FilterMapComponent implements OnInit {
   }
 
   removeFilters(): void {
-    const werkendFilter = this.createWerkendFilter();
-
     this.selectedFilter = {
       provincie: '',
-      toestand: 'Werkend',
+      toestand: '',
       type: '',
       hasImage: '',
     };
-    this.filters = {
-      MolenState: werkendFilter,
-    };
-    this.onClose([werkendFilter]);
-  }
-
-  private createWerkendFilter(): FilterFormValues {
-    return {
-      filterName: 'MolenState',
-      value: 'Werkend',
-      type: 'string',
-      isAList: false,
-      name: 'Toestand',
-    };
+    this.filters = {};
+    this.onClose([]);
   }
 
   private getStringFilterValue(filterName: string): string {
@@ -121,19 +109,44 @@ export class FilterMapComponent implements OnInit {
     return typeof value === 'string' ? value : '';
   }
 
+  private getUniqueOptions(options: ValueName[]): ValueName[] {
+    const uniqueOptions = new Map<string, ValueName>();
+
+    for (const option of options ?? []) {
+      const name = option.name?.trim();
+      if (!name) continue;
+
+      const key = name.toLocaleLowerCase('nl-NL');
+      const existingOption = uniqueOptions.get(key);
+
+      if (!existingOption || option.count > existingOption.count) {
+        uniqueOptions.set(key, {
+          name,
+          count: option.count,
+        });
+      }
+    }
+
+    return Array.from(uniqueOptions.values()).sort((left, right) =>
+      left.name.localeCompare(right.name, 'nl-NL'),
+    );
+  }
+
   private setStringFilter(
     filterName: string,
     name: string,
     value: string,
   ): void {
-    if (!value) {
+    const normalizedValue = value?.trim();
+
+    if (!normalizedValue) {
       delete this.filters[filterName];
       return;
     }
 
     this.filters[filterName] = {
       filterName,
-      value,
+      value: normalizedValue,
       type: 'string',
       isAList: false,
       name,

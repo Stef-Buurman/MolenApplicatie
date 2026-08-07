@@ -1,5 +1,4 @@
-import { MolenData } from './Models/MolenData';
-import { MolenImage } from './Models/MolenImage';
+import { MolenData, MolenImage } from '../api/generated/data-contracts';
 
 export interface MolensResponseType<T> {
   activeMolensWithImage: number;

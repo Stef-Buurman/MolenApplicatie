@@ -5,13 +5,13 @@ import {
   MatDialog,
 } from '@angular/material/dialog';
 import { EMPTY, Observable } from 'rxjs';
-import { MolenData } from '../../../Interfaces/Models/MolenData';
 import { Toasts } from '../../../Utils/Toasts';
 import { UploadImageDialogComponent } from '../upload-image-dialog/upload-image-dialog.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
-import { MolenImage } from '../../../Interfaces/Models/MolenImage';
 import { MolenService } from '../../../Services/MolenService';
+import { MolenData } from '../../../api/generated/data-contracts';
+import { MolenImageType } from '../../../Interfaces/Models/MolenImageType';
 
 @Component({
   selector: 'app-molen-dialog',
@@ -21,8 +21,8 @@ import { MolenService } from '../../../Services/MolenService';
 })
 export class MolenDialogComponent {
   public molen?: MolenData;
-  public molenImages: MolenImage[] = [];
-  public selectedImage?: MolenImage;
+  public molenImages: MolenImageType[] = [];
+  public selectedImage?: MolenImageType;
   goToMolenId?: string;
 
   isExpanded = false;
@@ -163,8 +163,8 @@ export class MolenDialogComponent {
     });
   }
 
-  getAllMolenImages(): MolenImage[] {
-    var AllImages: MolenImage[] = [];
+  getAllMolenImages(): MolenImageType[] {
+    var AllImages: MolenImageType[] = [];
     if (this.molen) {
       if (this.molen.images) {
         AllImages = AllImages.concat(this.molen.images);

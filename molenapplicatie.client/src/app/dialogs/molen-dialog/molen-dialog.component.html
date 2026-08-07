@@ -28,7 +28,7 @@
       <p *ngIf="molen.name">
         <strong>Volledige Naam:</strong> {{ molen.name }}
       </p>
-      <p><strong>Ten Brugge Nr:</strong> {{ molen.ten_Brugge_Nr }}</p>
+      <p><strong>Referentie:</strong> {{ molen.ten_Brugge_Nr }}</p>
       <p *ngIf="molen.functie"><strong>Functie:</strong> {{ molen.functie }}</p>
       <p><strong>Toestand:</strong> {{ molen.toestand || "Onbekend" }}</p>
       <p><strong>Bouwjaar:</strong> {{ getBouwjaar() }}</p>
@@ -42,6 +42,7 @@
 
       <p><strong>Plaats:</strong> {{ molen.plaats }}</p>
       <p *ngIf="molen.adres"><strong>Adres:</strong> {{ molen.adres }}</p>
+      <p *ngIf="molen.land"><strong>Land:</strong> {{ molen.land }}</p>
       <p *ngIf="molen.provincie">
         <strong>Provincie:</strong> {{ molen.provincie }}
         <span *ngIf="molen.gemeente"
@@ -50,7 +51,7 @@
       </p>
       <p *ngIf="molen.streek"><strong>Streek:</strong> {{ molen.streek }}</p>
       <p>
-        <strong>Coordinates:</strong> Lat: {{ molen.latitude }}, Long:
+        <strong>Coördinaten:</strong> Lat: {{ molen.latitude }}, Long:
         {{ molen.longitude }}
       </p>
       <p *ngIf="molen.plaatsaanduiding">
@@ -64,7 +65,7 @@
       </p>
       <p *ngIf="molen.doel"><strong>Doel:</strong> {{ molen.doel }}</p>
 
-      <p><strong>Model Types:</strong></p>
+      <p><strong>Molentypen:</strong></p>
       <ul>
         <li *ngFor="let association of molen.molenTypeAssociations">
           <span *ngIf="association.molenType != null">

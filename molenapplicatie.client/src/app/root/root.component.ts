@@ -5,9 +5,6 @@ import { DialogReturnStatus } from '../../Enums/DialogReturnStatus';
 import { ConfirmationDialogData } from '../../Interfaces/ConfirmationDialogData';
 import { DialogReturnType } from '../../Interfaces/DialogReturnType';
 import { FilterFormValues } from '../../Interfaces/Filters/Filter';
-import { MolenData } from '../../Interfaces/Models/MolenData';
-import { MolenType } from '../../Interfaces/Models/MolenType';
-import { Place } from '../../Interfaces/Models/Place';
 import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 import { SearchModelWithCount } from '../../Interfaces/SearchResultModel';
 import { ErrorService } from '../../Services/ErrorService';
@@ -16,6 +13,11 @@ import { getTypedApiErrorMessage } from '../../Utils/TypedApiObservable';
 import { Toasts } from '../../Utils/Toasts';
 import { ConfirmationDialogComponent } from '../dialogs/confirmation-dialog/confirmation-dialog.component';
 import { FilterMapComponent } from '../dialogs/filter-map/filter-map.component';
+import {
+  Place,
+  MolenData,
+  MolenType,
+} from '../../api/generated/data-contracts';
 
 export interface MapLocation {
   latitude: number;

@@ -1,8 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { RecentAddedImages } from '../../Interfaces/MolensResponseType';
 import { Router } from '@angular/router';
-import { MolenImage } from '../../Interfaces/Models/MolenImage';
-import { MolenData } from '../../Interfaces/Models/MolenData';
+import { MolenData, MolenImage } from '../../api/generated/data-contracts';
 
 @Component({
   selector: 'app-popup',
