@@ -28,6 +28,11 @@ import { GetMolenIcon } from '../../Utils/GetMolenIcon';
 import { MolenCacheKeys } from '../../Utils/MolenCacheKeys';
 import { molenGetMapItems } from '../../api/methods/Molen.api';
 
+interface RenderedMapMarker {
+  marker: L.Marker;
+  signature: string;
+}
+
 interface MolenIconProperties {
   toestand?: string | null;
   types?: string[] | null;
@@ -68,6 +73,7 @@ export class MolenClusteredMapComponent
   private map?: L.Map;
   private mapItemsLayer?: L.LayerGroup;
   private outlineLayer?: L.Polygon;
+  private renderedMarkers = new Map<string, RenderedMapMarker>();
 
   private resizeObserver?: ResizeObserver;
   private reloadTimeout?: ReturnType<typeof setTimeout>;
@@ -133,6 +139,7 @@ export class MolenClusteredMapComponent
     this.map = undefined;
     this.mapItemsLayer = undefined;
     this.outlineLayer = undefined;
+    this.renderedMarkers.clear();
 
     if (initialLoadWasPending) {
       this.sharedData.IsLoadingFalse();
@@ -344,6 +351,7 @@ export class MolenClusteredMapComponent
       north,
       zoom,
       molenType: this.getStringFilterValue('MolenType'),
+      land: this.getStringFilterValue('Land'),
       provincie: this.getStringFilterValue('Provincie'),
       molenState: this.getStringFilterValue('MolenState'),
       hasImage: this.getBooleanFilterValue('HasImage'),
@@ -437,20 +445,42 @@ export class MolenClusteredMapComponent
     if (!this.map || !this.mapItemsLayer) return;
 
     this.removeOutline();
-    this.mapItemsLayer.clearLayers();
+
+    const nextKeys = new Set<string>();
 
     for (const mapItem of mapItems) {
-      if (this.isCluster(mapItem)) {
-        this.addCluster(mapItem);
-      } else {
-        this.addPoint(mapItem);
+      const key = this.getMapItemKey(mapItem);
+      const signature = this.getMapItemSignature(mapItem);
+      nextKeys.add(key);
+
+      const renderedMarker = this.renderedMarkers.get(key);
+
+      if (renderedMarker?.signature === signature) {
+        continue;
       }
+
+      if (renderedMarker) {
+        this.mapItemsLayer.removeLayer(renderedMarker.marker);
+        this.renderedMarkers.delete(key);
+      }
+
+      const marker = this.isCluster(mapItem)
+        ? this.createClusterMarker(mapItem)
+        : this.createPointMarker(mapItem);
+
+      marker.addTo(this.mapItemsLayer);
+      this.renderedMarkers.set(key, { marker, signature });
+    }
+
+    for (const [key, renderedMarker] of this.renderedMarkers) {
+      if (nextKeys.has(key)) continue;
+
+      this.mapItemsLayer.removeLayer(renderedMarker.marker);
+      this.renderedMarkers.delete(key);
     }
   }
 
-  private addPoint(point: MapPointResponse): void {
-    if (!this.mapItemsLayer) return;
-
+  private createPointMarker(point: MapPointResponse): L.Marker {
     const molenPoint = point as MolenMapPointResponse;
 
     const marker = L.marker([point.latitude, point.longitude], {
@@ -464,12 +494,10 @@ export class MolenClusteredMapComponent
       this.navigateToUrl(point.url);
     });
 
-    marker.addTo(this.mapItemsLayer);
+    return marker;
   }
 
-  private addCluster(cluster: MapClusterResponse): void {
-    if (!this.mapItemsLayer) return;
-
+  private createClusterMarker(cluster: MapClusterResponse): L.Marker {
     const molenCluster = cluster as MolenMapClusterResponse;
     const isSingleMolen = cluster.pointCount === 1;
     const isExactLocationCluster = this.isExactLocationCluster(cluster);
@@ -508,7 +536,38 @@ export class MolenClusteredMapComponent
       this.handleClusterClick(cluster);
     });
 
-    marker.addTo(this.mapItemsLayer);
+    return marker;
+  }
+
+  private getMapItemKey(mapItem: MapItemResponse): string {
+    return this.isCluster(mapItem)
+      ? `cluster:${mapItem.clusterId}`
+      : `point:${mapItem.url}`;
+  }
+
+  private getMapItemSignature(mapItem: MapItemResponse): string {
+    if (this.isCluster(mapItem)) {
+      return JSON.stringify([
+        mapItem.latitude,
+        mapItem.longitude,
+        mapItem.pointCount,
+        mapItem.expansionZoom,
+        mapItem.popupData,
+        mapItem.outline,
+      ]);
+    }
+
+    const molenPoint = mapItem as MolenMapPointResponse;
+
+    return JSON.stringify([
+      mapItem.latitude,
+      mapItem.longitude,
+      mapItem.url,
+      mapItem.popupText,
+      molenPoint.toestand,
+      molenPoint.types,
+      molenPoint.hasImage,
+    ]);
   }
 
   private handleSingleMolenClusterClick(cluster: MapClusterResponse): void {

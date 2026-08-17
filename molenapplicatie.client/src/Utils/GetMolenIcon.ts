@@ -112,7 +112,7 @@ export function GetMolenTypeIcon(types?: string[]): string {
     return 'windmolen';
   }
 
-  return 'windmolen_verdwenen';
+  return 'windmolen';
 }
 
 function normalizeMolenType(value: string): string {

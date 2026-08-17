@@ -25,10 +25,17 @@
       [selected]="selectedFilter.toestand"
       (selectedChange)="selectedFilter.toestand = $event"
     ></app-custom-dropdown>
+    <label>Land</label>
+    <app-custom-dropdown
+      [placeholder]="'Alle landen'"
+      [options]="molenFilters.landen"
+      [selected]="selectedFilter.land"
+      (selectedChange)="onCountryChange($event)"
+    ></app-custom-dropdown>
     <label for="provincie-select">Provincie</label>
     <app-custom-dropdown
       [placeholder]="'Alle provincies'"
-      [options]="molenFilters.provincies"
+      [options]="provinceOptions"
       [selected]="selectedFilter.provincie"
       (selectedChange)="selectedFilter.provincie = $event"
     ></app-custom-dropdown>

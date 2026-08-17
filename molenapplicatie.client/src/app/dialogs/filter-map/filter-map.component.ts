@@ -16,6 +16,7 @@ import { MolenService } from '../../../Services/MolenService';
 })
 export class FilterMapComponent implements OnInit {
   selectedFilter: MolenFilters = {
+    land: '',
     provincie: '',
     toestand: '',
     type: '',
@@ -23,6 +24,7 @@ export class FilterMapComponent implements OnInit {
   };
 
   molenFilters: MolenFilterList = {
+    landen: [],
     provincies: [],
     toestanden: [],
     types: [],
@@ -46,6 +48,7 @@ export class FilterMapComponent implements OnInit {
       this.filters[filter.filterName] = { ...filter };
     }
 
+    this.selectedFilter.land = this.getStringFilterValue('Land');
     this.selectedFilter.provincie = this.getStringFilterValue('Provincie');
     this.selectedFilter.toestand = this.getStringFilterValue('MolenState');
     this.selectedFilter.type = this.getStringFilterValue('MolenType');
@@ -57,12 +60,59 @@ export class FilterMapComponent implements OnInit {
     this.molenService.getAllMolenFilters().subscribe({
       next: (filters) => {
         this.molenFilters = {
+          landen: this.getUniqueOptions(filters.landen),
           provincies: this.getUniqueOptions(filters.provincies),
           toestanden: this.getUniqueOptions(filters.toestanden),
           types: this.getUniqueOptions(filters.types),
         };
       },
     });
+  }
+
+  get provinceOptions(): ValueName[] {
+    const selectedCountry = this.selectedFilter.land?.trim();
+
+    if (!selectedCountry) {
+      const combinedProvinces = new Map<string, ValueName>();
+
+      for (const province of this.molenFilters.provincies) {
+        const key = province.name.toLocaleLowerCase('nl-NL');
+        const existingProvince = combinedProvinces.get(key);
+
+        if (existingProvince) {
+          existingProvince.count += province.count;
+        } else {
+          combinedProvinces.set(key, {
+            name: province.name,
+            count: province.count,
+          });
+        }
+      }
+
+      return Array.from(combinedProvinces.values()).sort((left, right) =>
+        left.name.localeCompare(right.name, 'nl-NL'),
+      );
+    }
+
+    return this.molenFilters.provincies.filter(
+      (province) =>
+        province.parent?.localeCompare(selectedCountry, 'nl-NL', {
+          sensitivity: 'accent',
+        }) === 0,
+    );
+  }
+
+  onCountryChange(country: string): void {
+    this.selectedFilter.land = country;
+
+    if (
+      this.selectedFilter.provincie &&
+      !this.provinceOptions.some(
+        (province) => province.name === this.selectedFilter.provincie,
+      )
+    ) {
+      this.selectedFilter.provincie = '';
+    }
   }
 
   onClose(filters?: FilterFormValues[]): void {
@@ -75,6 +125,7 @@ export class FilterMapComponent implements OnInit {
       'Toestand',
       this.selectedFilter.toestand,
     );
+    this.setStringFilter('Land', 'Land', this.selectedFilter.land);
     this.setStringFilter(
       'Provincie',
       'Provincie',
@@ -95,6 +146,7 @@ export class FilterMapComponent implements OnInit {
 
   removeFilters(): void {
     this.selectedFilter = {
+      land: '',
       provincie: '',
       toestand: '',
       type: '',
@@ -116,13 +168,15 @@ export class FilterMapComponent implements OnInit {
       const name = option.name?.trim();
       if (!name) continue;
 
-      const key = name.toLocaleLowerCase('nl-NL');
+      const parent = option.parent?.trim();
+      const key = `${parent?.toLocaleLowerCase('nl-NL') ?? ''}|${name.toLocaleLowerCase('nl-NL')}`;
       const existingOption = uniqueOptions.get(key);
 
       if (!existingOption || option.count > existingOption.count) {
         uniqueOptions.set(key, {
           name,
           count: option.count,
+          parent,
         });
       }
     }

@@ -195,6 +195,7 @@ export interface MolenData {
 }
 
 export interface MolenFilters {
+  landen: ValueName[];
   provincies: ValueName[];
   toestanden: ValueName[];
   types: ValueName[];
@@ -379,6 +380,7 @@ export interface ValueName {
   name: string;
   /** @format int32 */
   count: number;
+  parent?: string | null;
 }
 
 export interface MolenGetAllMolensByProvincieParams {
@@ -436,6 +438,7 @@ export interface MolenGetMapItemsParams {
   /** @format int32 */
   zoom?: number;
   molenType?: string;
+  land?: string;
   provincie?: string;
   molenState?: string;
   hasImage?: boolean;

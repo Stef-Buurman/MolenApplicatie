@@ -157,174 +157,6 @@
         }
       }
     },
-    "/api/DB/CallMolenResponses": {
-      "get": {
-        "tags": ["DB"],
-        "operationId": "DB_CallMolenResponses_GET_api_DB_CallMolenResponses",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected server error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "x-typedapi-operation": {
-          "controllerName": "DB",
-          "actionName": "CallMolenResponses"
-        }
-      }
-    },
-    "/api/DB/SaveMolenResponses": {
-      "get": {
-        "tags": ["DB"],
-        "operationId": "DB_SaveMolenResponses_GET_api_DB_SaveMolenResponses",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected server error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "x-typedapi-operation": {
-          "controllerName": "DB",
-          "actionName": "SaveMolenResponses"
-        }
-      }
-    },
-    "/api/DB/test": {
-      "get": {
-        "tags": ["DB"],
-        "operationId": "DB_test_GET_api_DB_test",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected server error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "x-typedapi-operation": {
-          "controllerName": "DB",
-          "actionName": "test"
-        }
-      }
-    },
-    "/api/DB/test2": {
-      "get": {
-        "tags": ["DB"],
-        "operationId": "DB_test2_GET_api_DB_test2",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected server error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "x-typedapi-operation": {
-          "controllerName": "DB",
-          "actionName": "test2"
-        }
-      }
-    },
     "/api/molen/all/{provincie}": {
       "get": {
         "tags": ["Molen"],
@@ -1733,6 +1565,13 @@
             }
           },
           {
+            "name": "Land",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Provincie",
             "in": "query",
             "schema": {
@@ -2674,9 +2513,15 @@
         "additionalProperties": false
       },
       "MolenFilters": {
-        "required": ["provincies", "toestanden", "types"],
+        "required": ["landen", "provincies", "toestanden", "types"],
         "type": "object",
         "properties": {
+          "landen": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueName"
+            }
+          },
           "provincies": {
             "type": "array",
             "items": {
@@ -3217,6 +3062,10 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          },
+          "parent": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
