@@ -1,4 +1,4 @@
-﻿namespace MolenApplicatie.Server.Utils
+namespace MolenApplicatie.Server.Utils
 {
     public static class Globals
     {
@@ -8,8 +8,9 @@
         public static readonly string MolenAddedImagesFolder = "wwwroot/MolenAddedImages";
         public static readonly string WWWROOTPath = "wwwroot";
         public static readonly int MaxNormalImagesCount = 2;
-        public static readonly List<string> AllowedMolenTypes = new List<string>
-        {
+
+        public static readonly List<string> AllowedMolenTypes =
+        [
             "beltmolen",
             "grondzeiler",
             "paltrokmolen",
@@ -24,6 +25,26 @@
             "watermolen",
             "ronde molen",
             "kantige molen"
-        };
+        ];
+
+        public static readonly List<string> MillDatabaseRemoteMolenTypes =
+        [
+            "hollow post mill",
+            "smock mill",
+            "tower mill",
+            "combined wind and watermill",
+            "composite mill",
+            "inverted windmill",
+            "paltrok mill",
+            "post mill"
+        ];
+
+        public static readonly List<string> AllowedMillDatabaseSourceTypes =
+        [
+            .. MillDatabaseRemoteMolenTypes,
+            "kantige molen",
+            "holländermühle",
+            "hollandermuhle"
+        ];
     }
 }

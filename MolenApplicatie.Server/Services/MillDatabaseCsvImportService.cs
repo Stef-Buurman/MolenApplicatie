@@ -1,13 +1,12 @@
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic.FileIO;
 using MolenApplicatie.Server.Data;
 using MolenApplicatie.Server.Models;
 using MolenApplicatie.Server.Models.MariaDB;
 using MolenApplicatie.Server.Services.Database;
+using MolenApplicatie.Server.Utils;
 using System.Globalization;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace MolenApplicatie.Server.Services
@@ -19,11 +18,13 @@ namespace MolenApplicatie.Server.Services
 
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dbMolenDataService;
+        private readonly TimeProvider _timeProvider;
 
-        public MillDatabaseCsvImportService(MolenDbContext dbContext, DBMolenDataService dbMolenDataService)
+        public MillDatabaseCsvImportService(MolenDbContext dbContext, DBMolenDataService dbMolenDataService, TimeProvider timeProvider)
         {
             _dbContext = dbContext;
             _dbMolenDataService = dbMolenDataService;
+            _timeProvider = timeProvider;
         }
 
         public Task<MillDatabaseImportResult> ImportAsync(Stream csvStream, CancellationToken token = default)
@@ -62,7 +63,7 @@ namespace MolenApplicatie.Server.Services
             ArgumentNullException.ThrowIfNull(processedExternalReferences);
             var result = new MillDatabaseImportResult();
             progressService?.SetProgressMessage("Reading rows from the downloaded CSV...", logToConsole: false);
-            var rows = ReadRows(csvStream, result, token);
+            var rows = MillDatabaseCsvReader.ReadRows(csvStream, result, token);
 
             if (rows.Count == 0)
             {
@@ -76,49 +77,9 @@ namespace MolenApplicatie.Server.Services
                     $"CSV contains {rows.Count:N0} rows. Loading existing mill references...",
                     logToConsole: false);
 
-            var existingMolens = await _dbContext.MolenData
-                .AsNoTracking()
-                .Select(molen => new ExistingMolenReference
-                {
-                    Id = molen.Id,
-                    MolenTBNId = molen.MolenTBNId,
-                    TenBruggeNr = molen.Ten_Brugge_Nr,
-                    Details = molen.Bijzonderheden
-                })
-                .ToListAsync(token);
-
-            var existingMolensByReference = existingMolens
-                .Where(molen => !string.IsNullOrWhiteSpace(molen.TenBruggeNr))
-                .GroupBy(
-                    molen => NormalizeReference(molen.TenBruggeNr),
-                    StringComparer.OrdinalIgnoreCase
-                )
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.First(),
-                    StringComparer.OrdinalIgnoreCase
-                );
-
-            var existingMolensByExternalReference = existingMolens
-                .SelectMany(molen => GetExternalReferenceAliases(molen)
-                    .Select(reference =>
-                        new KeyValuePair<string, ExistingMolenReference>(
-                            reference,
-                            molen
-                        )))
-                .GroupBy(
-                    pair => pair.Key,
-                    StringComparer.OrdinalIgnoreCase
-                )
-                .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .OrderBy(pair => IsMillDatabaseReference(
-                            pair.Value.TenBruggeNr) ? 1 : 0)
-                        .First()
-                        .Value,
-                    StringComparer.OrdinalIgnoreCase
-                );
+            var referenceIndex = await CreateReferenceIndexAsync(token);
+            var existingMolensByReference = referenceIndex.ByReference;
+            var existingMolensByExternalReference = referenceIndex.ByExternalReference;
 
             var processedSourceReferences = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var molensToImport = new Dictionary<string, MolenData>(StringComparer.OrdinalIgnoreCase);
@@ -162,6 +123,16 @@ namespace MolenApplicatie.Server.Services
 
                 if (correctedLatitude || correctedLongitude) AddWarning(result, $"CSV-regel {csvRowNumber}: typfout in coördinaten automatisch hersteld.");
                 sourceId = sourceId.Trim();
+
+                if (!HasAllowedMillDatabaseType(row, out var unsupportedTypes))
+                {
+                    result.SkippedUnsupportedMolenTypes++;
+                    AddWarning(
+                        result,
+                        $"CSV-regel {csvRowNumber}: niet-ondersteund molentype " +
+                        $"{unsupportedTypes}; rij overgeslagen.");
+                    continue;
+                }
 
                 var sourceReference = SourceReferencePrefix + sourceId;
                 var normalizedSourceReference = NormalizeReference(sourceReference);
@@ -318,11 +289,52 @@ namespace MolenApplicatie.Server.Services
             return result;
         }
 
-        private static void ReportProgress(
-            ProgressService? progressService,
-            int currentAmount,
-            int totalAmount,
-            ref int lastReportedPercentage)
+        private async Task<ReferenceIndex> CreateReferenceIndexAsync(CancellationToken token = default)
+        {
+            var existingMolens = await _dbContext.MolenData
+                .AsNoTracking()
+                .Select(molen => new ExistingMolenReference
+                {
+                    Id = molen.Id,
+                    MolenTBNId = molen.MolenTBNId,
+                    TenBruggeNr = molen.Ten_Brugge_Nr,
+                    Details = molen.Bijzonderheden
+                })
+                .ToListAsync(token);
+
+            var referenceIndex = new ReferenceIndex();
+
+            foreach (var molen in existingMolens) AddOrUpdateReference(referenceIndex, molen);
+
+            return referenceIndex;
+        }
+
+        private static void AddOrUpdateReference(ReferenceIndex referenceIndex, ExistingMolenReference molen)
+        {
+            if (!string.IsNullOrWhiteSpace(molen.TenBruggeNr))
+            {
+                var sourceReference = NormalizeReference(molen.TenBruggeNr);
+
+                if (!referenceIndex.ByReference.ContainsKey(sourceReference))
+                {
+                    referenceIndex.ByReference[sourceReference] = molen;
+                }
+            }
+
+            foreach (var externalReference in GetExternalReferenceAliases(molen))
+            {
+                if (!referenceIndex.ByExternalReference.TryGetValue(
+                        externalReference,
+                        out var existingReference) ||
+                    (IsMillDatabaseReference(existingReference.TenBruggeNr) &&
+                     !IsMillDatabaseReference(molen.TenBruggeNr)))
+                {
+                    referenceIndex.ByExternalReference[externalReference] = molen;
+                }
+            }
+        }
+
+        private static void ReportProgress(ProgressService? progressService, int currentAmount, int totalAmount, ref int lastReportedPercentage)
         {
             if (progressService == null || totalAmount <= 0)
                 return;
@@ -338,60 +350,7 @@ namespace MolenApplicatie.Server.Services
             lastReportedPercentage = percentage;
         }
 
-        private static List<Dictionary<string, string>> ReadRows(Stream csvStream, MillDatabaseImportResult result, CancellationToken token)
-        {
-            var rows = new List<Dictionary<string, string>>();
-
-            using var parser = new TextFieldParser(csvStream, new UTF8Encoding(false, true), true, true)
-            {
-                TextFieldType = FieldType.Delimited,
-                HasFieldsEnclosedInQuotes = true,
-                TrimWhiteSpace = false
-            };
-            parser.SetDelimiters("|");
-
-            if (parser.EndOfData) return rows;
-
-            var rawHeaders = parser.ReadFields() ?? [];
-            var headers = rawHeaders.Select(NormalizeHeader).ToArray();
-
-            if (!headers.Contains("id") && !headers.Contains("bron_id") && !headers.Contains("milldatabase_id"))
-                throw new InvalidDataException("De CSV bevat geen id- of bron_id-kolom.");
-
-            while (!parser.EndOfData)
-            {
-                token.ThrowIfCancellationRequested();
-                string[]? fields;
-
-                try
-                {
-                    fields = parser.ReadFields();
-                }
-                catch (MalformedLineException exception)
-                {
-                    result.SkippedInvalidRows++;
-                    AddWarning(result, $"CSV-regel {exception.LineNumber} kon niet worden gelezen.");
-                    continue;
-                }
-
-                if (fields == null || fields.All(string.IsNullOrWhiteSpace)) continue;
-
-                result.TotalRows++;
-                var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-                for (var index = 0; index < headers.Length; index++)
-                {
-                    if (string.IsNullOrWhiteSpace(headers[index])) continue;
-                    row[headers[index]] = index < fields.Length ? fields[index] : string.Empty;
-                }
-
-                rows.Add(row);
-            }
-
-            return rows;
-        }
-
-        private static MolenData CreateMolen(
+        private MolenData CreateMolen(
             Dictionary<string, string> row,
             string sourceId,
             string sourceReference,
@@ -453,7 +412,7 @@ namespace MolenApplicatie.Server.Services
                 RadDiameter = CleanText(Get(row, "waterwheel_diameter", "waterrad_diameter")),
                 Latitude = latitude,
                 Longitude = longitude,
-                LastUpdated = DateTime.UtcNow,
+                LastUpdated = _timeProvider.GetUtcNow().UtcDateTime,
                 CanAddImages = true,
                 AddedImages = [],
                 DisappearedYearInfos = [],
@@ -463,6 +422,34 @@ namespace MolenApplicatie.Server.Services
             };
 
             return molen;
+        }
+
+        private static bool HasAllowedMillDatabaseType(Dictionary<string, string> row, out string unsupportedTypes)
+        {
+            var rawTypes = Get(row, "mill_type_en", "mill_type", "molentype")
+                .Split(
+                    ';',
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+                .Select(type => type.ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (rawTypes.Count == 0)
+            {
+                unsupportedTypes = "(leeg)";
+                return false;
+            }
+
+            var unsupported = rawTypes
+                .Where(type => !Globals.AllowedMillDatabaseSourceTypes.Contains(type))
+                .ToList();
+
+            unsupportedTypes = unsupported.Count == 0
+                ? string.Empty
+                : string.Join(", ", unsupported);
+
+            return unsupported.Count == 0;
         }
 
         private static List<MolenTypeAssociation> CreateTypeAssociations(Dictionary<string, string> row)
@@ -851,7 +838,7 @@ namespace MolenApplicatie.Server.Services
         {
             foreach (var alias in aliases)
             {
-                if (row.TryGetValue(NormalizeHeader(alias), out var value) && !string.IsNullOrWhiteSpace(value)) return value.Trim();
+                if (row.TryGetValue(MillDatabaseCsvReader.NormalizeHeader(alias), out var value) && !string.IsNullOrWhiteSpace(value)) return value.Trim();
             }
             return string.Empty;
         }
@@ -980,16 +967,18 @@ namespace MolenApplicatie.Server.Services
             return Regex.Replace(value.Trim().ToLowerInvariant(), @"[^a-z0-9]+", string.Empty);
         }
 
-        private static string NormalizeHeader(string value)
-        {
-            var normalized = value.Trim().ToLowerInvariant();
-            normalized = normalized.Replace('é', 'e').Replace('ë', 'e').Replace('ï', 'i');
-            return Regex.Replace(normalized, @"[^a-z0-9]+", "_").Trim('_');
-        }
-
         private static void AddWarning(MillDatabaseImportResult result, string warning)
         {
             if (result.Warnings.Count < 100) result.Warnings.Add(warning);
+        }
+
+        private sealed class ReferenceIndex
+        {
+            public Dictionary<string, ExistingMolenReference> ByReference { get; } =
+                new(StringComparer.OrdinalIgnoreCase);
+
+            public Dictionary<string, ExistingMolenReference> ByExternalReference { get; } =
+                new(StringComparer.OrdinalIgnoreCase);
         }
 
         private sealed class ExistingMolenReference

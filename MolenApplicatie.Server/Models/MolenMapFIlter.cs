@@ -9,6 +9,7 @@ namespace MolenApplicatie.Server.Models
         public int Zoom { get; set; }
 
         public string? MolenType { get; set; }
+        public string? Land { get; set; }
         public string? Provincie { get; set; }
         public string? MolenState { get; set; }
         public bool? HasImage { get; set; }

@@ -8,6 +8,7 @@ namespace MolenApplicatie.Server.Models
         public int UpdatedMolens { get; set; }
         public int SkippedExistingMolens { get; set; }
         public int SkippedInvalidRows { get; set; }
+        public int SkippedUnsupportedMolenTypes { get; set; }
         public string? SearchUrl { get; set; }
         public string? CsvUrl { get; set; }
         public List<string> SearchUrls { get; set; } = [];

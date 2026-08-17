@@ -1,5 +1,6 @@
 using HtmlAgilityPack;
 using MolenApplicatie.Server.Models;
+using MolenApplicatie.Server.Utils;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -11,17 +12,8 @@ namespace MolenApplicatie.Server.Services
         private const string CsvDownloadUrl = "https://milldatabase.org/search/download";
         private const string ImportLanguage = "en";
 
-        private static readonly string[] MillTypes =
-        [
-            "hollow post mill",
-            "smock mill",
-            "tower mill",
-            "combined wind and watermill",
-            "composite mill",
-            "inverted windmill",
-            "paltrok mill",
-            "post mill"
-        ];
+        private static readonly IReadOnlyList<string> MillTypes =
+            Globals.MillDatabaseRemoteMolenTypes;
 
         private static readonly string[] ExistingConditionTypes =
         [
@@ -121,7 +113,8 @@ namespace MolenApplicatie.Server.Services
                     $"{importResult.ImportedRows:N0} imported, " +
                     $"{importResult.AddedMolens:N0} added, " +
                     $"{importResult.UpdatedMolens:N0} updated, " +
-                    $"{importResult.SkippedExistingMolens:N0} skipped.");
+                    $"{importResult.SkippedExistingMolens:N0} duplicates skipped, " +
+                    $"{importResult.SkippedUnsupportedMolenTypes:N0} unsupported types skipped.");
             }
 
             combinedResult.SearchUrl = combinedResult.SearchUrls.FirstOrDefault();
@@ -247,6 +240,7 @@ namespace MolenApplicatie.Server.Services
             target.UpdatedMolens += source.UpdatedMolens;
             target.SkippedExistingMolens += source.SkippedExistingMolens;
             target.SkippedInvalidRows += source.SkippedInvalidRows;
+            target.SkippedUnsupportedMolenTypes += source.SkippedUnsupportedMolenTypes;
             target.SearchUrls.Add(searchUrl);
             target.CsvUrls.Add(csvUrl);
             target.CompletedImports.Add(importName);

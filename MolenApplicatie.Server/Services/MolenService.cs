@@ -12,6 +12,9 @@ namespace MolenApplicatie.Server.Services
 {
     public class MolenService
     {
+        private const string MillDatabaseReferencePrefix = "MDB-";
+        private const string LegacyDefaultCountry = "Nederland";
+
         private readonly string _molenAddedImagesPath;
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
@@ -118,25 +121,90 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<ValueName>> GetAllMolenProvincies()
         {
-            var provincies = await _dbContext.MolenData
-                    .Where(m => !string.IsNullOrWhiteSpace(m.Provincie) && m.Latitude != 0 && m.Longitude != 0)
-                    .GroupBy(m => m.Provincie)
-                    .Select(g => new ValueName
-                    {
-                        Name = g.Key ?? string.Empty,
-                        Count = g.Count()
-                    })
-                    .OrderBy(p => p.Name)
-                    .ToListAsync();
-            return provincies.ToList();
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(MolenCoordinateQuery.HasUsableCoordinates)
+                .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .Where(molen => !string.IsNullOrWhiteSpace(molen.Provincie))
+                .GroupBy(molen => molen.Provincie)
+                .Select(group => new ValueName
+                {
+                    Name = group.Key ?? string.Empty,
+                    Count = group.Count()
+                })
+                .OrderBy(province => province.Name)
+                .ToListAsync();
+        }
+
+        private async Task<List<ValueName>> GetAllMolenFilterProvincies()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(MolenCoordinateQuery.HasUsableCoordinates)
+                .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .Where(molen => !string.IsNullOrWhiteSpace(molen.Provincie))
+                .GroupBy(molen => new
+                {
+                    molen.Provincie,
+                    Land = molen.Land != null && molen.Land != string.Empty
+                        ? molen.Land
+                        : !molen.Ten_Brugge_Nr.StartsWith(
+                            MillDatabaseReferencePrefix)
+                            ? LegacyDefaultCountry
+                            : null
+                })
+                .Select(group => new ValueName
+                {
+                    Name = group.Key.Provincie ?? string.Empty,
+                    Parent = group.Key.Land,
+                    Count = group.Count()
+                })
+                .OrderBy(province => province.Parent)
+                .ThenBy(province => province.Name)
+                .ToListAsync();
+        }
+
+        public async Task<List<ValueName>> GetAllMolenCountries()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(MolenCoordinateQuery.HasUsableCoordinates)
+                .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .Select(molen => new
+                {
+                    Land = molen.Land != null && molen.Land != string.Empty
+                        ? molen.Land
+                        : !molen.Ten_Brugge_Nr.StartsWith(
+                            MillDatabaseReferencePrefix)
+                            ? LegacyDefaultCountry
+                            : null
+                })
+                .Where(molen => molen.Land != null)
+                .GroupBy(molen => molen.Land)
+                .Select(group => new ValueName
+                {
+                    Name = group.Key ?? string.Empty,
+                    Count = group.Count()
+                })
+                .OrderBy(country => country.Name)
+                .ToListAsync();
         }
 
         public async Task<List<ValueName>> GetAllMolenTypes()
         {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
             var types = await _dbContext.MolenData
-                    .Where(m => m.Latitude != 0 && m.Longitude != 0)
+                    .Where(MolenCoordinateQuery.HasUsableCoordinates)
                     .SelectMany(m => m.MolenTypeAssociations.Select(mt => mt.MolenType.Name))
                     .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .Where(t => allowedMolenTypes.Contains(t.ToLower()))
                     .GroupBy(t => t)
                     .Select(g => new ValueName
                     {
@@ -150,12 +218,14 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<ValueName>> GetAllMolenConditions()
         {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
             var conditionValues = await _dbContext.MolenData
                 .AsNoTracking()
-                .Where(molen =>
-                    !string.IsNullOrWhiteSpace(molen.Toestand) &&
-                    molen.Latitude != 0 &&
-                    molen.Longitude != 0)
+                .Where(MolenCoordinateQuery.HasUsableCoordinates)
+                .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .Where(molen => !string.IsNullOrWhiteSpace(molen.Toestand))
                 .Select(molen => molen.Toestand!)
                 .ToListAsync();
 
@@ -213,7 +283,8 @@ namespace MolenApplicatie.Server.Services
         {
             return new MolenFilters
             {
-                Provincies = await GetAllMolenProvincies(),
+                Landen = await GetAllMolenCountries(),
+                Provincies = await GetAllMolenFilterProvincies(),
                 Toestanden = await GetAllMolenConditions(),
                 Types = await GetAllMolenTypes()
             };
@@ -221,9 +292,12 @@ namespace MolenApplicatie.Server.Services
 
         public List<MolenData> GetAllMolenDataByProvincie(string provincie)
         {
-            List<MolenData> alleMolenData = GetAllMolenData();
-            List<MolenData> MolenDataByProvincie = alleMolenData.Where(molen => molen.Provincie != null && molen.Provincie.ToLower() == provincie.ToLower()).ToList();
-            return MolenDataByProvincie;
+            return GetAllMolenDataCorrectTypes()
+                .Where(molen => molen.Provincie != null &&
+                    molen.Provincie.ToLower() == provincie.ToLower())
+                .AsEnumerable()
+                .Select(GetMolenData)
+                .ToList();
         }
 
         public List<MolenData> GetAllMolenData()
@@ -248,7 +322,7 @@ namespace MolenApplicatie.Server.Services
 
         public IQueryable<MolenData> GetAllMolenDataCorrectTypes()
         {
-            List<string> allowedMolenTypes = Globals.AllowedMolenTypes.Select(t => t.ToLower()).ToList();
+            var allowedMolenTypes = GetAllowedMolenTypes();
 
             return _dbContext.MolenData
                 .Include(m => m.MolenTypeAssociations)
@@ -258,7 +332,8 @@ namespace MolenApplicatie.Server.Services
                 .Include(m => m.AddedImages)
                 .Include(m => m.MolenMakers)
                 .Include(m => m.DisappearedYearInfos)
-                .Where(m => m.MolenTypeAssociations.Any(mta => allowedMolenTypes.Contains(mta.MolenType.Name.ToLower())))
+                .Where(m => m.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                 .AsQueryable();
         }
 
@@ -277,8 +352,15 @@ namespace MolenApplicatie.Server.Services
 
         public List<MolenData> GetAllDisappearedMolens(string provincie)
         {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
             return _dbContext.MolenData
-                .Where(m => m.Toestand != null && m.Toestand == MolenToestand.Verdwenen && m.Provincie != null && m.Provincie.ToLower() == provincie.ToLower())
+                .Where(m => m.Toestand != null &&
+                    m.Toestand == MolenToestand.Verdwenen &&
+                    m.Provincie != null &&
+                    m.Provincie.ToLower() == provincie.ToLower() &&
+                    m.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                 .Include(m => m.MolenTBN)
                 .Include(m => m.Images)
                 .Include(m => m.AddedImages)
@@ -558,29 +640,79 @@ namespace MolenApplicatie.Server.Services
             return (true, "Images deleted");
         }
 
-        private async Task<int> GetCountOfActiveMolensWithImages() => await _dbContext.MolenData
-            .Where(m => m.Toestand == MolenToestand.Werkend && m.AddedImages.Any())
-            .CountAsync();
+        private async Task<int> GetCountOfActiveMolensWithImages()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
 
-        private async Task<int> GetCountOfRemainderMolensWithImage() => await _dbContext.MolenData
-            .Where(m => m.Toestand == MolenToestand.Restant && m.AddedImages.Any())
-            .CountAsync();
+            return await _dbContext.MolenData
+                .Where(m => m.Toestand == MolenToestand.Werkend &&
+                    m.AddedImages.Any() &&
+                    m.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .CountAsync();
+        }
 
-        public Task<int> GetMolensWithImageCountAsync(CancellationToken token = default)
-            => _dbContext.MolenData.AsNoTracking().CountAsync(molen => molen.AddedImages.Any(), token);
+        private async Task<int> GetCountOfRemainderMolensWithImage()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
 
-        private async Task<int> GetCountOfActiveMolens() => await _dbContext.MolenData
-            .Where(m => m.Toestand == MolenToestand.Werkend)
-            .CountAsync();
+            return await _dbContext.MolenData
+                .Where(m => m.Toestand == MolenToestand.Restant &&
+                    m.AddedImages.Any() &&
+                    m.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .CountAsync();
+        }
 
-        private async Task<int> GetCountOfRemainderMolens() => await _dbContext.MolenData
-            .Where(m => m.Toestand == MolenToestand.Restant)
-            .CountAsync();
+        public Task<int> GetMolensWithImageCountAsync(
+            CancellationToken token = default)
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
 
-        private async Task<int> GetCountMolens() => await _dbContext.MolenData.CountAsync();
+            return _dbContext.MolenData
+                .AsNoTracking()
+                .CountAsync(molen =>
+                    molen.AddedImages.Any() &&
+                    molen.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())),
+                    token);
+        }
+
+        private async Task<int> GetCountOfActiveMolens()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(m => m.Toestand == MolenToestand.Werkend &&
+                    m.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .CountAsync();
+        }
+
+        private async Task<int> GetCountOfRemainderMolens()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(m => m.Toestand == MolenToestand.Restant &&
+                    m.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .CountAsync();
+        }
+
+        private async Task<int> GetCountMolens()
+        {
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
+            return await _dbContext.MolenData
+                .Where(m => m.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
+                .CountAsync();
+        }
 
         private async Task<List<CountDisappearedMolens>> GetCountOfDisappearedMolens()
         {
+            var allowedMolenTypes = GetAllowedMolenTypes();
             List<ValueName> provincies = await GetAllMolenProvincies();
             List<CountDisappearedMolens> disappearedMolens = new List<CountDisappearedMolens>();
             foreach (ValueName provincie in provincies)
@@ -588,7 +720,9 @@ namespace MolenApplicatie.Server.Services
                 int count = await _dbContext.MolenData
                     .Where(m => m.Toestand == MolenToestand.Verdwenen &&
                                 m.Provincie != null &&
-                                EF.Functions.Like(m.Provincie.ToLower(), provincie.Name.ToLower()))
+                                EF.Functions.Like(m.Provincie.ToLower(), provincie.Name.ToLower()) &&
+                                m.MolenTypeAssociations.Any(association =>
+                                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                     .CountAsync();
 
                 disappearedMolens.Add(new CountDisappearedMolens
@@ -614,8 +748,14 @@ namespace MolenApplicatie.Server.Services
 
             int totalMolens = await GetCountMolens();
 
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
             var recentImages = _dbContext.AddedImages
-                .Where(ai => ai.DateTaken >= DateTime.Now.AddDays(-7) && ai.DateTaken <= DateTime.Now)
+                .Where(ai =>
+                    ai.DateTaken >= DateTime.Now.AddDays(-7) &&
+                    ai.DateTaken <= DateTime.Now &&
+                    ai.MolenData.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                 .GroupBy(ai => ai.MolenDataId)
                 .Select(g => new
                 {
@@ -660,9 +800,15 @@ namespace MolenApplicatie.Server.Services
             var now = DateTime.Now;
             var recentImageStart = now.AddDays(-7);
 
+            var allowedMolenTypes = GetAllowedMolenTypes();
+
             var recentImages = await _dbContext.AddedImages
                 .AsNoTracking()
-                .Where(image => image.DateTaken >= recentImageStart && image.DateTaken <= now)
+                .Where(image =>
+                    image.DateTaken >= recentImageStart &&
+                    image.DateTaken <= now &&
+                    image.MolenData.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                 .OrderByDescending(image => image.DateTaken)
                 .ToListAsync(token);
 
@@ -680,6 +826,8 @@ namespace MolenApplicatie.Server.Services
                     .Include(molen => molen.MolenTypeAssociations)
                         .ThenInclude(association => association.MolenType)
                     .Where(molen => molenIds.Contains(molen.Id))
+                    .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                     .ToListAsync(token);
 
             var molensById = molens
@@ -706,19 +854,13 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<IReadOnlyList<MapItemResponse>> GetMapItemsAsync(MolenMapFilter filter, CancellationToken token)
         {
-            var allowedMolenTypes = Globals.AllowedMolenTypes
-                .Select(type => type.ToLower())
-                .ToList();
+            var allowedMolenTypes = GetAllowedMolenTypes();
 
             var query = _dbContext.MolenData
                 .AsNoTracking()
-                .Where(molen =>
-                    molen.Latitude >= -90d &&
-                    molen.Latitude <= 90d &&
-                    molen.Longitude >= -180d &&
-                    molen.Longitude <= 180d &&
-                    molen.MolenTypeAssociations.Any(association =>
-                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())));
+                .Where(MolenCoordinateQuery.HasUsableCoordinates)
+                .Where(molen => molen.MolenTypeAssociations.Any(association =>
+                    allowedMolenTypes.Contains(association.MolenType.Name.ToLower())));
 
             query = ApplyMapFilters(query, filter);
 
@@ -767,6 +909,13 @@ namespace MolenApplicatie.Server.Services
                 token);
         }
 
+        private static List<string> GetAllowedMolenTypes()
+        {
+            return Globals.AllowedMolenTypes
+                .Select(type => type.ToLowerInvariant())
+                .ToList();
+        }
+
         private IQueryable<MolenData> ApplyMapFilters(IQueryable<MolenData> query, MolenMapFilter filter)
         {
             var molenState = MolenToestand.From(filter.MolenState);
@@ -781,6 +930,21 @@ namespace MolenApplicatie.Server.Services
             {
                 var molenType = filter.MolenType.Trim().ToLower();
                 query = query.Where(molen => molen.MolenTypeAssociations.Any(association => association.MolenType.Name.ToLower() == molenType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Land))
+            {
+                var land = filter.Land.Trim().ToLower();
+                var legacyDefaultCountry = LegacyDefaultCountry.ToLower();
+
+                query = land == legacyDefaultCountry
+                    ? query.Where(molen =>
+                        (molen.Land != null && molen.Land.ToLower() == land) ||
+                        ((molen.Land == null || molen.Land == string.Empty) &&
+                         !molen.Ten_Brugge_Nr.StartsWith(
+                             MillDatabaseReferencePrefix)))
+                    : query.Where(molen =>
+                        molen.Land != null && molen.Land.ToLower() == land);
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Provincie))

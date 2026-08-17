@@ -32,12 +32,14 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<SearchModel<MolenData>>> SearchMolenDataAsync(string query, int limit)
         {
-            List<string> allowedMolenTypes = Globals.AllowedMolenTypes.Select(t => t.ToLower()).ToList();
+            var allowedMolenTypes = GetAllowedMolenTypes();
             query = query.ToLower();
 
             var directMolens = await _dbContext.MolenData
             .Where(m => m.Name != null && EF.Functions.Like(m.Name.ToLower(), $"%{query}%") && m.Toestand != null
-                && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+                && m.Toestand != MolenToestand.Verdwenen &&
+                m.MolenTypeAssociations.Any(ma =>
+                    allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
             .OrderBy(m => m.Name)
             .ThenBy(m => m.Id)
             .Select(m => new { m.Id, m.Name, Source = "Molen naam: " })
@@ -46,7 +48,9 @@ namespace MolenApplicatie.Server.Services
 
             var buildYearMolens = await _dbContext.MolenData
             .Where(m => m.Bouwjaar != null && EF.Functions.Like(m.Bouwjaar.ToString(), $"%{query}%")
-                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen &&
+                m.MolenTypeAssociations.Any(ma =>
+                    allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
             .OrderBy(m => m.Bouwjaar)
             .ThenBy(m => m.Id)
             .Select(m => new { m.Id, Name = m.Bouwjaar.ToString(), Source = "Molen Bouwjaar: " })
@@ -54,7 +58,10 @@ namespace MolenApplicatie.Server.Services
             .ToListAsync();
 
             var tbnMolens = await _dbContext.MolenTBNs
-            .Where(t => t.Ten_Brugge_Nr != null && EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%"))
+            .Where(t => t.Ten_Brugge_Nr != null &&
+                EF.Functions.Like(t.Ten_Brugge_Nr.ToLower(), $"%{query}%") &&
+                t.MolenData.MolenTypeAssociations.Any(ma =>
+                    allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
             .OrderBy(t => t.Ten_Brugge_Nr)
             .ThenBy(t => t.Id)
             .Select(t => new { t.MolenData.Id, Name = t.Ten_Brugge_Nr, Source = "Molen TBN: " })
@@ -63,7 +70,9 @@ namespace MolenApplicatie.Server.Services
 
             var typeMolens = await _dbContext.MolenTypeAssociations
             .Where(ma => ma.MolenType.Name != null && EF.Functions.Like(ma.MolenType.Name.ToLower(), $"%{query}%")
-                && ma.MolenData.Toestand != null && ma.MolenData.Toestand != MolenToestand.Verdwenen && allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
+                && ma.MolenData.Toestand != null &&
+                ma.MolenData.Toestand != MolenToestand.Verdwenen &&
+                allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
             .OrderBy(ma => ma.MolenType.Name)
             .ThenBy(ma => ma.MolenDataId)
             .Select(ma => new { ma.MolenData.Id, ma.MolenType.Name, Source = "Molen Type: " })
@@ -72,7 +81,9 @@ namespace MolenApplicatie.Server.Services
 
             var placeMolens = await _dbContext.MolenData
             .Where(m => m.Plaats != null && EF.Functions.Like(m.Plaats.ToLower(), $"%{query}%")
-                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen && m.MolenTypeAssociations.Any(ma => allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
+                && m.Toestand != null && m.Toestand != MolenToestand.Verdwenen &&
+                m.MolenTypeAssociations.Any(ma =>
+                    allowedMolenTypes.Contains(ma.MolenType.Name.ToLower())))
             .OrderBy(m => m.Plaats)
             .ThenBy(m => m.Id)
             .Select(m => new { m.Id, Name = m.Plaats, Source = "Molen Plaats: " })
@@ -166,10 +177,13 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<List<SearchModelWithCount<MolenType>>> SearchMolenTypesAsync(string query, int limit, List<Guid> molenIds)
         {
+            var allowedMolenTypes = GetAllowedMolenTypes();
             query = query.ToLower();
 
             var molenTypes = await _dbContext.MolenTypes
-                .Where(mt => mt.Name != null && EF.Functions.Like(mt.Name.ToLower(), $"%{query}%"))
+                .Where(mt => mt.Name != null &&
+                    allowedMolenTypes.Contains(mt.Name.ToLower()) &&
+                    EF.Functions.Like(mt.Name.ToLower(), $"%{query}%"))
                 .OrderBy(mt => mt.Name)
                 .ThenBy(mt => mt.Id)
                 .Take(limit)
@@ -178,7 +192,9 @@ namespace MolenApplicatie.Server.Services
             if (!molenTypes.Any())
             {
                 var molenTypeIds = await _dbContext.MolenTypeAssociations
-                    .Where(ma => ma.MolenDataId != null && molenIds.Contains(ma.MolenDataId))
+                    .Where(ma => ma.MolenDataId != null &&
+                        molenIds.Contains(ma.MolenDataId) &&
+                        allowedMolenTypes.Contains(ma.MolenType.Name.ToLower()))
                     .Select(ma => ma.MolenTypeId)
                     .Distinct()
                     .ToListAsync();
@@ -189,7 +205,9 @@ namespace MolenApplicatie.Server.Services
             var molenTypeIdsToCount = molenTypes.Select(mt => mt.Id).ToList();
 
             var molenTypeCounts = await _dbContext.MolenTypeAssociations
-                .Where(ma => molenTypeIdsToCount.Contains(ma.MolenTypeId))
+                .Where(ma => molenTypeIdsToCount.Contains(ma.MolenTypeId) &&
+                    ma.MolenData.MolenTypeAssociations.Any(association =>
+                        allowedMolenTypes.Contains(association.MolenType.Name.ToLower())))
                 .GroupBy(ma => ma.MolenTypeId)
                 .Select(ma => new { ma.Key, Count = ma.Count() })
                 .ToDictionaryAsync(ma => ma.Key, ma => ma.Count);
@@ -201,6 +219,13 @@ namespace MolenApplicatie.Server.Services
                 Data = mt,
                 Count = molenTypeCounts.ContainsKey(mt.Id) ? molenTypeCounts[mt.Id] : 0
             }).ToList();
+        }
+
+        private static List<string> GetAllowedMolenTypes()
+        {
+            return Globals.AllowedMolenTypes
+                .Select(type => type.ToLowerInvariant())
+                .ToList();
         }
 
     }

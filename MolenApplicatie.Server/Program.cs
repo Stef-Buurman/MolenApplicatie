@@ -61,8 +61,15 @@ builder.Services
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<NewMolenDataService>();
+builder.Services
+    .AddHttpClient<NewMolenDataService>(httpClient =>
+    {
+        httpClient.Timeout = TimeSpan.FromMinutes(5);
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (compatible; MolenApplicatie/1.0)");
+    });
 builder.Services.AddTransient<MillDatabaseCsvImportService>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddTransient<MillDatabaseImportJob>();
 
 builder.Services

@@ -24,26 +24,35 @@ namespace MolenApplicatie.Server.Services
         private readonly MolenDbContext _dbContext;
         private readonly DBMolenDataService _dBMolenDataService;
         private readonly DBMolenTBNService _dBMolenTBNService;
+        private readonly string _molenKeysPath;
+        private readonly string? _receiverUrl;
+        private readonly SemaphoreSlim _stringsLoadLock = new(1, 1);
+        private bool _stringsLoaded;
 
-        public NewMolenDataService(MolenService molenService, PlacesService placesService, MolenDbContext dbContext, DBMolenDataService dBMolenDataService, DBMolenTBNService dBMolenTBNService)
+        public NewMolenDataService(
+            HttpClient client,
+            MolenService molenService,
+            PlacesService placesService,
+            MolenDbContext dbContext,
+            DBMolenDataService dBMolenDataService,
+            DBMolenTBNService dBMolenTBNService,
+            IWebHostEnvironment environment,
+            IConfiguration configuration)
         {
-            _client = new HttpClient();
+            _client = client;
             _molenService = molenService;
             _placesService = placesService;
             _dbContext = dbContext;
             _dBMolenDataService = dBMolenDataService;
-
-            string jsonString = File.ReadAllTextAsync("Json/AlleKeysMolens.json").Result;
-            if (!string.IsNullOrEmpty(jsonString))
-            {
-                strings = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(jsonString)!;
-            }
-            else
-            {
-                strings = new Dictionary<string, List<string>>();
-            }
-
             _dBMolenTBNService = dBMolenTBNService;
+            _molenKeysPath = Path.Combine(
+                environment.ContentRootPath,
+                "Json",
+                "AlleKeysMolens.json");
+            _receiverUrl = Environment.GetEnvironmentVariable(
+                    "MOLENDATABASE_IMPORT_RECEIVER_URL")
+                ?? configuration["MolendatabaseImport:ReceiverUrl"];
+            strings = new Dictionary<string, List<string>>();
         }
 
         public async Task test()
@@ -293,8 +302,19 @@ namespace MolenApplicatie.Server.Services
                     batchedResponses[tbn] = responseDict;
                 }
 
-                var content = new StringContent(JsonSerializer.Serialize(batchedResponses), Encoding.UTF8, "application/json");
-                var response = await _client.PostAsync("http://192.168.178.241:5000/api/molen/uploadMolensHtml", content);
+                if (string.IsNullOrWhiteSpace(_receiverUrl))
+                {
+                    throw new InvalidOperationException(
+                        "MolendatabaseImport:ReceiverUrl or " +
+                        "MOLENDATABASE_IMPORT_RECEIVER_URL must be configured " +
+                        "before sending saved Molendatabase responses.");
+                }
+
+                var content = new StringContent(
+                    JsonSerializer.Serialize(batchedResponses),
+                    Encoding.UTF8,
+                    "application/json");
+                var response = await _client.PostAsync(_receiverUrl, content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -369,7 +389,7 @@ namespace MolenApplicatie.Server.Services
                         WriteIndented = true
                     }));
                     Console.WriteLine("nr-" + count);
-                    Thread.Sleep(requestCount * 1000);
+                    await Task.Delay(requestCount * 1000);
                 }
             }
             return responses.Count();
@@ -588,6 +608,7 @@ namespace MolenApplicatie.Server.Services
 
         public async Task<(Dictionary<string, object> data, MolenData molen)> GetDataFromNode(HtmlDocument doc, string Ten_Brugge_Nr, MolenData newMolenData, MolenData oldMolenData, Dictionary<string, MolenImage> molenImages = null)
         {
+            await EnsureStringsLoadedAsync();
             Dictionary<string, object> data = new Dictionary<string, object>();
             var divs = doc.DocumentNode.SelectNodes("//div[contains(@class, 'attrib')]");
             var ModelTypeDiv = doc.DocumentNode.SelectNodes("//div[@class='attrib model_type']");
@@ -1510,7 +1531,7 @@ namespace MolenApplicatie.Server.Services
             Dictionary<int, Dictionary<string, object>> keyValuePairs = new Dictionary<int, Dictionary<string, object>>();
             List<MolenData> currentData = await _dbContext.MolenData.ToListAsync();
             List<MolenTBN> Data = _dbContext.MolenTBNs.ToList();
-            Thread.Sleep(1000);
+            await Task.Delay(1000);
 
             int count = 0;
             foreach (MolenTBN tbn in Data)
@@ -1526,14 +1547,11 @@ namespace MolenApplicatie.Server.Services
                 (MolenData molen, int requestCount, Dictionary<string, object> allData)? res = await GetMolenDataByTBNumber(tbn.Ten_Brugge_Nr);
                 if (res.HasValue)
                 {
-                    Thread.Sleep(res.Value.requestCount * 1000);
+                    await Task.Delay(res.Value.requestCount * 1000);
                     if (count % 100 == 0)
                     {
                         await _dbContext.SaveChangesAsync();
-                        File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
-                        {
-                            WriteIndented = true
-                        }));
+                        await SaveStringsAsync();
                         if (res.Value.allData != null)
                         {
                             keyValuePairs[count] = res.Value.allData;
@@ -1547,10 +1565,7 @@ namespace MolenApplicatie.Server.Services
             }
 
             await _dbContext.SaveChangesAsync();
-            File.WriteAllText("Json/AlleKeysMolens.json", JsonSerializer.Serialize(strings, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
+            await SaveStringsAsync();
 
             File.WriteAllText("Json/AlleMolenData.json", JsonSerializer.Serialize(keyValuePairs, new JsonSerializerOptions
             {
@@ -1560,6 +1575,55 @@ namespace MolenApplicatie.Server.Services
             await _dbContext.SaveChangesAsync();
 
             return keyValuePairs.Values.ToList();
+        }
+
+        private async Task EnsureStringsLoadedAsync()
+        {
+            if (_stringsLoaded) return;
+
+            await _stringsLoadLock.WaitAsync();
+            try
+            {
+                if (_stringsLoaded) return;
+
+                if (!File.Exists(_molenKeysPath))
+                {
+                    strings = new Dictionary<string, List<string>>();
+                    _stringsLoaded = true;
+                    return;
+                }
+
+                var jsonString = await File.ReadAllTextAsync(_molenKeysPath);
+
+                strings = string.IsNullOrWhiteSpace(jsonString)
+                    ? new Dictionary<string, List<string>>()
+                    : JsonSerializer.Deserialize<Dictionary<string, List<string>>>(
+                        jsonString)
+                        ?? new Dictionary<string, List<string>>();
+
+                _stringsLoaded = true;
+            }
+            finally
+            {
+                _stringsLoadLock.Release();
+            }
+        }
+
+        private async Task SaveStringsAsync()
+        {
+            await EnsureStringsLoadedAsync();
+
+            Directory.CreateDirectory(
+                Path.GetDirectoryName(_molenKeysPath)!);
+
+            await File.WriteAllTextAsync(
+                _molenKeysPath,
+                JsonSerializer.Serialize(
+                    strings,
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }));
         }
 
         public async Task<List<MolenTBN>> SaveAllMolenTBN()
